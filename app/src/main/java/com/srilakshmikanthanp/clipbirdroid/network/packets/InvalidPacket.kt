@@ -102,7 +102,7 @@ class InvalidPacket(
       val packetLength = buffer.int
       val packetType = buffer.get()
       val errorCode = buffer.get()
-      val errorMessage = ByteArray(buffer.remaining())
+      val errorMessage = ByteArray(buffer.remaining()); buffer.get(errorMessage)
 
       // check packetType
       if (packetType != PacketType.RequestFailed.value) {
