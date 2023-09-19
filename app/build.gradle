@@ -1,21 +1,30 @@
 plugins {
   id 'com.android.application'
   id 'org.jetbrains.kotlin.android'
+  id 'com.google.protobuf'
 }
 
 android {
-  namespace 'com.srilakshmikanthanp.clipbirdroid'
-  compileSdk 33
-
   defaultConfig {
-    applicationId "com.srilakshmikanthanp.clipbirdroid"
-    minSdk 28
-    targetSdk 33
-    versionCode 1
-    versionName "1.0"
+    buildConfigField "String", "APP_ISSUE", "\"https://github.com/srilakshmikanthanp/clipbirdroid/issues\""
+    buildConfigField "String", "APP_NAME", "\"ClipBird\""
+    buildConfigField "String", "APP_HOME", "\"https://github.com/srilakshmikanthanp/clipbirdroid\""
+    buildConfigField "String", "APP_VERSION", "\"1.0.0\""
+    buildConfigField "String", "APP_ORG", "\"srilakshmikanthanp\""
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    targetSdk 33
+    minSdk 28
+    versionCode 1
+    versionName "1.0.0"
+    applicationId "com.srilakshmikanthanp.clipbirdroid"
+    vectorDrawables {
+      useSupportLibrary true
+    }
   }
+
+  namespace 'com.srilakshmikanthanp.clipbirdroid'
+  compileSdk 33
 
   buildTypes {
     release {
@@ -23,20 +32,62 @@ android {
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
   }
+
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
   }
+
   kotlinOptions {
     jvmTarget = '1.8'
+  }
+
+  buildFeatures {
+    compose true
+  }
+
+  composeOptions {
+    kotlinCompilerExtensionVersion '1.3.2'
+  }
+
+  packagingOptions {
+    resources {
+      excludes += '/META-INF/{AL2.0,LGPL2.1}'
+    }
+  }
+}
+
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.24.3'
+  }
+  generateProtoTasks {
+    all().configureEach { task ->
+      task.builtins {
+        java {
+          option "lite"
+        }
+      }
+    }
   }
 }
 
 dependencies {
-  implementation 'androidx.core:core-ktx:1.8.0'
-  implementation 'androidx.appcompat:appcompat:1.4.1'
-  implementation 'com.google.android.material:material:1.5.0'
-  testImplementation 'junit:junit:4.13.2'
+  androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
   androidTestImplementation 'androidx.test.ext:junit:1.1.5'
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+  androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+  implementation 'androidx.core:core-ktx:1.8.0'
+  implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.0')
+  implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
+  implementation 'androidx.activity:activity-compose:1.5.1'
+  implementation platform('androidx.compose:compose-bom:2022.10.00')
+  implementation 'androidx.compose.ui:ui'
+  implementation 'androidx.compose.ui:ui-graphics'
+  implementation 'androidx.compose.ui:ui-tooling-preview'
+  implementation 'androidx.compose.material3:material3'
+  testImplementation 'junit:junit:4.13.2'
+  debugImplementation 'androidx.compose.ui:ui-tooling'
+  debugImplementation 'androidx.compose.ui:ui-test-manifest'
+  implementation 'com.google.protobuf:protobuf-javalite:3.24.3'
 }
