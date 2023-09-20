@@ -3,7 +3,7 @@ package com.srilakshmikanthanp.clipbirdroid.types.enums
 /**
  * Enum Class Used for Authentication packet
  */
-enum class AuthStatus(val value: Byte = 0x00) {
+enum class AuthStatus(val value: Int = 0x00) {
   /**
    * Allowed Auth Status
    */
@@ -13,19 +13,13 @@ enum class AuthStatus(val value: Byte = 0x00) {
    * Companion Object
    */
   companion object {
-    /**
-     * Convert Byte to AuthStatus
-     */
-    fun fromByte(value: Byte): AuthStatus = when (value) {
+    fun fromInt(value: Int): AuthStatus = when (value) {
         AuthOkay.value -> AuthOkay
         AuthFail.value -> AuthFail
         else -> throw IllegalArgumentException("Invalid AuthStatus value: $value")
     }
 
-    /**
-     * Convert AuthStatus to Byte
-     */
-    fun toByte(status: AuthStatus): Byte {
+    fun toInt(status: AuthStatus): Int {
       return status.value
     }
   }

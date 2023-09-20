@@ -1,20 +1,20 @@
 package com.srilakshmikanthanp.clipbirdroid.network.packets
 
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
-import java.nio.ByteBuffer
+import com.srilakshmikanthanp.clipbirdroid.AuthenticationOuterClass as AuthenticationPacket
 
 /**
  * Data Class Used for Authentication packet
  */
 class Authentication(
   @JvmField var packetLength: Int,
-  @JvmField var packetType: Byte,
-  @JvmField var authStatus: Byte
+  @JvmField var packetType: Int,
+  @JvmField var authStatus: Int
 ) {
   /**
    * Allowed packet Types
    */
-  enum class PacketType(val value: Byte = 0x01) {
+  enum class PacketType(val value: Int = 0x01) {
     AuthStatus(0x01),
   }
 
@@ -35,7 +35,7 @@ class Authentication(
   /**
    * Set the Packet Type
    */
-  fun setPacketType(type: Byte) {
+  fun setPacketType(type: Int) {
     // check packetType
     if (type != PacketType.AuthStatus.value) {
       throw IllegalArgumentException("Invalid PacketType value: $type")
@@ -47,21 +47,21 @@ class Authentication(
   /**
    * Get the Packet Type
    */
-  fun getPacketType(): Byte {
+  fun getPacketType(): Int {
     return this.packetType
   }
 
   /**
    * Set the Auth Status
    */
-  fun setAuthStatus(status: Byte) {
-    this.authStatus = AuthStatus.fromByte(status).value
+  fun setAuthStatus(status: Int) {
+    this.authStatus = AuthStatus.fromInt(status).value
   }
 
   /**
    * Get the Auth Status
    */
-  fun getAuthStatus(): Byte {
+  fun getAuthStatus(): Int {
     return this.authStatus
   }
 
@@ -80,13 +80,18 @@ class Authentication(
      * Create From byte array In BigEndian
      */
     fun fromByteArray(byteArray: ByteArray): Authentication {
-      // create ByteBuffer from byte array
-      val buffer = ByteBuffer.wrap(byteArray)
+      // parse the byte array with google protobuf
+      val packet = AuthenticationPacket.Authentication.parseFrom(byteArray)
+
+      // if any error
+      if (!packet.isInitialized) {
+        throw IllegalArgumentException("Invalid Packet") // TODO change exception type
+      }
 
       // read fields
-      val packetLength = buffer.int
-      val packetType = buffer.get()
-      val authStatus = AuthStatus.fromByte(buffer.get())
+      val packetLength = packet.packetLength
+      val packetType = packet.packetType
+      val authStatus = packet.status.number
 
       // check packetType
       if (packetType != PacketType.AuthStatus.value) {
@@ -97,7 +102,7 @@ class Authentication(
       return Authentication(
         packetLength,
         packetType,
-        authStatus.value
+        authStatus
       )
     }
 
@@ -105,16 +110,16 @@ class Authentication(
      * Convert To Byte array Big Endian
      */
     fun toByteArray(auth: Authentication): ByteArray {
-      // create ByteArray from the Class
-      val byteBuffer = ByteBuffer.allocate(auth.packetLength)
+      // create protobuf builder
+      val packet = AuthenticationPacket.Authentication.newBuilder()
 
-      // Set the fields
-      byteBuffer.putInt(auth.packetLength)
-      byteBuffer.put(auth.packetType)
-      byteBuffer.put(auth.authStatus)
+      // set fields
+      packet.packetLength = auth.packetLength
+      packet.packetType = auth.packetType
+      packet.status = AuthenticationPacket.Authentication.AuthStatus.forNumber(auth.authStatus)
 
-      // return Bytearray
-      return byteBuffer.array()
+      // return byte array
+      return packet.build().toByteArray()
     }
   }
 }

@@ -1,21 +1,22 @@
 package com.srilakshmikanthanp.clipbirdroid.network.packets
 
+import com.google.protobuf.ByteString
 import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
-import java.nio.ByteBuffer
+import com.srilakshmikanthanp.clipbirdroid.Invalidrequest as InvalidrequestPacket
 
 /**
  * Packet Class for Invalid Packet
  */
 class InvalidPacket(
   @JvmField var packetLength: Int,
-  @JvmField var packetType: Byte,
-  @JvmField var errorCode: Byte,
+  @JvmField var packetType: Int,
+  @JvmField var errorCode: Int,
   @JvmField var errorMessage: ByteArray
 ) {
   /**
    * Allowed packet Types
    */
-  enum class PacketType(val value: Byte = 0x01) {
+  enum class PacketType(val value: Int = 0x01) {
     RequestFailed(0x00),
   }
 
@@ -36,7 +37,7 @@ class InvalidPacket(
   /**
    * Set the Packet Type
    */
-  fun setPacketType(type: Byte) {
+  fun setPacketType(type: Int) {
     // check packetType
     if (type != PacketType.RequestFailed.value) {
       throw IllegalArgumentException("Invalid PacketType value: $type")
@@ -48,21 +49,21 @@ class InvalidPacket(
   /**
    * Get the Packet Type
    */
-  fun getPacketType(): Byte {
+  fun getPacketType(): Int {
     return this.packetType
   }
 
   /**
    * Set the Error Code
    */
-  fun setErrorCode(code: Byte) {
+  fun setErrorCode(code: Int) {
     this.errorCode = ErrorCode.fromByte(code).value
   }
 
   /**
    * Get the Error Code
    */
-  fun getErrorCode(): Byte {
+  fun getErrorCode(): Int {
     return this.errorCode
   }
 
@@ -95,14 +96,19 @@ class InvalidPacket(
      * Create Packet From ByteArray Big Endian
      */
     fun fromByteArray(byteArray: ByteArray): InvalidPacket {
-      // create ByteBuffer from byte array
-      val buffer = ByteBuffer.wrap(byteArray)
+      // create packet from protobuf builder
+      val packet = InvalidrequestPacket.InvalidRequest.parseFrom(byteArray)
+
+      // if any error
+      if (!packet.isInitialized) {
+        throw IllegalArgumentException("Invalid Packet") // TODO change exception type
+      }
 
       // read fields
-      val packetLength = buffer.int
-      val packetType = buffer.get()
-      val errorCode = buffer.get()
-      val errorMessage = ByteArray(buffer.remaining()); buffer.get(errorMessage)
+      val packetLength = packet.packetLength
+      val packetType = packet.packetType
+      val errorCode = packet.errorCode
+      val errorMessage = packet.errorMessage.toByteArray()
 
       // check packetType
       if (packetType != PacketType.RequestFailed.value) {
@@ -122,17 +128,17 @@ class InvalidPacket(
      * Convert Packet to ByteArray Big Endian
      */
     fun toByteArray(packet: InvalidPacket): ByteArray {
-      // create ByteBuffer
-      val buffer = ByteBuffer.allocate(packet.size())
+      // create protobuf builder
+      val builder = InvalidrequestPacket.InvalidRequest.newBuilder()
 
-      // write fields
-      buffer.putInt(packet.packetLength)
-      buffer.put(packet.packetType)
-      buffer.put(packet.errorCode)
-      buffer.put(packet.errorMessage)
+      // set fields
+      builder.packetLength = packet.packetLength
+      builder.packetType = packet.packetType
+      builder.errorCode = packet.errorCode
+      builder.errorMessage = ByteString.copyFrom(packet.errorMessage)
 
       // return ByteArray
-      return buffer.array()
+      return builder.build().toByteArray()
     }
   }
 }
