@@ -18,7 +18,7 @@ enum class ErrorCode(val value: Int = 0x00) {
    */
   companion object {
     fun fromByte(value: Int): ErrorCode = when (value) {
-      InvalidPacket.value -> InvalidPacket
+      CodingError.value -> CodingError
       InvalidPacket.value -> InvalidPacket
       else -> throw IllegalArgumentException("Invalid ErrorCode value: $value")
     }

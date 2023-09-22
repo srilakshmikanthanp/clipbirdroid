@@ -11,11 +11,19 @@ import java.nio.ByteOrder
  * Class For Syncing Item
  */
 class SyncingItem(
-  @JvmField var mimeLength: Int,
-  @JvmField var mimeType: ByteArray,
-  @JvmField var payloadLength: Int,
-  @JvmField var payload: ByteArray
+  private var mimeType: ByteArray,
+  private var payload: ByteArray
 ) {
+  // packet fields
+  private var mimeLength: Int
+  private var payloadLength: Int
+
+  // init
+  init {
+    mimeLength = mimeType.size
+    payloadLength = payload.size
+  }
+
   /**
    * Set the Mime Length
    */
@@ -138,7 +146,7 @@ class SyncingItem(
       }
 
       // return the SyncingItem
-      return SyncingItem(mimeLength, mimeType, payloadLength, payload)
+      return SyncingItem(mimeType, payload)
     }
 
     /**
@@ -161,16 +169,24 @@ class SyncingItem(
  * Packet Class for Syncing Packet
  */
 class SyncingPacket(
-  @JvmField var packetLength: Int,
-  @JvmField var packetType: Int,
-  @JvmField var itemCount: Int,
-  @JvmField var items: Array<SyncingItem>
+  private var itemCount: Int,
+  private var items: Array<SyncingItem>
 ) {
+  // packet fields
+  private var packetType: PacketType
+  private var packetLength: Int
+
+  // init
+  init {
+    this.packetType = PacketType.SyncPacket
+    this.packetLength = this.size()
+  }
+
   /**
    * Allowed packet Types
    */
-  enum class PacketType(val value: Int = 0x01) {
-    SyncPacket(0x01),
+  enum class PacketType(val value: Int) {
+    SyncPacket(0x02),
   }
 
   /**
@@ -190,18 +206,14 @@ class SyncingPacket(
   /**
    * Set the Packet Type
    */
-  fun setPacketType(type: Int) {
-    if (type != PacketType.SyncPacket.value) {
-      throw IllegalArgumentException("Invalid PacketType value: $type")
-    }
-
+  fun setPacketType(type: PacketType) {
     this.packetType = type
   }
 
   /**
    * Get the Packet Type
    */
-  fun getPacketType(): Int {
+  fun getPacketType(): PacketType {
     return this.packetType
   }
 
@@ -241,7 +253,7 @@ class SyncingPacket(
    * Size of Packet
    */
   fun size(): Int {
-    var size = (Int.SIZE_BYTES + Byte.SIZE_BYTES + Int.SIZE_BYTES)
+    var size = (Int.SIZE_BYTES + Int.SIZE_BYTES + Int.SIZE_BYTES)
 
     for (item in this.items) {
       size += item.size()
@@ -253,19 +265,19 @@ class SyncingPacket(
   /**
    * Convert To Byte array Big Endian
    */
-  fun toByteArray(syncingPacket: SyncingPacket): ByteArray {
+  fun toByteArray(): ByteArray {
     // create an ByteBuffer to serialize the packet
-    val byteBuffer = ByteBuffer.allocate(syncingPacket.size())
+    val byteBuffer = ByteBuffer.allocate(this.size())
 
     // set the order
     byteBuffer.order(ByteOrder.BIG_ENDIAN)
 
     // set the fields
-    byteBuffer.putInt(syncingPacket.packetLength)
-    byteBuffer.put(syncingPacket.packetType.toByte())
-    byteBuffer.putInt(syncingPacket.itemCount)
+    byteBuffer.putInt(this.packetLength)
+    byteBuffer.putInt(this.packetType.value)
+    byteBuffer.putInt(this.itemCount)
 
-    for (item in syncingPacket.items) {
+    for (item in this.items) {
       byteBuffer.put(item.toByteArray(item))
     }
 
@@ -296,7 +308,7 @@ class SyncingPacket(
       // try to get the fields
       try {
         packetLength = byteBuffer.int
-        packetType = byteBuffer.get().toInt()
+        packetType = byteBuffer.int
         itemCount = byteBuffer.int
         items = Array(itemCount) { SyncingItem.fromByteBuffer(byteBuffer) }
       } catch (e: BufferUnderflowException) {
@@ -308,8 +320,16 @@ class SyncingPacket(
         throw MalformedPacket(ErrorCode.CodingError, "Invalid PacketType value: $packetType")
       }
 
-      // return the SyncingPacket
-      return SyncingPacket(packetLength, packetType, itemCount, items)
+      // create the SyncingPacket
+      val packet = SyncingPacket(itemCount, items)
+
+      // check length
+      if (packet.packetLength != packetLength) {
+        throw MalformedPacket(ErrorCode.CodingError, "Length Does match")
+      }
+
+      // done return
+      return packet
     }
   }
 }

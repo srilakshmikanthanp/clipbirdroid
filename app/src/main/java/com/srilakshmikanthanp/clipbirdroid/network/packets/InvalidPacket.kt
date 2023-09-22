@@ -11,15 +11,23 @@ import java.nio.ByteOrder
  * Packet Class for Invalid Packet
  */
 class InvalidPacket(
-  @JvmField var packetLength: Int,
-  @JvmField var packetType: Int,
-  @JvmField var errorCode: Int,
+  @JvmField var errorCode: ErrorCode,
   @JvmField var errorMessage: ByteArray
 ) {
+  // Packet Fields
+  private var packetLength: Int
+  private var packetType: PacketType
+
+  // init
+  init {
+    this.packetType = PacketType.RequestFailed
+    this.packetLength = this.size()
+  }
+
   /**
    * Allowed packet Types
    */
-  enum class PacketType(val value: Int = 0x01) {
+  enum class PacketType(val value: Int) {
     RequestFailed(0x00),
   }
 
@@ -40,33 +48,28 @@ class InvalidPacket(
   /**
    * Set the Packet Type
    */
-  fun setPacketType(type: Int) {
-    // check packetType
-    if (type != PacketType.RequestFailed.value) {
-      throw IllegalArgumentException("Invalid PacketType value: $type")
-    }
-
+  fun setPacketType(type: PacketType) {
     this.packetType = type
   }
 
   /**
    * Get the Packet Type
    */
-  fun getPacketType(): Int {
+  fun getPacketType(): PacketType {
     return this.packetType
   }
 
   /**
    * Set the Error Code
    */
-  fun setErrorCode(code: Int) {
-    this.errorCode = ErrorCode.fromByte(code).value
+  fun setErrorCode(code: ErrorCode) {
+    this.errorCode = code
   }
 
   /**
    * Get the Error Code
    */
-  fun getErrorCode(): Int {
+  fun getErrorCode(): ErrorCode {
     return this.errorCode
   }
 
@@ -88,24 +91,24 @@ class InvalidPacket(
    * Size of Packet
    */
   fun size(): Int {
-    return (Int.SIZE_BYTES + Byte.SIZE_BYTES + Byte.SIZE_BYTES + this.errorMessage.size)
+    return (Int.SIZE_BYTES + Int.SIZE_BYTES + Int.SIZE_BYTES + this.errorMessage.size)
   }
 
   /**
    * Convert Packet to ByteArray Big Endian
    */
-  fun toByteArray(packet: InvalidPacket): ByteArray {
+  fun toByteArray(): ByteArray {
     // create ByteBuffer to serialize the packet
-    val byteBuffer = ByteBuffer.allocate(packet.size())
+    val byteBuffer = ByteBuffer.allocate(this.size())
 
     // set order
     byteBuffer.order(ByteOrder.BIG_ENDIAN)
 
     // put fields
-    byteBuffer.putInt(packet.packetLength)
-    byteBuffer.putInt(packet.packetType)
-    byteBuffer.putInt(packet.errorCode)
-    byteBuffer.put(packet.errorMessage)
+    byteBuffer.putInt(this.packetLength)
+    byteBuffer.putInt(this.packetType.value)
+    byteBuffer.putInt(this.errorCode.value)
+    byteBuffer.put(this.errorMessage)
 
     // return ByteArray
     return byteBuffer.array()
@@ -165,7 +168,15 @@ class InvalidPacket(
       }
 
       // return InvalidPacket
-      return InvalidPacket(packetLength, packetType, errorCode, errorMessage)
+      val packet = InvalidPacket(ErrorCode.fromByte(errorCode), errorMessage)
+
+      // check length
+      if (packet.size() != packetLength) {
+        throw MalformedPacket(ErrorCode.CodingError, "Length Does match")
+      }
+
+      // done return
+      return packet
     }
   }
 }

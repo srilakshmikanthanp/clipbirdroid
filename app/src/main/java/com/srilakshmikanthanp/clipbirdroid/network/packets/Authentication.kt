@@ -12,14 +12,22 @@ import java.nio.ByteOrder
  * Data Class Used for Authentication packet
  */
 class Authentication(
-  @JvmField var packetLength: Int,
-  @JvmField var packetType: Int,
-  @JvmField var authStatus: Int
+  private var authStatus: AuthStatus
 ) {
+  // Private Fields
+  private var packetType: PacketType
+  private var packetLength: Int
+
+  // init
+  init {
+    this.packetType = PacketType.AuthStatus
+    this.packetLength = this.size()
+  }
+
   /**
    * Allowed packet Types
    */
-  enum class PacketType(val value: Int = 0x01) {
+  enum class PacketType(val value: Int) {
     AuthStatus(0x01),
   }
 
@@ -40,33 +48,28 @@ class Authentication(
   /**
    * Set the Packet Type
    */
-  fun setPacketType(type: Int) {
-    // check packetType
-    if (type != PacketType.AuthStatus.value) {
-      throw IllegalArgumentException("Invalid PacketType value: $type")
-    }
-
+  fun setPacketType(type: PacketType) {
     this.packetType = type
   }
 
   /**
    * Get the Packet Type
    */
-  fun getPacketType(): Int {
+  fun getPacketType(): PacketType {
     return this.packetType
   }
 
   /**
    * Set the Auth Status
    */
-  fun setAuthStatus(status: Int) {
-    this.authStatus = AuthStatus.fromInt(status).value
+  fun setAuthStatus(status: AuthStatus) {
+    this.authStatus = status
   }
 
   /**
    * Get the Auth Status
    */
-  fun getAuthStatus(): Int {
+  fun getAuthStatus(): AuthStatus {
     return this.authStatus
   }
 
@@ -74,7 +77,7 @@ class Authentication(
    * Size of Packet
    */
   fun size(): Int {
-    return (Int.SIZE_BYTES + Byte.SIZE_BYTES)
+    return (Int.SIZE_BYTES + Int.SIZE_BYTES + Int.SIZE_BYTES)
   }
 
   /**
@@ -89,8 +92,8 @@ class Authentication(
 
     // put data
     buffer.putInt(this.packetLength)
-    buffer.putInt(this.packetType)
-    buffer.putInt(this.authStatus)
+    buffer.putInt(this.packetType.value)
+    buffer.putInt(this.authStatus.value)
 
     // return ByteArray
     return buffer.array()
@@ -137,8 +140,16 @@ class Authentication(
         throw MalformedPacket(ErrorCode.CodingError, "Invalid AuthStatus value: $authStatus")
       }
 
-      // return Authentication
-      return Authentication(packetLength, packetType, authStatus)
+      // create Authentication
+      val packet = Authentication(AuthStatus.fromInt(authStatus))
+
+      // check the packet length
+      if (packetLength != packet.packetLength) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
+      }
+
+      // done return
+      return packet
     }
   }
 }
