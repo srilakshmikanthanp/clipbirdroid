@@ -1,8 +1,11 @@
 package com.srilakshmikanthanp.clipbirdroid.network.packets
 
-import com.google.protobuf.ByteString
 import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
-import com.srilakshmikanthanp.clipbirdroid.Invalidrequest as InvalidrequestPacket
+import com.srilakshmikanthanp.clipbirdroid.types.except.MalformedPacket
+import com.srilakshmikanthanp.clipbirdroid.types.except.NotThisPacket
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Packet Class for Invalid Packet
@@ -89,6 +92,26 @@ class InvalidPacket(
   }
 
   /**
+   * Convert Packet to ByteArray Big Endian
+   */
+  fun toByteArray(packet: InvalidPacket): ByteArray {
+    // create ByteBuffer to serialize the packet
+    val byteBuffer = ByteBuffer.allocate(packet.size())
+
+    // set order
+    byteBuffer.order(ByteOrder.BIG_ENDIAN)
+
+    // put fields
+    byteBuffer.putInt(packet.packetLength)
+    byteBuffer.putInt(packet.packetType)
+    byteBuffer.putInt(packet.errorCode)
+    byteBuffer.put(packet.errorMessage)
+
+    // return ByteArray
+    return byteBuffer.array()
+  }
+
+  /**
    * Companion Object
    */
   companion object {
@@ -96,49 +119,53 @@ class InvalidPacket(
      * Create Packet From ByteArray Big Endian
      */
     fun fromByteArray(byteArray: ByteArray): InvalidPacket {
-      // create packet from protobuf builder
-      val packet = InvalidrequestPacket.InvalidRequest.parseFrom(byteArray)
+      // list of allowed error codes for InvalidPacket
+      val allowedErrorCodes = ErrorCode.values().map { it.value }
 
-      // if any error
-      if (!packet.isInitialized) {
-        throw IllegalArgumentException("Invalid Packet") // TODO change exception type
+      // create ByteBuffer to deserialize the packet
+      val byteBuffer = ByteBuffer.wrap(byteArray)
+
+      // set order
+      byteBuffer.order(ByteOrder.BIG_ENDIAN)
+
+      // get fields
+      val packetLength: Int
+      val packetType: Int
+      val errorCode: Int
+      val errorMessage: ByteArray
+
+      // try to get bytes
+      try {
+        packetLength = byteBuffer.int
+        packetType = byteBuffer.int
+        errorCode = byteBuffer.int
+        errorMessage = ByteArray(byteBuffer.remaining())
+      } catch (e: BufferUnderflowException) {
+        throw MalformedPacket(ErrorCode.CodingError, "BufferUnderflowException")
       }
 
-      // read fields
-      val packetLength = packet.packetLength
-      val packetType = packet.packetType
-      val errorCode = packet.errorCode
-      val errorMessage = packet.errorMessage.toByteArray()
+      // msg len
+      val msgLen = packetLength - (
+        Int.SIZE_BYTES + Int.SIZE_BYTES + Int.SIZE_BYTES
+      )
 
-      // check packetType
+      // if not a valid message
+      if (errorMessage.size != msgLen) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Message Length")
+      }
+
+      // check the packet type
       if (packetType != PacketType.RequestFailed.value) {
-        throw IllegalArgumentException("Invalid PacketType value: $packetType")
+        throw NotThisPacket("Not Invalid Packet")
+      }
+
+      // check the error code
+      if (!allowedErrorCodes.contains(errorCode)) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid ErrorCode value: $errorCode")
       }
 
       // return InvalidPacket
-      return InvalidPacket(
-        packetLength,
-        packetType,
-        errorCode,
-        errorMessage
-      )
-    }
-
-    /**
-     * Convert Packet to ByteArray Big Endian
-     */
-    fun toByteArray(packet: InvalidPacket): ByteArray {
-      // create protobuf builder
-      val builder = InvalidrequestPacket.InvalidRequest.newBuilder()
-
-      // set fields
-      builder.packetLength = packet.packetLength
-      builder.packetType = packet.packetType
-      builder.errorCode = packet.errorCode
-      builder.errorMessage = ByteString.copyFrom(packet.errorMessage)
-
-      // return ByteArray
-      return builder.build().toByteArray()
+      return InvalidPacket(packetLength, packetType, errorCode, errorMessage)
     }
   }
 }

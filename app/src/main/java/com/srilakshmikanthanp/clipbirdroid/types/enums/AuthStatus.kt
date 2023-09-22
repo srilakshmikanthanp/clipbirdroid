@@ -10,6 +10,13 @@ enum class AuthStatus(val value: Int = 0x00) {
   AuthOkay(0x00), AuthFail(0x01);
 
   /**
+   * Convert to Byte
+   */
+  fun toInt(status: AuthStatus): Int {
+    return status.value
+  }
+
+  /**
    * Companion Object
    */
   companion object {
@@ -17,10 +24,6 @@ enum class AuthStatus(val value: Int = 0x00) {
         AuthOkay.value -> AuthOkay
         AuthFail.value -> AuthFail
         else -> throw IllegalArgumentException("Invalid AuthStatus value: $value")
-    }
-
-    fun toInt(status: AuthStatus): Int {
-      return status.value
     }
   }
 }

@@ -7,6 +7,13 @@ enum class ErrorCode(val value: Int = 0x00) {
   CodingError(0x00), InvalidPacket(0x01);
 
   /**
+   * Convert to Byte
+   */
+  fun toByte(status: ErrorCode): Int {
+    return status.value
+  }
+
+  /**
    * Companion Object
    */
   companion object {
@@ -14,10 +21,6 @@ enum class ErrorCode(val value: Int = 0x00) {
       InvalidPacket.value -> InvalidPacket
       InvalidPacket.value -> InvalidPacket
       else -> throw IllegalArgumentException("Invalid ErrorCode value: $value")
-    }
-
-    fun toByte(status: ErrorCode): Int {
-      return status.value
     }
   }
 }

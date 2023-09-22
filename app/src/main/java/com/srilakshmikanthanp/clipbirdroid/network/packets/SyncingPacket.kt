@@ -1,8 +1,5 @@
 package com.srilakshmikanthanp.clipbirdroid.network.packets
 
-import com.google.protobuf.ByteString
-import com.srilakshmikanthanp.clipbirdroid.Syncingpacket as SyncingPacketPacket
-
 /**
  * Packet Class for Syncing Packet
  */
@@ -97,6 +94,13 @@ class SyncingPacket(
   }
 
   /**
+   * Convert To Byte array Big Endian
+   */
+  fun toByteArray(syncingPacket: SyncingPacket): ByteArray {
+
+  }
+
+  /**
    * Companion Object
    */
   companion object {
@@ -104,49 +108,6 @@ class SyncingPacket(
      * Create Syncing Packet From ByteArray Big Endian
      */
     fun fromByteArray(byteArray: ByteArray): SyncingPacket {
-      // create the protobuf packet
-      val packet = SyncingPacketPacket.SyncingPacket.parseFrom(byteArray)
-
-      // if any error
-      if (!packet.isInitialized) {
-        throw IllegalArgumentException("Invalid Packet") // TODO change exception type
-      }
-
-      // read fields
-      val packetLength = packet.packetLength
-      val packetType = packet.packetType
-      val itemCount = packet.itemCount
-      val items = packet.itemsList.map { SyncingItem.fromProto(it) }.toTypedArray()
-
-      // check packetType
-      if (packetType != PacketType.SyncPacket.value) {
-        throw IllegalArgumentException("Invalid PacketType value: $packetType")
-      }
-
-      // return SyncingPacket
-      return SyncingPacket(
-        packetLength,
-        packetType,
-        itemCount,
-        items
-      )
-    }
-
-    /**
-     * Convert To Byte array Big Endian
-     */
-    fun toByteArray(syncingPacket: SyncingPacket): ByteArray {
-      // create protobuf builder
-      val packet = SyncingPacketPacket.SyncingPacket.newBuilder()
-
-      // set fields
-      packet.packetLength = syncingPacket.packetLength
-      packet.packetType = syncingPacket.packetType
-      packet.itemCount = syncingPacket.itemCount
-      packet.addAllItems(syncingPacket.items.map { SyncingItem.toProto(it) })
-
-      // return ByteArray
-      return packet.build().toByteArray()
     }
   }
 }
@@ -232,6 +193,13 @@ class SyncingItem(
   }
 
   /**
+   * Convert To Byte array Big Endian
+   */
+  fun toByteArray(syncingItem: SyncingItem): ByteArray {
+
+  }
+
+  /**
    * Companion Object
    */
   companion object {
@@ -239,80 +207,7 @@ class SyncingItem(
      * Create Syncing Item From ByteArray Big Endian
      */
     fun fromByteArray(byteArray: ByteArray): SyncingItem {
-      // create the protobuf packet
-      val item = SyncingPacketPacket.SyncingItem.parseFrom(byteArray)
 
-      // if any error
-      if (!item.isInitialized) {
-        throw IllegalArgumentException("Invalid Item") // TODO change exception type
-      }
-
-      // read fields
-      val mimeLength = item.mimeLength
-      val mimeType = item.mimeType.toByteArray()
-      val payloadLength = item.payloadLength
-      val payload = item.payload.toByteArray()
-
-      // return SyncingItem
-      return SyncingItem(
-        mimeLength,
-        mimeType,
-        payloadLength,
-        payload
-      )
-    }
-
-    /**
-     * Convert To Byte array Big Endian
-     */
-    fun toByteArray(syncingItem: SyncingItem): ByteArray {
-      // create protobuf builder
-      val item = SyncingPacketPacket.SyncingItem.newBuilder()
-
-      // set fields
-      item.mimeLength = syncingItem.mimeLength
-      item.mimeType = ByteString.copyFrom(syncingItem.mimeType)
-      item.payloadLength = syncingItem.payloadLength
-      item.payload = ByteString.copyFrom(syncingItem.payload)
-
-      // return ByteArray
-      return item.build().toByteArray()
-    }
-
-    /**
-     * Create Syncing Item From Proto Packet
-     */
-    fun fromProto(item: SyncingPacketPacket.SyncingItem): SyncingItem {
-      // read fields
-      val mimeLength = item.mimeLength
-      val mimeType = item.mimeType.toByteArray()
-      val payloadLength = item.payloadLength
-      val payload = item.payload.toByteArray()
-
-      // return SyncingItem
-      return SyncingItem(
-        mimeLength,
-        mimeType,
-        payloadLength,
-        payload
-      )
-    }
-
-    /**
-     * Convert To Proto Packet
-     */
-    fun toProto(syncingItem: SyncingItem): SyncingPacketPacket.SyncingItem {
-      // create protobuf builder
-      val item = SyncingPacketPacket.SyncingItem.newBuilder()
-
-      // set fields
-      item.mimeLength = syncingItem.mimeLength
-      item.mimeType = ByteString.copyFrom(syncingItem.mimeType)
-      item.payloadLength = syncingItem.payloadLength
-      item.payload = ByteString.copyFrom(syncingItem.payload)
-
-      // return ByteArray
-      return item.build()
     }
   }
 }

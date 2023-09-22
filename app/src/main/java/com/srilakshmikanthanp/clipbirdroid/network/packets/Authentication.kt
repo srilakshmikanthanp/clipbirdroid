@@ -1,7 +1,12 @@
 package com.srilakshmikanthanp.clipbirdroid.network.packets
 
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
-import com.srilakshmikanthanp.clipbirdroid.AuthenticationOuterClass as AuthenticationPacket
+import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
+import com.srilakshmikanthanp.clipbirdroid.types.except.MalformedPacket
+import com.srilakshmikanthanp.clipbirdroid.types.except.NotThisPacket
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Data Class Used for Authentication packet
@@ -73,6 +78,25 @@ class Authentication(
   }
 
   /**
+   * Convert To Byte array Big Endian
+   */
+  fun toByteArray(): ByteArray {
+    // Create ByteBuffer to serialize the Packet
+    val buffer = ByteBuffer.allocate(this.size())
+
+    // set order
+    buffer.order(ByteOrder.BIG_ENDIAN)
+
+    // put data
+    buffer.putInt(this.packetLength)
+    buffer.putInt(this.packetType)
+    buffer.putInt(this.authStatus)
+
+    // return ByteArray
+    return buffer.array()
+  }
+
+  /**
    * Companion Object
    */
   companion object {
@@ -80,46 +104,41 @@ class Authentication(
      * Create From byte array In BigEndian
      */
     fun fromByteArray(byteArray: ByteArray): Authentication {
-      // parse the byte array with google protobuf
-      val packet = AuthenticationPacket.Authentication.parseFrom(byteArray)
+      // allowed authStatus
+      val allowedAuthStatus = AuthStatus.values().map { it.value }
 
-      // if any error
-      if (!packet.isInitialized) {
-        throw IllegalArgumentException("Invalid Packet") // TODO change exception type
+      // Create ByteBuffer to deserialize the Packet
+      val buffer = ByteBuffer.wrap(byteArray)
+
+      // set order
+      buffer.order(ByteOrder.BIG_ENDIAN)
+
+      // get data
+      val packetLength: Int
+      val packetType:Int
+      val authStatus: Int
+
+      // trey to get bytes
+      try {
+        packetLength = buffer.int
+        packetType = buffer.int
+        authStatus = buffer.int
+      } catch (e: BufferUnderflowException) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
       }
 
-      // read fields
-      val packetLength = packet.packetLength
-      val packetType = packet.packetType
-      val authStatus = packet.status.number
-
-      // check packetType
+      // check the packet type
       if (packetType != PacketType.AuthStatus.value) {
-        throw IllegalArgumentException("Invalid PacketType value: $packetType")
+        throw NotThisPacket("Not Authentication Packet")
+      }
+
+      // check authStatus
+      if (!allowedAuthStatus.contains(authStatus)) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid AuthStatus value: $authStatus")
       }
 
       // return Authentication
-      return Authentication(
-        packetLength,
-        packetType,
-        authStatus
-      )
-    }
-
-    /**
-     * Convert To Byte array Big Endian
-     */
-    fun toByteArray(auth: Authentication): ByteArray {
-      // create protobuf builder
-      val packet = AuthenticationPacket.Authentication.newBuilder()
-
-      // set fields
-      packet.packetLength = auth.packetLength
-      packet.packetType = auth.packetType
-      packet.status = AuthenticationPacket.Authentication.AuthStatus.forNumber(auth.authStatus)
-
-      // return byte array
-      return packet.build().toByteArray()
+      return Authentication(packetLength, packetType, authStatus)
     }
   }
 }
