@@ -5,8 +5,7 @@ import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
 import org.junit.Test
 
 class InvalidPacketTest {
-  @Test
-  fun invalidPacketTest() {
+  @Test fun invalidPacketTest() {
     val packSend = InvalidPacket(ErrorCode.CodingError, "Testing Packet".toByteArray())
     val array = packSend.toByteArray()
     val packRecv = InvalidPacket.fromByteArray(array)

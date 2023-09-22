@@ -5,8 +5,7 @@ import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
 import org.junit.Test
 
 class AuthenticationTest {
-  @Test
-  fun authenticationTest() {
+  @Test fun authenticationTest() {
     val packSend: Authentication = Authentication(AuthStatus.AuthOkay)
     val array = packSend.toByteArray()
     val packRecv: Authentication = Authentication.fromByteArray(array)

@@ -5,9 +5,10 @@ import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import org.junit.Test
 
 class SyncingPacketTest {
-  @Test
-  fun syncingPacketTest() {
-    val syncingItem = SyncingItem("text/plain".toByteArray(), "Hello".toByteArray())
+  @Test fun syncingPacketTest() {
+    val mimeType = "text/plain"
+    val payload = "Hello"
+    val syncingItem = SyncingItem(mimeType.toByteArray(), payload.toByteArray())
     val items = Array<SyncingItem>(5) { syncingItem }
     val packSend = SyncingPacket(5, items)
     val array = packSend.toByteArray()
@@ -18,8 +19,8 @@ class SyncingPacketTest {
     assert(packRecv.getItemCount() == 5)
 
     for (item in packRecv.getItems()) {
-      assert(item.getMimeType().contentEquals("text/plain".toByteArray()))
-      assert(item.getPayload().contentEquals("Hello".toByteArray()))
+      assert(item.getMimeType().contentEquals(mimeType.toByteArray()))
+      assert(item.getPayload().contentEquals(payload.toByteArray()))
     }
   }
 }
