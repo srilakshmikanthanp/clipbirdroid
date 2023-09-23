@@ -47,28 +47,32 @@ class Clipboard(private val clipboard: ClipboardManager) {
   }
 
   /**
-   * Set the clipboard content
+   * @brief Set the clipboard content with the given contents
+   * @param contents List of Pair<String, ByteArray>
+   * first -> MIME Type, second -> Raw Data
    */
   fun setClipboardContent(contents: MutableList<Pair<String, ByteArray>>) {
     // create the clip data & description
-    val description = ClipDescription(null, Array<String>(contents.size) { contents[it].first });
+    val description = ClipDescription(null, Array(contents.size) { contents[it].first });
     val clipData = ClipData(description, null);
 
     // loop through the contents
     for (content in contents) {
-      if (content.first == this.MIME_TYPE_TEXT) {
-        clipData.addItem(ClipData.Item(content.second.toString()))
+      val (mimeType, rawData) = Pair(content.first, content.second)
+
+      if (mimeType == this.MIME_TYPE_TEXT) {
+        clipData.addItem(ClipData.Item(rawData.toString()))
       }
 
-      if (content.first == this.MIME_TYPE_COLOR) {
-        clipData.addItem(ClipData.Item(content.second.toString()))
+      if (mimeType == this.MIME_TYPE_COLOR) {
+        clipData.addItem(ClipData.Item(rawData.toString()))
       }
 
-      if (content.first == this.MIME_TYPE_HTML) {
-        clipData.addItem(ClipData.Item(content.second.toString()))
+      if (mimeType == this.MIME_TYPE_HTML) {
+        clipData.addItem(ClipData.Item(rawData.toString()))
       }
 
-      if (content.first == this.MIME_TYPE_PNG) {
+      if (mimeType == this.MIME_TYPE_PNG) {
 
       }
     }
@@ -85,7 +89,9 @@ class Clipboard(private val clipboard: ClipboardManager) {
   }
 
   /**
-   * Get the current clipboard content
+   * @brief Get the current clipboard content as a list of Pair<String, ByteArray>
+   * first -> MIME Type, second -> Raw Data
+   * @return MutableList<Pair<String, ByteArray>>
    */
   fun getClipboardContent(): MutableList<Pair<String, ByteArray>> {
     // check if the clipboard is empty if so return empty list
