@@ -55,7 +55,7 @@ fun appIssuesPage(): String {
  * @brief Get the MDns Service Name
  * @return string
  */
-fun mdnsServiceName(): String {
+fun appMdnsServiceName(): String {
   return Build.HOST
 }
 
@@ -64,7 +64,7 @@ fun mdnsServiceName(): String {
  *
  * @return string
  */
-fun mdnsServiceType(): String {
+fun appMdnsServiceType(): String {
   return "_clipbird._tcp"
 }
 

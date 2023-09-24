@@ -11,8 +11,8 @@ import java.nio.ByteOrder
  * Packet Class for Invalid Packet
  */
 class InvalidPacket(
-  @JvmField var errorCode: ErrorCode,
-  @JvmField var errorMessage: ByteArray
+  private var errorCode: ErrorCode,
+  private var errorMessage: ByteArray
 ) {
   // Packet Fields
   private var packetLength: Int

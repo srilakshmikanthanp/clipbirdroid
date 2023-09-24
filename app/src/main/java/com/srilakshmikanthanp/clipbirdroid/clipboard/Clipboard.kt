@@ -3,9 +3,17 @@ package com.srilakshmikanthanp.clipbirdroid.clipboard
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
-import com.srilakshmikanthanp.clipbirdroid.interfaces.ClipboardChangeListener
+import android.content.Context
 
-class Clipboard(private val clipboard: ClipboardManager) {
+class Clipboard(private val context: Context) {
+  /// clipboard Manager to manage the clipboard
+  private val clipboard: ClipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+  // Clipboard Change Listener
+  public interface ClipboardChangeListener {
+    fun onClipboardChange(content: MutableList<Pair<String, ByteArray>>)
+  }
+
   /// List of ClipboardChangeListener
   private val listeners: MutableList<ClipboardChangeListener> = mutableListOf()
 
