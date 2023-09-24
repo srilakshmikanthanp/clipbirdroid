@@ -32,7 +32,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/srilakshmikanthanp/clipbirdesk">
+  <a href="https://github.com/srilakshmikanthanp/clipbirdroid">
     <img src="assets/images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -40,9 +40,9 @@
   <p align="center">
     A Bird that syncs Your clipboard data between devices connected in a local network.
     <br />
-    <a href="https://github.com/srilakshmikanthanp/clipbirdesk/issues">Report Bug</a>
+    <a href="https://github.com/srilakshmikanthanp/clipbirdroid/issues">Report Bug</a>
     ·
-    <a href="https://github.com/srilakshmikanthanp/clipbirdesk/issues">Request Feature</a>
+    <a href="https://github.com/srilakshmikanthanp/clipbirdroid/issues">Request Feature</a>
   </p>
 </div>
 
@@ -69,7 +69,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Clipbird Software helps you to sync your clipboard data between devices connected to a local network. It is a cross-platform software that works on various platforms. It is free and open-source software that is licensed under the MIT License. It currently supports [`Windows`](https://github.com/srilakshmikanthanp/clipbirdesk), `Android`.
+Clipbird Software helps you to sync your clipboard data between devices connected to a local network. It is a cross-platform software that works on various platforms. It is free and open-source software that is licensed under the MIT License. It currently supports [`Windows`](https://github.com/srilakshmikanthanp/clipbirdroid), `Android`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -88,7 +88,7 @@ To Install Clipbird on your system, you can either download the installer from t
 
 ### Installing Clipbird on a Windows Platform
 
-Follow thw instructions on the [clipbirdroid](https://github.com/srilakshmikanthanp/clipbirdesk) repository to install Clipbird on your Windows system.
+Follow thw instructions on the [clipbirdroid](https://github.com/srilakshmikanthanp/clipbirdroid) repository to install Clipbird on your Windows system.
 
 ### Installing Clipbird on an Android Platform
 
@@ -99,7 +99,7 @@ It's in under development. we will update the instructions once it is ready.
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/srilakshmikanthanp/clipbirdesk/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/srilakshmikanthanp/clipbirdroid/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -131,7 +131,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information. Howev
 
 Sri Lakshmi Kanthan P - [@itsmekanth](https://twitter.com/itsmekanth) - <srilakshmikanthanp@gmail.com>
 
-Project Link: [https://github.com/srilakshmikanthanp/clipbirdesk](https://github.com/srilakshmikanthanp/clipbirdesk)
+Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://github.com/srilakshmikanthanp/clipbirdroid)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -152,11 +152,11 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdesk](https://github
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[forks-shield]: https://img.shields.io/github/forks/srilakshmikanthanp/clipbirdesk.svg?style=for-the-badge
-[forks-url]: https://github.com/srilakshmikanthanp/clipbirdesk/network/members
-[stars-shield]: https://img.shields.io/github/stars/srilakshmikanthanp/clipbirdesk.svg?style=for-the-badge
-[stars-url]: https://github.com/srilakshmikanthanp/clipbirdesk/stargazers
-[issues-shield]: https://img.shields.io/github/issues/srilakshmikanthanp/clipbirdesk.svg?style=for-the-badge
-[issues-url]: https://github.com/srilakshmikanthanp/clipbirdesk/issues
-[license-shield]: https://img.shields.io/github/license/srilakshmikanthanp/clipbirdesk.svg?style=for-the-badge
-[license-url]: https://github.com/srilakshmikanthanp/clipbirdesk/blob/master/LICENSE.txt
+[forks-shield]: https://img.shields.io/github/forks/srilakshmikanthanp/clipbirdroid.svg?style=for-the-badge
+[forks-url]: https://github.com/srilakshmikanthanp/clipbirdroid/network/members
+[stars-shield]: https://img.shields.io/github/stars/srilakshmikanthanp/clipbirdroid.svg?style=for-the-badge
+[stars-url]: https://github.com/srilakshmikanthanp/clipbirdroid/stargazers
+[issues-shield]: https://img.shields.io/github/issues/srilakshmikanthanp/clipbirdroid.svg?style=for-the-badge
+[issues-url]: https://github.com/srilakshmikanthanp/clipbirdroid/issues
+[license-shield]: https://img.shields.io/github/license/srilakshmikanthanp/clipbirdroid.svg?style=for-the-badge
+[license-url]: https://github.com/srilakshmikanthanp/clipbirdroid/blob/master/LICENSE.txt
