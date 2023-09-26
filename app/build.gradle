@@ -6,9 +6,9 @@ plugins {
 android {
   defaultConfig {
     buildConfigField "String", "APP_ISSUE", "\"https://github.com/srilakshmikanthanp/clipbirdroid/issues\""
+    buildConfigField "String", "APP_ORG", "\"srilakshmikanthanp\""
     buildConfigField "String", "APP_NAME", "\"ClipBird\""
     buildConfigField "String", "APP_HOME", "\"https://github.com/srilakshmikanthanp/clipbirdroid\""
-    buildConfigField "String", "APP_ORG", "\"srilakshmikanthanp\""
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     targetSdk 33
