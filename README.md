@@ -159,4 +159,4 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://githu
 [issues-shield]: https://img.shields.io/github/issues/srilakshmikanthanp/clipbirdroid.svg?style=for-the-badge
 [issues-url]: https://github.com/srilakshmikanthanp/clipbirdroid/issues
 [license-shield]: https://img.shields.io/github/license/srilakshmikanthanp/clipbirdroid.svg?style=for-the-badge
-[license-url]: https://github.com/srilakshmikanthanp/clipbirdroid/blob/master/LICENSE
+[license-url]: https://github.com/srilakshmikanthanp/clipbirdroid/blob/main/LICENSE.txt
