@@ -76,6 +76,7 @@ Clipbird Software helps you to sync your clipboard data between devices connecte
 ### Built With
 
 * Android
+* Kotlin
 * BouncyCastle
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -138,6 +139,7 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://githu
 ## Acknowledgments
 
 * [Android](https://www.android.com/)
+* [Kotlin](https://kotlinlang.org/)
 * [BouncyCastle](https://www.bouncycastle.org/)
 
 <!-- Contributors -->
