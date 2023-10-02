@@ -87,7 +87,7 @@ To Install Clipbird on your system, you can either download the installer from t
 
 ### Installing Clipbird on a Windows Platform
 
-Follow thw instructions on the [clipbirdroid](https://github.com/srilakshmikanthanp/clipbirdroid) repository to install Clipbird on your Windows system.
+Follow thw instructions on the [clipbirdesk](https://github.com/srilakshmikanthanp/clipbirdesk) repository to install Clipbird on your Windows system.
 
 ### Installing Clipbird on an Android Platform
 
