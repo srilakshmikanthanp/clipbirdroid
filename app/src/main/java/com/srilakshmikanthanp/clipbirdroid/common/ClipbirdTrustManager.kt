@@ -19,4 +19,9 @@ class ClipbirdTrustManager : X509TrustManager {
   override fun getAcceptedIssuers(): Array<X509Certificate> {
     return arrayOf()
   }
+
+  // Instance of ClipbirdTrustManager
+  companion object {
+    val instance = ClipbirdTrustManager()
+  }
 }

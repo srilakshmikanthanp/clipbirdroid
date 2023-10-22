@@ -15,8 +15,8 @@ class Register(private val context: Context) : RegistrationListener {
 
   // callbacks for service discovery events.
   public interface RegisterListener {
-    fun onServiceRegistered()
     fun onServiceUnregistered()
+    fun onServiceRegistered()
   }
 
   // List of listeners that will be notified of browser events.
@@ -72,18 +72,14 @@ class Register(private val context: Context) : RegistrationListener {
    * @brief called when the service is registered
    */
   override fun onServiceRegistered(p0: NsdServiceInfo?) {
-    for (listener in listeners) {
-      listener.onServiceRegistered()
-    }
+    for (listener in listeners) listener.onServiceRegistered()
   }
 
   /**
    * @brief called when the service is unregistered
    */
   override fun onServiceUnregistered(p0: NsdServiceInfo?) {
-    for (listener in listeners) {
-      listener.onServiceUnregistered()
-    }
+    for (listener in listeners) listener.onServiceUnregistered()
   }
 
   /**

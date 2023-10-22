@@ -14,6 +14,13 @@ import java.nio.ByteOrder
 class Authentication(
   private var authStatus: AuthStatus
 ) {
+  /**
+   * Allowed packet Types
+   */
+  enum class PacketType(val value: Int) {
+    AuthStatus(0x01),
+  }
+
   // Private Fields
   private var packetType: PacketType
   private var packetLength: Int
@@ -22,13 +29,6 @@ class Authentication(
   init {
     this.packetType = PacketType.AuthStatus
     this.packetLength = this.size()
-  }
-
-  /**
-   * Allowed packet Types
-   */
-  enum class PacketType(val value: Int) {
-    AuthStatus(0x01),
   }
 
   /**
@@ -118,10 +118,10 @@ class Authentication(
 
       // get data
       val packetLength: Int
-      val packetType:Int
+      val packetType: Int
       val authStatus: Int
 
-      // trey to get bytes
+      // try to get bytes
       try {
         packetLength = buffer.int
         packetType = buffer.int

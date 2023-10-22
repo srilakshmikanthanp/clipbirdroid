@@ -78,6 +78,7 @@ Clipbird Software helps you to sync your clipboard data between devices connecte
 * Android
 * Kotlin
 * BouncyCastle
+* Netty
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -141,6 +142,7 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://githu
 * [Android](https://www.android.com/)
 * [Kotlin](https://kotlinlang.org/)
 * [BouncyCastle](https://www.bouncycastle.org/)
+* [Netty](https://netty.io/)
 
 <!-- Contributors -->
 ## Contributors
