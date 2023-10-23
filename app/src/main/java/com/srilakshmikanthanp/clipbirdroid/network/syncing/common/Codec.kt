@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.network.syncing
+package com.srilakshmikanthanp.clipbirdroid.network.syncing.common
 
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
