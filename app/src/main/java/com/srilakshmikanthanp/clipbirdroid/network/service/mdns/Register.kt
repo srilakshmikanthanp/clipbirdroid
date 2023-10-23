@@ -9,12 +9,17 @@ import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
 
-class Register(private val context: Context) : RegistrationListener {
+class Register(context: Context) : RegistrationListener {
   // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
+  // TAG for logging.
+  companion object {
+    private val TAG = "Register"
+  }
+
   // callbacks for service discovery events.
-  public interface RegisterListener {
+  interface RegisterListener {
     fun onServiceUnregistered()
     fun onServiceRegistered()
   }
@@ -25,14 +30,14 @@ class Register(private val context: Context) : RegistrationListener {
   /**
    * Adds a listener to the browser.
    */
-  fun addListener(listener: RegisterListener) {
+  fun addRegisterListener(listener: RegisterListener) {
     listeners.add(listener)
   }
 
   /**
    * Removes a listener from the browser.
    */
-  fun removeListener(listener: RegisterListener) {
+  fun removeRegisterListener(listener: RegisterListener) {
     listeners.remove(listener)
   }
 
@@ -65,7 +70,7 @@ class Register(private val context: Context) : RegistrationListener {
    * @brief called when the unregistering service Failed
    */
   override fun onUnregistrationFailed(p0: NsdServiceInfo?, p1: Int) {
-    Log.e("Unregister", "Failed to unregister service: $p0")
+    Log.e(TAG, "Failed to unregister service: $p0")
   }
 
   /**
@@ -86,6 +91,6 @@ class Register(private val context: Context) : RegistrationListener {
    * @brief called when the service registration is Failed
    */
   override fun onRegistrationFailed(p0: NsdServiceInfo?, p1: Int) {
-    Log.e("Register", "Failed to register service: $p0")
+    Log.e(TAG, "Failed to register service: $p0")
   }
 }

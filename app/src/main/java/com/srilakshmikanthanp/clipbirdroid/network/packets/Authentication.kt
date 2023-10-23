@@ -11,9 +11,7 @@ import java.nio.ByteOrder
 /**
  * Data Class Used for Authentication packet
  */
-class Authentication(
-  private var authStatus: AuthStatus
-) {
+class Authentication(private var authStatus: AuthStatus) {
   /**
    * Allowed packet Types
    */
@@ -125,7 +123,6 @@ class Authentication(
       try {
         packetLength = buffer.int
         packetType = buffer.int
-        authStatus = buffer.int
       } catch (e: BufferUnderflowException) {
         throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
       }
@@ -135,21 +132,21 @@ class Authentication(
         throw NotThisPacket("Not Authentication Packet")
       }
 
+      // try to get bytes
+      try {
+        authStatus = buffer.int
+      } catch (e: BufferUnderflowException) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
+      }
+
       // check authStatus
       if (!allowedAuthStatus.contains(authStatus)) {
         throw MalformedPacket(ErrorCode.CodingError, "Invalid AuthStatus value: $authStatus")
       }
 
-      // create Authentication
-      val packet = Authentication(AuthStatus.fromInt(authStatus))
-
-      // check the packet length
-      if (packetLength != packet.packetLength) {
-        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
-      }
 
       // done return
-      return packet
+      return Authentication(AuthStatus.fromInt(authStatus))
     }
   }
 }

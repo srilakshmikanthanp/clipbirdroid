@@ -2,6 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.network.packets
 
 import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
 import com.srilakshmikanthanp.clipbirdroid.types.except.MalformedPacket
+import com.srilakshmikanthanp.clipbirdroid.types.except.NotThisPacket
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -10,10 +11,7 @@ import java.nio.ByteOrder
 /**
  * Class For Syncing Item
  */
-class SyncingItem(
-  private var mimeType: ByteArray,
-  private var payload: ByteArray
-) {
+class SyncingItem(private var mimeType: ByteArray, private var payload: ByteArray) {
   // packet fields
   private var mimeLength: Int
   private var payloadLength: Int
@@ -168,10 +166,7 @@ class SyncingItem(
 /**
  * Packet Class for Syncing Packet
  */
-class SyncingPacket(
-  private var itemCount: Int,
-  private var items: Array<SyncingItem>
-) {
+class SyncingPacket(private var itemCount: Int, private var items: Array<SyncingItem>) {
   // packet fields
   private var packetType: PacketType
   private var packetLength: Int
@@ -309,27 +304,25 @@ class SyncingPacket(
       try {
         packetLength = byteBuffer.int
         packetType = byteBuffer.int
-        itemCount = byteBuffer.int
-        items = Array(itemCount) { SyncingItem.fromByteBuffer(byteBuffer) }
       } catch (e: BufferUnderflowException) {
-        throw MalformedPacket(ErrorCode.CodingError, "Invalid Syncing Packet")
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
       }
 
       // check the packet type
       if (packetType != PacketType.SyncPacket.value) {
-        throw MalformedPacket(ErrorCode.CodingError, "Invalid PacketType value: $packetType")
+        throw NotThisPacket("Not Syncing Packet")
       }
 
-      // create the SyncingPacket
-      val packet = SyncingPacket(itemCount, items)
-
-      // check length
-      if (packet.packetLength != packetLength) {
-        throw MalformedPacket(ErrorCode.CodingError, "Length Does match")
+      // try to get the fields
+      try {
+        itemCount = byteBuffer.int
+        items = Array(itemCount) { SyncingItem.fromByteBuffer(byteBuffer) }
+      } catch (e: BufferUnderflowException) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
       }
 
       // done return
-      return packet
+      return SyncingPacket(itemCount, items)
     }
   }
 }

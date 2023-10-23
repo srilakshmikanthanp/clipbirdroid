@@ -10,10 +10,7 @@ import java.nio.ByteOrder
 /**
  * Packet Class for Invalid Packet
  */
-class InvalidPacket(
-  private var errorCode: ErrorCode,
-  private var errorMessage: ByteArray
-) {
+class InvalidPacket(private var errorCode: ErrorCode, private var errorMessage: ByteArray) {
   // Packet Fields
   private var packetLength: Int
   private var packetType: PacketType
@@ -141,21 +138,8 @@ class InvalidPacket(
       try {
         packetLength = byteBuffer.int
         packetType = byteBuffer.int
-        errorCode = byteBuffer.int
-        errorMessage = ByteArray(byteBuffer.remaining())
-        byteBuffer.get(errorMessage)
       } catch (e: BufferUnderflowException) {
-        throw MalformedPacket(ErrorCode.CodingError, "BufferUnderflowException")
-      }
-
-      // msg len
-      val msgLen = packetLength - (
-        Int.SIZE_BYTES + Int.SIZE_BYTES + Int.SIZE_BYTES
-      )
-
-      // if not a valid message
-      if (errorMessage.size != msgLen) {
-        throw MalformedPacket(ErrorCode.CodingError, "Invalid Message Length")
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
       }
 
       // check the packet type
@@ -163,21 +147,27 @@ class InvalidPacket(
         throw NotThisPacket("Not Invalid Packet")
       }
 
+      // try to get bytes
+      try {
+        errorCode = byteBuffer.int
+        errorMessage = ByteArray(byteBuffer.remaining())
+        byteBuffer.get(errorMessage)
+      } catch (e: BufferUnderflowException) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
+      }
+
+      // if not a valid message
+      if (errorMessage.size != packetLength - (Int.SIZE_BYTES * 3)) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Message Length")
+      }
+
       // check the error code
       if (!allowedErrorCodes.contains(errorCode)) {
         throw MalformedPacket(ErrorCode.CodingError, "Invalid ErrorCode value: $errorCode")
       }
 
-      // return InvalidPacket
-      val packet = InvalidPacket(ErrorCode.fromInt(errorCode), errorMessage)
-
-      // check length
-      if (packet.size() != packetLength) {
-        throw MalformedPacket(ErrorCode.CodingError, "Length Does match")
-      }
-
       // done return
-      return packet
+      return InvalidPacket(ErrorCode.fromInt(errorCode), errorMessage)
     }
   }
 }
