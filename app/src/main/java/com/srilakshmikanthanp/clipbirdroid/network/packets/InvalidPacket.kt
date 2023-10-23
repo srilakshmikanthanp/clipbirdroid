@@ -143,6 +143,7 @@ class InvalidPacket(
         packetType = byteBuffer.int
         errorCode = byteBuffer.int
         errorMessage = ByteArray(byteBuffer.remaining())
+        byteBuffer.get(errorMessage)
       } catch (e: BufferUnderflowException) {
         throw MalformedPacket(ErrorCode.CodingError, "BufferUnderflowException")
       }
@@ -168,7 +169,7 @@ class InvalidPacket(
       }
 
       // return InvalidPacket
-      val packet = InvalidPacket(ErrorCode.fromByte(errorCode), errorMessage)
+      val packet = InvalidPacket(ErrorCode.fromInt(errorCode), errorMessage)
 
       // check length
       if (packet.size() != packetLength) {

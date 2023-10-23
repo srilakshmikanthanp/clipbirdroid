@@ -6,8 +6,7 @@ import org.junit.Test
 
 class SyncingPacketTest {
   @Test fun syncingPacketTest() {
-    val mimeType = "text/plain"
-    val payload = "Hello"
+    val (mimeType, payload) = Pair("text/plain", "Hello")
     val syncingItem = SyncingItem(mimeType.toByteArray(), payload.toByteArray())
     val items = Array<SyncingItem>(5) { syncingItem }
     val packSend = SyncingPacket(5, items)

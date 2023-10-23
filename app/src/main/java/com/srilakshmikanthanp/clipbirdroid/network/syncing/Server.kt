@@ -1,7 +1,10 @@
 package com.srilakshmikanthanp.clipbirdroid.network.syncing
 
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import io.netty.bootstrap.ServerBootstrap
+import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.handler.ssl.SslContext
+import java.security.cert.X509Certificate
 
 /**
  * Client State Change Handler
@@ -39,6 +42,13 @@ interface OnClientListChangeHandler {
 }
 
 /**
+ * Class for Handling Events
+ */
+class ServerInboundHandler : ChannelInboundHandlerAdapter() {
+
+}
+
+/**
  * A SSl Server Using Netty as a Backend
  */
 class Server {
@@ -58,10 +68,93 @@ class Server {
   private val clientListChangeHandlers = mutableListOf<OnClientListChangeHandler>()
 
   // Ssl Context
-  var sslContext: SslContext? = null
+  private var sslContext: SslContext? = null
 
   // Netty's SSL server Instance
+  private var sslServer: ServerBootstrap? = null
 
+  /**
+   * Start the Server
+   */
+  fun startServer() {
+
+  }
+
+  /**
+   * Stop the Server
+   */
+  fun stopServer() {
+
+  }
+
+  /**
+   * Set the SSL certificate and key
+   */
+  fun setSslContext(sslContext: SslContext) {
+    this.sslContext = sslContext
+  }
+
+  /**
+   * Get the SSL Context
+   */
+  fun getSslContext(): SslContext? {
+    return sslContext
+  }
+
+  /**
+   * Sync the Items
+   */
+  fun syncItems(items: List<Pair<String, ByteArray>>) {
+  }
+
+  /**
+   * Get the List of Clients
+   */
+  fun getClients(): List<Device> {
+    return listOf()
+  }
+
+  /**
+   * Disconnect the client from the server and delete the client
+   */
+  fun disconnectClient(client: Device) {
+
+  }
+
+  /**
+   * Disconnect the all the clients from the server
+   */
+  fun disconnectAllClients() {
+
+  }
+
+  /**
+   * Get the Server Details
+   */
+  fun getServerInfo(): Device {
+    TODO("Not yet implemented")
+  }
+
+  /**
+   * Get the Client Certificate
+   */
+  fun getClientCertificate(): X509Certificate {
+    TODO("Not yet implemented")
+  }
+
+  /**
+   * The function that is called when the client is authenticated
+   */
+  fun onClientAuthenticated(client: Device) {
+  }
+
+
+  /**
+   * The function that is called when the client is not authenticated
+   */
+  fun onClientNotAuthenticated(client: Device) {
+
+  }
 
   /**
    * Add Client State Change Handler
