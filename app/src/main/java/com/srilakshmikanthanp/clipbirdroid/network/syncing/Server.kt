@@ -51,8 +51,29 @@ fun interface OnClientListChangeHandler {
  * A SSl Server Using Netty as a Backend
  */
 class Server(private val context: Context) {
+  // Client State Change Handlers
+  private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
+
+  // Server State Change Handlers
+  private val serverStateChangeHandlers = mutableListOf<OnServerStateChangeHandler>()
+
+  // Auth Request Handlers
+  private val authRequestHandlers = mutableListOf<OnAuthRequestHandler>()
+
+  // Sync Request Handlers
+  private val syncRequestHandlers = mutableListOf<OnSyncRequestHandler>()
+
+  // Client List Change Handlers
+  private val clientListChangeHandlers = mutableListOf<OnClientListChangeHandler>()
+
+  // List of clients unauthenticated
+  private val unauthenticatedClients = mutableListOf<ChannelHandlerContext>()
+
+  // List of clients authenticated
+  private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
+
   // InBound Handler for the Server (Inner Class)
-  inner class InBoundHandler : ChannelInboundHandlerAdapter() {
+  private inner class InBoundHandler : ChannelInboundHandlerAdapter() {
     // Called when the channel can be Read
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
       // is the message is instance of SyncingPacket
@@ -78,10 +99,8 @@ class Server(private val context: Context) {
     }
   }
 
-  /**
-   * Register Listener for the Server (Inner Class)
-   */
-  inner class RegisterListener : Register.RegisterListener {
+  // Register Listener for the Server (Inner Class)
+  private inner class RegisterListener : Register.RegisterListener {
     // called when the service unregistered
     override fun onServiceUnregistered() {
       notifyServerStateChangeHandlers(false)
@@ -92,27 +111,6 @@ class Server(private val context: Context) {
       notifyServerStateChangeHandlers(true)
     }
   }
-
-  // Client State Change Handlers
-  private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
-
-  // Server State Change Handlers
-  private val serverStateChangeHandlers = mutableListOf<OnServerStateChangeHandler>()
-
-  // Auth Request Handlers
-  private val authRequestHandlers = mutableListOf<OnAuthRequestHandler>()
-
-  // Sync Request Handlers
-  private val syncRequestHandlers = mutableListOf<OnSyncRequestHandler>()
-
-  // Client List Change Handlers
-  private val clientListChangeHandlers = mutableListOf<OnClientListChangeHandler>()
-
-  // List of clients unauthenticated
-  private val unauthenticatedClients = mutableListOf<ChannelHandlerContext>()
-
-  // List of clients authenticated
-  private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
 
   // Register Listener for the Server
   private val registerListener = RegisterListener()
