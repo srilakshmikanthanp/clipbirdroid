@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.network.syncing
 
 import android.content.Context
+import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Register
@@ -8,7 +9,7 @@ import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.channel.ChannelInboundHandler
 import io.netty.handler.ssl.SslContext
 import java.security.cert.X509Certificate
 
@@ -50,7 +51,7 @@ fun interface OnClientListChangeHandler {
 /**
  * A SSl Server Using Netty as a Backend
  */
-class Server(private val context: Context) {
+class Server(private val context: Context) : ChannelInboundHandler, Register.RegisterListener {
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
 
@@ -72,54 +73,8 @@ class Server(private val context: Context) {
   // List of clients authenticated
   private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
 
-  // InBound Handler for the Server (Inner Class)
-  private inner class InBoundHandler : ChannelInboundHandlerAdapter() {
-    // Called when the channel can be Read
-    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-      // is the message is instance of SyncingPacket
-      when (msg) {
-        is SyncingPacket -> return onSyncingPacket(ctx, msg)
-      }
-
-      // Unknown packet
-      val err = "Unknown Packet".toByteArray()
-      val code = ErrorCode.InvalidPacket
-      val packet = InvalidPacket(code, err)
-      ctx.writeAndFlush(packet)
-    }
-
-    // Called When the channel is Active
-    override fun channelActive(ctx: ChannelHandlerContext) {
-      TODO()
-    }
-
-    // Called When the channel is InActive
-    override fun channelInactive(ctx: ChannelHandlerContext) {
-      TODO()
-    }
-  }
-
-  // Register Listener for the Server (Inner Class)
-  private inner class RegisterListener : Register.RegisterListener {
-    // called when the service unregistered
-    override fun onServiceUnregistered() {
-      notifyServerStateChangeHandlers(false)
-    }
-
-    // called when the service registered
-    override fun onServiceRegistered() {
-      notifyServerStateChangeHandlers(true)
-    }
-  }
-
-  // Register Listener for the Server
-  private val registerListener = RegisterListener()
-
   // Register instance
   private val register = Register(context)
-
-  // InBound Handler for the Server
-  private val inBoundHandler = InBoundHandler()
 
   // Ssl Context for the Server
   private var sslContext: SslContext? = null
@@ -136,7 +91,7 @@ class Server(private val context: Context) {
    * Initialize the Server
    */
   init {
-    register.addRegisterListener(registerListener)
+    register.addRegisterListener(this)
   }
 
   /**
@@ -351,5 +306,116 @@ class Server(private val context: Context) {
    */
   fun removeClientListChangeHandler(handler: OnClientListChangeHandler) {
     clientListChangeHandlers.remove(handler)
+  }
+
+  /**
+   * Gets called after the ChannelHandler was added to the actual
+   * context and it's ready to handle events.
+   */
+  override fun handlerAdded(ctx: ChannelHandlerContext?) {
+    // Do Nothing
+  }
+
+  /**
+   * Gets called after the ChannelHandler was removed from the
+   * actual context and it doesn't handle events anymore.
+   */
+  override fun handlerRemoved(ctx: ChannelHandlerContext?) {
+    // Do Nothing
+  }
+
+  /**
+   * Gets called if a [Throwable] was thrown.
+   */
+  override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+    Log.e(TAG, "Exception Caught", cause)
+    ctx.close()
+  }
+
+  /**
+   * The Channel of the ChannelHandlerContext was registered
+   * with its EventLoop
+   */
+  override fun channelRegistered(ctx: ChannelHandlerContext?) {
+    // Do Nothing
+  }
+
+  /**
+   * The Channel of the ChannelHandlerContext was
+   * unregistered from its EventLoop
+   */
+  override fun channelUnregistered(ctx: ChannelHandlerContext?) {
+    // Do Nothing
+  }
+
+  /**
+   * The Channel of the ChannelHandlerContext is now active
+   */
+  override fun channelActive(ctx: ChannelHandlerContext?) {
+    TODO("Not yet implemented")
+  }
+
+  /**
+   * The Channel of the ChannelHandlerContext was registered
+   * is now inactive and reached its end of lifetime.
+   */
+  override fun channelInactive(ctx: ChannelHandlerContext?) {
+    TODO("Not yet implemented")
+  }
+
+  /**
+   * Invoked when the current Channel has read a message from the peer.
+   */
+  override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+    // is the message is instance of SyncingPacket
+    when (msg) {
+      is SyncingPacket -> return onSyncingPacket(ctx, msg)
+    }
+
+    // Unknown packet
+    val err = "Unknown Packet".toByteArray()
+    val code = ErrorCode.InvalidPacket
+    val packet = InvalidPacket(code, err)
+    ctx.writeAndFlush(packet)
+  }
+
+  /**
+   * Invoked when the last message read by the current read
+   * operation has been consumed by channelRead. If
+   * ChannelOption.AUTO_READ is off, no further attempt to
+   * read an inbound data from the current Channel will be
+   * made until ChannelHandlerContext.read is called.
+   */
+  override fun channelReadComplete(ctx: ChannelHandlerContext?) {
+    // Do Nothing
+  }
+
+  /**
+   * Gets called if an user event was triggered.
+   */
+  override fun userEventTriggered(ctx: ChannelHandlerContext?, evt: Any?) {
+    // Do Nothing
+  }
+
+  /**
+   * Gets called once the writable state of a Channel changed.
+   * You can check the state with Channel.isWritable
+   */
+  override fun channelWritabilityChanged(ctx: ChannelHandlerContext?) {
+    // Do Nothing
+  }
+
+  /**
+   * Gets called if NSD service is un registered
+   */
+  override fun onServiceUnregistered() {
+    notifyServerStateChangeHandlers(false)
+  }
+
+  /**
+   * Gets called if NSD service is registered
+   */
+  override fun onServiceRegistered() {
+    notifyServerStateChangeHandlers(true)
   }
 }
