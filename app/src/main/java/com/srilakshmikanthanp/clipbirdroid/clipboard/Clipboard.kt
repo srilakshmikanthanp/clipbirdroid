@@ -5,14 +5,19 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 
+/**
+ * Clipboard Change Listener Interface
+ */
+fun interface ClipboardChangeListener {
+  fun onClipboardChange(content: MutableList<Pair<String, ByteArray>>)
+}
+
+/**
+ * Class For Managing the Clipboard
+ */
 class Clipboard(private val context: Context) {
   /// clipboard Manager to manage the clipboard
   private val clipboard: ClipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-
-  // Clipboard Change Listener
-  public interface ClipboardChangeListener {
-    fun onClipboardChange(content: MutableList<Pair<String, ByteArray>>)
-  }
 
   /// List of ClipboardChangeListener
   private val listeners: MutableList<ClipboardChangeListener> = mutableListOf()
@@ -81,7 +86,7 @@ class Clipboard(private val context: Context) {
       }
 
       if (mimeType == this.MIME_TYPE_PNG) {
-
+        // TODO: Implement
       }
     }
 

@@ -4,7 +4,6 @@ import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Register
-import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Register.RegisterListener
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
 import io.netty.bootstrap.ServerBootstrap
@@ -16,42 +15,84 @@ import java.security.cert.X509Certificate
 /**
  * Client State Change Handler
  */
-interface OnClientStateChangeHandler {
+fun interface OnClientStateChangeHandler {
   fun onClientStateChanged(device: Device, connected: Boolean)
 }
 
 /**
  * Server State Change Handler
  */
-interface OnServerStateChangeHandler {
+fun interface OnServerStateChangeHandler {
   fun onServerStateChanged(started: Boolean)
 }
 
 /**
  * Auth Request Handler
  */
-interface OnAuthRequestHandler {
+fun interface OnAuthRequestHandler {
   fun onAuthRequest(client: Device)
 }
 
 /**
  * Sync Request Handler
  */
-interface OnSyncRequestHandler {
+fun interface OnSyncRequestHandler {
   fun onSyncRequest(items: List<Pair<String, ByteArray>>)
 }
 
 /**
  * Client List Change Handler
  */
-interface OnClientListChangeHandler {
+fun interface OnClientListChangeHandler {
   fun onClientListChanged(clients: List<Device>)
 }
 
 /**
  * A SSl Server Using Netty as a Backend
  */
-class Server(private val context: Context) : ChannelInboundHandlerAdapter(), RegisterListener {
+class Server(private val context: Context) {
+  // InBound Handler for the Server (Inner Class)
+  inner class InBoundHandler : ChannelInboundHandlerAdapter() {
+    // Called when the channel can be Read
+    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+      // is the message is instance of SyncingPacket
+      when (msg) {
+        is SyncingPacket -> return onSyncingPacket(ctx, msg)
+      }
+
+      // Unknown packet
+      val err = "Unknown Packet".toByteArray()
+      val code = ErrorCode.InvalidPacket
+      val packet = InvalidPacket(code, err)
+      ctx.writeAndFlush(packet)
+    }
+
+    // Called When the channel is Active
+    override fun channelActive(ctx: ChannelHandlerContext) {
+      TODO()
+    }
+
+    // Called When the channel is InActive
+    override fun channelInactive(ctx: ChannelHandlerContext) {
+      TODO()
+    }
+  }
+
+  /**
+   * Register Listener for the Server (Inner Class)
+   */
+  inner class RegisterListener : Register.RegisterListener {
+    // called when the service unregistered
+    override fun onServiceUnregistered() {
+      notifyServerStateChangeHandlers(false)
+    }
+
+    // called when the service registered
+    override fun onServiceRegistered() {
+      notifyServerStateChangeHandlers(true)
+    }
+  }
+
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
 
@@ -67,14 +108,20 @@ class Server(private val context: Context) : ChannelInboundHandlerAdapter(), Reg
   // Client List Change Handlers
   private val clientListChangeHandlers = mutableListOf<OnClientListChangeHandler>()
 
-  // Register instance
-  private val register = Register(context)
-
   // List of clients unauthenticated
   private val unauthenticatedClients = mutableListOf<ChannelHandlerContext>()
 
   // List of clients authenticated
   private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
+
+  // Register Listener for the Server
+  private val registerListener = RegisterListener()
+
+  // Register instance
+  private val register = Register(context)
+
+  // InBound Handler for the Server
+  private val inBoundHandler = InBoundHandler()
 
   // Ssl Context for the Server
   private var sslContext: SslContext? = null
@@ -84,7 +131,14 @@ class Server(private val context: Context) : ChannelInboundHandlerAdapter(), Reg
 
   // TAG for logging
   companion object {
-    private val TAG = "Server"
+    val TAG = "Server"
+  }
+
+  /**
+   * Initialize the Server
+   */
+  init {
+    register.addRegisterListener(registerListener)
   }
 
   /**
@@ -146,13 +200,6 @@ class Server(private val context: Context) : ChannelInboundHandlerAdapter(), Reg
 
     // notify the sync handlers
     notifySyncRequestHandlers(items)
-  }
-
-  /**
-   * Initialize the Server
-   */
-  init {
-    register.addRegisterListener(this)
   }
 
   /**
@@ -306,36 +353,5 @@ class Server(private val context: Context) : ChannelInboundHandlerAdapter(), Reg
    */
   fun removeClientListChangeHandler(handler: OnClientListChangeHandler) {
     clientListChangeHandlers.remove(handler)
-  }
-
-  /**
-   * called when the service unregistered
-   */
-  override fun onServiceUnregistered() {
-    this.notifyServerStateChangeHandlers(false)
-  }
-
-  /**
-   * called when the service registered
-   */
-  override fun onServiceRegistered() {
-    this.notifyServerStateChangeHandlers(true)
-  }
-
-  /**
-   * Called when the channel can be Read
-   */
-  override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-    // is the message is instance of SyncingPacket
-    if (msg is SyncingPacket) {
-      onSyncingPacket(ctx, msg)
-      return
-    }
-
-    // Unknown packet
-    val code = ErrorCode.InvalidPacket
-    val err = "Unknown Packet".toByteArray()
-    val packet = InvalidPacket(code, err)
-    ctx.writeAndFlush(packet)
   }
 }
