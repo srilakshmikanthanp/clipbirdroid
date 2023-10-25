@@ -3,6 +3,7 @@
   xmlns:tools="http://schemas.android.com/tools">
 
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
   <application
     android:allowBackup="true"
     android:dataExtractionRules="@xml/data_extraction_rules"
@@ -19,8 +20,9 @@
       android:exported="true"
       android:theme="@style/Theme.Clipbird">
       <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
+        <action android:name="android.intent.action.SEND" />
         <category android:name="android.intent.category.LAUNCHER" />
+        <action android:name="android.intent.action.MAIN" />
       </intent-filter>
     </activity>
 
@@ -29,8 +31,7 @@
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity" />
 
-    <service android:name=".ui.gui.MyService"/>
-
+    <service android:name=".ui.gui.MyService" />
   </application>
 
 </manifest>

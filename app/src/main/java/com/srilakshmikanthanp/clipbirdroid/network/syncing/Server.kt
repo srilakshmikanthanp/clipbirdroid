@@ -5,12 +5,23 @@ import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Register
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
 import io.netty.bootstrap.ServerBootstrap
+import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandler
-import io.netty.handler.ssl.SslContext
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.SocketChannel
+import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.handler.ssl.SslContextBuilder
+import java.net.InetSocketAddress
+import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
 /**
@@ -73,25 +84,44 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   // List of clients authenticated
   private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
 
+  // Channel Initializer
+  inner class NewChannelInitializer : ChannelInitializer<SocketChannel>() {
+    override fun initChannel(ch: SocketChannel) {
+      // create SSL Context from cert and private key
+      val sslContext = SslContextBuilder.forServer(sslCert?.first, sslCert?.second).build()
+
+      // Add the SSL Handler
+      ch.pipeline().addLast(sslContext?.newHandler(ch.alloc()))
+
+      // Add the Packet Encoder
+      ch.pipeline().addLast(AuthenticationEncoder())
+
+      // Add the Packet Encoder
+      ch.pipeline().addLast(InvalidPacketEncoder())
+
+      // Add the Packet Decoder
+      ch.pipeline().addLast(PacketDecoder())
+
+      // Add the Packet Encoder
+      ch.pipeline().addLast(SyncingPacketEncoder())
+
+      // Add the Server Handler
+      ch.pipeline().addLast(this)
+    }
+  }
+
+  // Netty's SSL server Instance
+  private var sslServer: Channel? = null
+
   // Register instance
   private val register = Register(context)
 
   // Ssl Context for the Server
-  private var sslContext: SslContext? = null
-
-  // Netty's SSL server Instance
-  private var sslServer: ServerBootstrap? = null
+  private var sslCert: Pair<PrivateKey, X509Certificate>? = null
 
   // TAG for logging
   companion object {
     val TAG = "Server"
-  }
-
-  /**
-   * Initialize the Server
-   */
-  init {
-    register.addRegisterListener(this)
   }
 
   /**
@@ -140,6 +170,25 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
+   * Set Up the Server
+   */
+  private fun setUpServer(server: Channel?) {
+    // if the server is null
+    if (server == null) {
+      throw RuntimeException("Server Can't be SetUp")
+    }
+
+    // check for the non null assertion
+    this.sslServer = server
+
+    // Address
+    val addr = server.localAddress() as InetSocketAddress
+
+    // register the service
+    register.registerService(addr.port)
+  }
+
+  /**
    * On Syncing Packet Received
    */
   private fun onSyncingPacket(ctx: ChannelHandlerContext, m: SyncingPacket) {
@@ -156,31 +205,78 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
+   * Initialize the Server
+   */
+  init {
+    register.addRegisterListener(this)
+  }
+
+  /**
+   * Is Server Running
+   */
+  fun isServerRunning(): Boolean {
+    return sslServer != null && sslCert != null && sslServer?.isOpen == true
+  }
+
+  /**
    * Start the Server
    */
   fun startServer() {
+    // check for the non null assertion
+    if (this.isServerRunning()) {
+      throw RuntimeException("Server is already started Or SSL Context is not set")
+    }
 
+    // create the server
+    val workerGroup = NioEventLoopGroup()
+    val bossGroup = NioEventLoopGroup()
+
+    // create the server
+    val serverFuture = ServerBootstrap()
+      .channel(NioServerSocketChannel::class.java)
+      .group(bossGroup, workerGroup)
+      .childHandler(NewChannelInitializer())
+      .bind(0)
+
+    // On Bind Completed
+    serverFuture.addListener {
+      this.setUpServer(serverFuture.channel())
+    }
   }
 
   /**
    * Stop the Server
    */
   fun stopServer() {
+    // check for the non null assertion
+    if (!this.isServerRunning()) {
+      throw RuntimeException("Server is not started")
+    }
 
+    // close the server
+    val fut = sslServer?.closeFuture()
+
+    // Assign Null Value
+    this.sslServer = null
+
+    // Add Listener for complete
+    fut?.addListener {
+      register.unRegisterService()
+    }
   }
 
   /**
    * Set the SSL certificate and key
    */
-  fun setSslContext(sslContext: SslContext) {
-    this.sslContext = sslContext
+  fun setSslConfig(sslCert: Pair<PrivateKey, X509Certificate>) {
+    this.sslCert = sslCert
   }
 
   /**
    * Get the SSL Context
    */
-  fun getSslContext(): SslContext? {
-    return sslContext
+  fun getSslConfig(): Pair<PrivateKey, X509Certificate>? {
+    return sslCert
   }
 
   /**
@@ -214,13 +310,32 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Get the Server Details
    */
   fun getServerInfo(): Device {
-    TODO("Not yet implemented")
+    // if server is not running the throw error
+    if(!this.isServerRunning()) {
+      throw RuntimeException("Server is not started")
+    }
+
+    // Get the Required parameters
+    val address = sslServer?.localAddress() as InetSocketAddress?
+    val name = sslCert?.second?.subjectDN?.name
+
+    // if it is null
+    if(address == null || name == null) {
+      throw RuntimeException("Server is not started")
+    }
+
+    // Construct Device and Return
+    return Device(
+      ip    =  address.address,
+      port  =  address.port,
+      name  =  name
+    )
   }
 
   /**
    * Get the Client Certificate
    */
-  fun getClientCertificate(): X509Certificate {
+  fun getClientCertificate(client: Device): X509Certificate {
     TODO("Not yet implemented")
   }
 
@@ -230,12 +345,10 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   fun onClientAuthenticated(client: Device) {
   }
 
-
   /**
    * The function that is called when the client is not authenticated
    */
   fun onClientNotAuthenticated(client: Device) {
-
   }
 
   /**
@@ -328,8 +441,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Gets called if a [Throwable] was thrown.
    */
   override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-    Log.e(TAG, "Exception Caught", cause)
-    ctx.close()
+    Log.e(TAG, "Exception Caught", cause); ctx.close()
   }
 
   /**
@@ -373,9 +485,9 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
     }
 
     // Unknown packet
-    val err = "Unknown Packet".toByteArray()
+    val error = "Unknown Packet".toByteArray()
     val code = ErrorCode.InvalidPacket
-    val packet = InvalidPacket(code, err)
+    val packet = InvalidPacket(code, error)
     ctx.writeAndFlush(packet)
   }
 

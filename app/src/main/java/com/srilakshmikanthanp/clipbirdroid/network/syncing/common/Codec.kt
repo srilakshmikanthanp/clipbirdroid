@@ -17,7 +17,7 @@ import java.nio.ByteOrder
 /**
  * Authentication Packet encoder
  */
-private class AuthenticationEncoder : MessageToByteEncoder<Authentication>() {
+class AuthenticationEncoder : MessageToByteEncoder<Authentication>() {
   override fun encode(ctx: ChannelHandlerContext, msg: Authentication, out: ByteBuf) {
     out.writeBytes(msg.toByteArray())
   }
@@ -26,7 +26,7 @@ private class AuthenticationEncoder : MessageToByteEncoder<Authentication>() {
 /**
  * Invalid Packet decoder
  */
-private class InvalidPacketEncoder : MessageToByteEncoder<InvalidPacket>() {
+class InvalidPacketEncoder : MessageToByteEncoder<InvalidPacket>() {
   override fun encode(ctx: ChannelHandlerContext, msg: InvalidPacket, out: ByteBuf) {
     out.writeBytes(msg.toByteArray())
   }
@@ -35,7 +35,7 @@ private class InvalidPacketEncoder : MessageToByteEncoder<InvalidPacket>() {
 /**
  * Sync Packet encoder
  */
-private class SyncingPacketEncoder : MessageToByteEncoder<SyncingPacket>() {
+class SyncingPacketEncoder : MessageToByteEncoder<SyncingPacket>() {
   override fun encode(ctx: ChannelHandlerContext, msg: SyncingPacket, out: ByteBuf) {
     out.writeBytes(msg.toByteArray())
   }
@@ -44,7 +44,7 @@ private class SyncingPacketEncoder : MessageToByteEncoder<SyncingPacket>() {
 /**
  * Replaying Decoder for Server
  */
-private class PacketDecoder : ReplayingDecoder<Void>() {
+class PacketDecoder : ReplayingDecoder<Void>() {
   override fun decode(ctx: ChannelHandlerContext, inBuf: ByteBuf, out: MutableList<Any>) {
     // get the packet elements from the buffer
     val length: Int = inBuf.readInt()
