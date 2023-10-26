@@ -108,6 +108,9 @@ class PacketDecoder : ReplayingDecoder<Void>() {
       return
     }
 
+    // skip the packet
+    inBuf.skipBytes(inBuf.readableBytes())
+
     // Unknown packet
     val code = ErrorCode.InvalidPacket
     val msg = "Unknown Packet".toByteArray()

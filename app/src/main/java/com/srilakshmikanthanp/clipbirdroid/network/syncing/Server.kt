@@ -3,7 +3,7 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.ClipbirdTrustManager
-import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
+import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Register
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
@@ -11,11 +11,12 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketE
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
-import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
+import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandler
+import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
@@ -86,6 +87,13 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   // List of clients authenticated
   private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
 
+  // Filter for the Server
+  inner class ServerFilter : ChannelInboundHandlerAdapter() {
+    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+      if (authenticatedClients.contains(ctx)) ctx.fireChannelRead(msg)
+    }
+  }
+
   // Channel Initializer
   inner class NewChannelInitializer : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
@@ -107,6 +115,9 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
       // Add the Packet Encoder
       ch.pipeline().addLast(SyncingPacketEncoder())
+
+      // Add the Server Filter
+      ch.pipeline().addLast(ServerFilter())
 
       // Add the Server Handler
       ch.pipeline().addLast(this@Server)
@@ -192,20 +203,12 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   /**
    * Get Channel for the Device
    */
-  private fun getChannel(device: Device): ChannelHandlerContext {
+  private fun getChannel(device: Device): ChannelHandlerContext? {
     // find the channel in authenticated clients
-    val ctx = authenticatedClients.find {
+    return authenticatedClients.find {
       val addr = it.channel().remoteAddress() as InetSocketAddress
       return@find addr.address == device.ip && addr.port == device.port
     }
-
-    // if the channel is not found
-    if (ctx == null) {
-      throw RuntimeException("Client is not found")
-    }
-
-    // return the channel
-    return ctx
   }
 
   /**
@@ -222,6 +225,17 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
     // notify the sync handlers
     notifySyncRequestHandlers(items)
+  }
+
+  /**
+   * Send packet to all Clients except the one specified
+   */
+  fun <T>sendPacketToAllClients(packet: T, except: ChannelHandlerContext? = null) {
+    for (client in authenticatedClients) {
+      if (client != except) {
+        client.writeAndFlush(packet)
+      }
+    }
   }
 
   /**
@@ -323,7 +337,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Disconnect the client from the server and delete the client
    */
   fun disconnectClient(client: Device) {
-    getChannel(client).close().sync()
+    (getChannel(client) ?: throw RuntimeException("Client not found")).close().sync()
   }
 
   /**
@@ -364,7 +378,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    */
   fun getClientCertificate(client: Device): X509Certificate {
     // Find the client in authenticated clients
-    val ctx = getChannel(client)
+    val ctx = getChannel(client) ?: throw RuntimeException("Client not found")
 
     // get the certificate
     val sslHandler = ctx.channel().pipeline().get("ssl") as SslHandler
@@ -378,14 +392,47 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * The function that is called when the client is authenticated
    */
   fun onClientAuthenticated(client: Device) {
-    // TODO: Add the client to the authenticated clients
+    val ctx = unauthenticatedClients.find {
+      val addr = it.channel().remoteAddress() as InetSocketAddress
+      return@find addr.address == client.ip && addr.port == client.port
+    } ?: throw RuntimeException("Client not found")
+
+    // remove the client from unauthenticated clients
+    unauthenticatedClients.remove(ctx)
+
+    // add the client to authenticated clients
+    authenticatedClients.add(ctx)
+
+    // notify the client state change handlers
+    notifyClientStateChangeHandlers(client, true)
+
+    // notify the client list change handlers
+    notifyClientListChangeHandlers(getClients())
+
+    // send the packet to the client
+    ctx.writeAndFlush(Authentication(AuthStatus.AuthOkay))
   }
 
   /**
    * The function that is called when the client is not authenticated
    */
   fun onClientNotAuthenticated(client: Device) {
-    // TODO: Add the client to the unauthenticated clients
+    val ctx = unauthenticatedClients.find {
+      val addr = it.channel().remoteAddress() as InetSocketAddress
+      return@find addr.address == client.ip && addr.port == client.port
+    } ?: throw RuntimeException("Client not found")
+
+    // remove the client from unauthenticated clients
+    unauthenticatedClients.remove(ctx)
+
+    // notify the client state change handlers
+    notifyClientStateChangeHandlers(client, false)
+
+    // send the packet to the client
+    val fut = ctx.writeAndFlush(Authentication(AuthStatus.AuthFail))
+
+    // close the channel
+    fut.addListener { ctx.close() }
   }
 
   /**
@@ -508,24 +555,36 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * The Channel of the ChannelHandlerContext was registered
    * is now inactive and reached its end of lifetime.
    */
-  override fun channelInactive(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+  override fun channelInactive(ctx: ChannelHandlerContext) {
+    // if it is in the unauthenticated clients
+    if (unauthenticatedClients.remove(ctx)) return
+
+    // if it is not in the authenticated clients
+    if (!authenticatedClients.remove(ctx)) return
+
+    // get the address, port, name
+    val addr = ctx.channel().remoteAddress() as InetSocketAddress
+    val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
+    val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
+    val name = cert.subjectDN.name
+
+    // create a device for context
+    val device = Device(addr.address, addr.port, name)
+
+    // notify the client state change handlers
+    notifyClientStateChangeHandlers(device, false)
+
+    // notify the client list change handlers
+    notifyClientListChangeHandlers(getClients())
   }
 
   /**
    * Invoked when the current Channel has read a message from the peer.
    */
   override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-    // is the message is instance of SyncingPacket
     when (msg) {
       is SyncingPacket -> return onSyncingPacket(ctx, msg)
     }
-
-    // Unknown packet
-    val error = "Unknown Packet".toByteArray()
-    val code = ErrorCode.InvalidPacket
-    val packet = InvalidPacket(code, error)
-    ctx.writeAndFlush(packet)
   }
 
   /**
