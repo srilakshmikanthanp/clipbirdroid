@@ -29,41 +29,6 @@ import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
 /**
- * Client State Change Handler
- */
-fun interface OnClientStateChangeHandler {
-  fun onClientStateChanged(device: Device, connected: Boolean)
-}
-
-/**
- * Server State Change Handler
- */
-fun interface OnServerStateChangeHandler {
-  fun onServerStateChanged(started: Boolean)
-}
-
-/**
- * Auth Request Handler
- */
-fun interface OnAuthRequestHandler {
-  fun onAuthRequest(client: Device)
-}
-
-/**
- * Sync Request Handler
- */
-fun interface OnSyncRequestHandler {
-  fun onSyncRequest(items: List<Pair<String, ByteArray>>)
-}
-
-/**
- * Client List Change Handler
- */
-fun interface OnClientListChangeHandler {
-  fun onClientListChanged(clients: List<Device>)
-}
-
-/**
  * A SSl Server Using Netty as a Backend
  */
 class Server(private val context: Context) : ChannelInboundHandler, Register.RegisterListener {
@@ -87,6 +52,32 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
   // List of clients authenticated
   private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
+
+  // Client State Change Handler
+  fun interface OnClientStateChangeHandler {
+    fun onClientStateChanged(device: Device, connected: Boolean)
+  }
+
+  // Server State Change Handler
+  fun interface OnServerStateChangeHandler {
+    fun onServerStateChanged(started: Boolean)
+  }
+
+  // Auth Request Handler
+  fun interface OnAuthRequestHandler {
+    fun onAuthRequest(client: Device)
+  }
+
+  // Sync Request Handler
+  fun interface OnSyncRequestHandler {
+    fun onSyncRequest(items: List<Pair<String, ByteArray>>)
+  }
+
+
+  // Client List Change Handler
+  fun interface OnClientListChangeHandler {
+    fun onClientListChanged(clients: List<Device>)
+  }
 
   // Filter for the Server
   inner class ServerFilter : ChannelInboundHandlerAdapter() {

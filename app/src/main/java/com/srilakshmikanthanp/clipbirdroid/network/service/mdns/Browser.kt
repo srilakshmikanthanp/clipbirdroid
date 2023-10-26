@@ -22,7 +22,7 @@ class Browser(context: Context) : ResolveListener, DiscoveryListener {
   }
 
   // callbacks for service discovery events.
-  public interface BrowserListener {
+  interface BrowserListener {
     fun onServiceRemoved(device: Device)
     fun onServiceAdded(device: Device)
   }
