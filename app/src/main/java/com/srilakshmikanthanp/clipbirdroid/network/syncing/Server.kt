@@ -213,6 +213,15 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
+   * Send packet to all Clients except the one specified
+   */
+  private fun<T> sendPacketToAllClients(packet: T, except: ChannelHandlerContext? = null) {
+    for (client in authenticatedClients) {
+      if (client != except) client.writeAndFlush(packet)
+    }
+  }
+
+  /**
    * On Syncing Packet Received
    */
   private fun onSyncingPacket(ctx: ChannelHandlerContext, m: SyncingPacket) {
@@ -226,17 +235,9 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
     // notify the sync handlers
     notifySyncRequestHandlers(items)
-  }
 
-  /**
-   * Send packet to all Clients except the one specified
-   */
-  fun <T>sendPacketToAllClients(packet: T, except: ChannelHandlerContext? = null) {
-    for (client in authenticatedClients) {
-      if (client != except) {
-        client.writeAndFlush(packet)
-      }
-    }
+    // send to all client except this one
+    this.sendPacketToAllClients(m, ctx)
   }
 
   /**
