@@ -10,6 +10,7 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import java.security.KeyPair
 import java.security.KeyPairGenerator
+import java.security.PrivateKey
 import java.security.cert.X509Certificate
 import java.util.Date
 
@@ -25,7 +26,7 @@ fun generateRSAKeyPair(bits: Int): KeyPair {
 /**
  * Generate X509 certificate
  */
-fun generateX509Certificate(bits: Int): Pair<KeyPair, X509Certificate> {
+fun generateX509Certificate(bits: Int): Pair<PrivateKey, X509Certificate> {
   // create Expiry dates
   val expiryBefore = Date(System.currentTimeMillis() - (365 * 24 * 60 * 60))
   val expiryAfter = Date(System.currentTimeMillis() + (365 * 24 * 60 * 60))
@@ -58,5 +59,5 @@ fun generateX509Certificate(bits: Int): Pair<KeyPair, X509Certificate> {
   val cert = JcaX509CertificateConverter().getCertificate(builder.build(signer))
 
   // return the key pair and certificate
-  return Pair(keyPair, cert)
+  return Pair(keyPair.private, cert)
 }

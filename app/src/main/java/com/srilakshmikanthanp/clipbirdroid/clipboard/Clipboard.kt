@@ -4,6 +4,9 @@ import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
+import androidx.core.content.FileProvider
+import com.srilakshmikanthanp.clipbirdroid.constant.appName
 
 /**
  * Clipboard Change Listener Interface
@@ -65,29 +68,29 @@ class Clipboard(private val context: Context) {
    * first -> MIME Type, second -> Raw Data
    */
   fun setClipboardContent(contents: MutableList<Pair<String, ByteArray>>) {
-    // create the clip data & description
-    val description = ClipDescription(null, Array(contents.size) { contents[it].first });
-    val clipData = ClipData(description, null);
+    // Enumerate all Mime Types
+    val mimeTypes = contents.map { it.first }.toTypedArray()
 
-    // loop through the contents
-    for (content in contents) {
-      val (mimeType, rawData) = Pair(content.first, content.second)
+    // List of URI's
+    val uris = mutableListOf<Uri>()
 
-      if (mimeType == this.MIME_TYPE_TEXT) {
-        clipData.addItem(ClipData.Item(rawData.toString()))
-      }
+    // create Files for contents
+    for (i in contents.indices) {
+      val file = java.io.File.createTempFile(appName(), ".tmp", context.cacheDir)
+      file.writeBytes(contents[i].second)
+      uris.add(FileProvider.getUriForFile(context, context.packageName, file))
+    }
 
-      if (mimeType == this.MIME_TYPE_COLOR) {
-        clipData.addItem(ClipData.Item(rawData.toString()))
-      }
+    // if less than 1 return
+    if (uris.size < 1) return
 
-      if (mimeType == this.MIME_TYPE_HTML) {
-        clipData.addItem(ClipData.Item(rawData.toString()))
-      }
+    // create ClipData
+    val clipDescription = ClipDescription(appName(), mimeTypes)
+    val clipData = ClipData(clipDescription, ClipData.Item(uris[0]))
 
-      if (mimeType == this.MIME_TYPE_PNG) {
-        // TODO: Implement
-      }
+    // add all the items
+    for (i in 1 until uris.size) {
+      clipData.addItem(ClipData.Item(uris[i]))
     }
 
     // set the clip data
@@ -107,29 +110,43 @@ class Clipboard(private val context: Context) {
    * @return MutableList<Pair<String, ByteArray>>
    */
   fun getClipboardContent(): MutableList<Pair<String, ByteArray>> {
-    // check if the clipboard is empty if so return empty list
-    val primaryClipData = this.clipboard.primaryClip ?: return mutableListOf()
-    val contents: MutableList<Pair<String, ByteArray>> = mutableListOf()
+    // get the clip data
+    val clipData = this.clipboard.primaryClip ?: return mutableListOf()
 
-    // loop through the items
-    for (i in 0 until primaryClipData.itemCount) {
-      val mimeType = primaryClipData.description.getMimeType(i)
-      val item = primaryClipData.getItemAt(i)
+    // create a list of Pair<String, ByteArray>
+    val contents = mutableListOf<Pair<String, ByteArray>>()
 
-      if (mimeType == this.MIME_TYPE_TEXT) {
-        contents.add(Pair(mimeType, item.text.toString().toByteArray()))
+    // iterate through all the items
+    for (i in 0 until clipData.itemCount) {
+      // get tha Item at i
+      val item = clipData.getItemAt(i)
+
+      // if has uri
+      if (item.uri != null) {
+        // List of Allowed Types
+        val allowedTypes = arrayOf(MIME_TYPE_TEXT, MIME_TYPE_PNG, MIME_TYPE_COLOR, MIME_TYPE_HTML)
+
+        // get the content
+        val result = context.contentResolver.openInputStream(item.uri).use {
+          val mimeType = context.contentResolver.getType(item.uri) ?: return@use null
+          val content = it?.readBytes() ?: return@use null
+          return@use Pair(mimeType, content)
+        } ?: continue
+
+        // if allowed type
+        if (allowedTypes.contains(result.first)) {
+          contents.add(result)
+        }
       }
 
-      if (mimeType == this.MIME_TYPE_COLOR) {
-        contents.add(Pair(mimeType, item.text.toString().toByteArray()))
+      // if has text
+      if (item.text != null) {
+        contents.add(Pair(MIME_TYPE_TEXT, item.text.toString().toByteArray()))
       }
 
-      if (mimeType == this.MIME_TYPE_HTML) {
-        contents.add(Pair(mimeType, item.text.toString().toByteArray()))
-      }
-
-      if (mimeType == this.MIME_TYPE_PNG) {
-        // TODO: Implement
+      // if has html
+      if (item.htmlText != null) {
+        contents.add(Pair(MIME_TYPE_HTML, item.htmlText.toString().toByteArray()))
       }
     }
 
