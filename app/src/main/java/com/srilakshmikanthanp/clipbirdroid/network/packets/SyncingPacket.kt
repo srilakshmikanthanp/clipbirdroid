@@ -166,15 +166,17 @@ class SyncingItem(private var mimeType: ByteArray, private var payload: ByteArra
 /**
  * Packet Class for Syncing Packet
  */
-class SyncingPacket(private var itemCount: Int, private var items: Array<SyncingItem>) {
+class SyncingPacket(private var items: Array<SyncingItem>) {
   // packet fields
   private var packetType: PacketType
   private var packetLength: Int
+  private var itemCount: Int
 
   // init
   init {
     this.packetType = PacketType.SyncPacket
     this.packetLength = this.size()
+    this.itemCount = items.size
   }
 
   /**
@@ -322,7 +324,7 @@ class SyncingPacket(private var itemCount: Int, private var items: Array<Syncing
       }
 
       // done return
-      return SyncingPacket(itemCount, items)
+      return SyncingPacket(items)
     }
   }
 }

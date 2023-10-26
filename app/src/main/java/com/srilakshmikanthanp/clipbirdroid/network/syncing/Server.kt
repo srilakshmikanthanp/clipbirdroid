@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.ClipbirdTrustManager
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
+import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Register
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
@@ -317,7 +318,19 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Sync the Items
    */
   fun syncItems(items: List<Pair<String, ByteArray>>) {
-    // TODO : Sync the items
+    // if server is not running the throw error
+    if (!this.isServerRunning()) throw RuntimeException("Server is not started")
+
+    // create the syncing Items
+    val syncingItems = items.map {
+      return@map SyncingItem(it.first.toByteArray(), it.second)
+    }
+
+    // Array
+    val array = syncingItems.toTypedArray()
+
+    // send the packet to all the clients
+    sendPacketToAllClients(SyncingPacket(array))
   }
 
   /**
@@ -409,8 +422,11 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
     // notify the client list change handlers
     notifyClientListChangeHandlers(getClients())
 
+    // packet
+    val packet = Authentication(AuthStatus.AuthOkay)
+
     // send the packet to the client
-    ctx.writeAndFlush(Authentication(AuthStatus.AuthOkay))
+    ctx.writeAndFlush(packet)
   }
 
   /**
@@ -424,9 +440,6 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
     // remove the client from unauthenticated clients
     unauthenticatedClients.remove(ctx)
-
-    // notify the client state change handlers
-    notifyClientStateChangeHandlers(client, false)
 
     // send the packet to the client
     val fut = ctx.writeAndFlush(Authentication(AuthStatus.AuthFail))
