@@ -11,6 +11,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
 import io.netty.bootstrap.ServerBootstrap
@@ -24,6 +25,9 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
+import org.bouncycastle.asn1.x500.style.BCStyle
+import org.bouncycastle.asn1.x500.style.IETFUtils
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
@@ -80,16 +84,9 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   // Filter for the Server
-  inner class ServerFilter : ChannelInboundHandlerAdapter() {
+  inner class ChannelsFilter : ChannelInboundHandlerAdapter() {
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
       if (authenticatedClients.contains(ctx)) ctx.fireChannelRead(msg)
-    }
-  }
-
-  // SSL Verifier
-  inner class SSLVerifier : ChannelInboundHandlerAdapter() {
-    override fun channelActive(ctx: ChannelHandlerContext) {
-      TODO("Not yet implemented")
     }
   }
 
@@ -100,25 +97,12 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
       val sslContext = SslContextBuilder.forServer(sslCert?.first, sslCert?.second)
        .trustManager(ClipbirdTrustManager()).build()
 
-      // Add the SSL Handler
-      ch.pipeline().addLast(sslContext?.newHandler(ch.alloc()))
-
-      // Add the Server Filter
-      ch.pipeline().addLast(ServerFilter())
-
-      // Add the SSL Verifier
-      ch.pipeline().addLast(SSLVerifier())
-
-      // Add the Packet Encoder
+      // Preprocessing Handlers
+      ch.pipeline().addLast("ssl", sslContext?.newHandler(ch.alloc()))
+      ch.pipeline().addLast(ChannelsFilter())
       ch.pipeline().addLast(AuthenticationEncoder())
-
-      // Add the Packet Encoder
       ch.pipeline().addLast(InvalidPacketEncoder())
-
-      // Add the Packet Encoder
       ch.pipeline().addLast(SyncingPacketEncoder())
-
-      // Add the Packet Decoder
       ch.pipeline().addLast(PacketDecoder())
 
       // Add the Server Handler
@@ -343,7 +327,9 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
       val addr = it.channel().remoteAddress() as InetSocketAddress
       val ssl = it.channel().pipeline().get("ssl") as SslHandler
       val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
-      val name = cert.subjectDN.name
+      val x500Name = JcaX509CertificateHolder(cert).subject
+      val cn = x500Name.getRDNs(BCStyle.CN)[0]
+      val name = IETFUtils.valueToString(cn.first.value)
       Device(addr.address, addr.port, name)
     }
   }
@@ -377,7 +363,9 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
     // Get the Required parameters
     val address = sslServer?.localAddress() as InetSocketAddress?
-    val name = sslCert?.second?.subjectDN?.name
+    val x500Name = JcaX509CertificateHolder(sslCert?.second).subject
+    val cn = x500Name.getRDNs(BCStyle.CN)[0]
+    val name = IETFUtils.valueToString(cn.first.value)
 
     // if it is null
     if (address == null || name == null) {
@@ -537,7 +525,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
-   * Gets called if a [Throwable] was thrown.
+   * Gets called if a Throwable was thrown.
    */
   override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
     Log.e(TAG, "Exception Caught", cause); ctx.close()
@@ -562,8 +550,49 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   /**
    * The Channel of the ChannelHandlerContext is now active
    */
-  override fun channelActive(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+  override fun channelActive(ctx: ChannelHandlerContext) {
+    // get the Handler for SSL from Pipeline
+    val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
+
+    // get the Storage Instance
+    val storage = Storage.getInstance(context)
+
+    // check if client has certificate
+    if(ssl.engine().session.peerCertificates.isEmpty()) {
+      ctx.close().also { return }
+    }
+
+    // get the Peer Certificate
+    val peerCert = ssl.engine().session.peerCertificates[0] as X509Certificate
+
+    // get name
+    val addr = ctx.channel().remoteAddress() as InetSocketAddress
+
+    // get CN name from certificate using bouncy castle
+    val x500Name = JcaX509CertificateHolder(peerCert).subject
+    val rdns = x500Name.getRDNs(BCStyle.CN)
+
+    // is does not have CN name
+    if (rdns.isEmpty()) ctx.close().also { return }
+
+    // get the CN name
+    val name = IETFUtils.valueToString(rdns[0].first.value)
+
+    // if Storage dis not have name
+    if (!storage.hasClientCert(name)) {
+      return this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
+    }
+
+    // get cert for name
+    val cert = storage.getClientCert(name)
+
+    // if matches then connect
+    if (peerCert == cert) {
+      this.onClientAuthenticated(Device(addr.address, addr.port, name))
+    }
+
+    // Notify Auth Request Handlers
+    this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
   }
 
   /**
@@ -581,7 +610,9 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
     val addr = ctx.channel().remoteAddress() as InetSocketAddress
     val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
     val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
-    val name = cert.subjectDN.name
+    val x500Name = JcaX509CertificateHolder(cert).subject
+    val cn = x500Name.getRDNs(BCStyle.CN)[0]
+    val name = IETFUtils.valueToString(cn.first.value)
 
     // create a device for context
     val device = Device(addr.address, addr.port, name)

@@ -2,25 +2,42 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 
 import android.content.Context
 import android.util.Log
+import com.srilakshmikanthanp.clipbirdroid.common.ClipbirdTrustManager
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Browser
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
+import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandler
+import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.SocketChannel
+import io.netty.channel.socket.nio.NioSocketChannel
+import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
+import org.bouncycastle.asn1.x500.style.BCStyle
+import org.bouncycastle.asn1.x500.style.IETFUtils
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
+
 /**
  * Client Class for Syncing the Clipboard
  */
-class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
+class Client(private val context: Context): Browser.BrowserListener, ChannelInboundHandler {
   // List handlers for server list changed
   private val onServerListChangeHandlers = mutableListOf<OnServerListChangeHandler>()
 
@@ -45,33 +62,138 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
   }
 
   // Interface for On Server List Changed
-  interface OnServerListChangeHandler {
-    fun OnServerListChanged(servers: List<Device>)
+  fun interface OnServerListChangeHandler {
+    fun onServerListChanged(servers: List<Device>)
   }
 
   // Interface for On Server Found
-  interface OnServerFoundHandler {
-    fun OnServerFound(server: Device)
+  fun interface OnServerFoundHandler {
+    fun onServerFound(server: Device)
   }
 
   // Interface for On Server Gone
-  interface OnServerGoneHandler {
-    fun OnServerGone(server: Device)
+  fun interface OnServerGoneHandler {
+    fun onServerGone(server: Device)
   }
 
   // Interface for On Server state changed
-  interface OnServerStatusChangeHandler {
-    fun OnServerStatusChanged(isConnected: Boolean)
+  fun interface OnServerStatusChangeHandler {
+    fun onServerStatusChanged(isConnected: Boolean)
   }
 
   // Interface for On Connection Error
-  interface OnConnectionErrorHandler {
-    fun OnConnectionError(error: String)
+  fun interface OnConnectionErrorHandler {
+    fun onConnectionError(error: String)
   }
 
   // Interface for On Sync Request
-  interface OnSyncRequestHandler {
-    fun OnSyncRequest(items: List<Pair<String, ByteArray>>)
+  fun interface OnSyncRequestHandler {
+    fun onSyncRequest(items: List<Pair<String, ByteArray>>)
+  }
+
+  // SSL Verifier Secured
+  inner class SSLVerifierSecured: ChannelInboundHandlerAdapter() {
+    override fun channelActive(ctx: ChannelHandlerContext) {
+      // get the Handler for SSL from Pipeline
+      val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
+
+      // get the Storage Instance
+      val storage = Storage.getInstance(context)
+
+      // check if peer has a valid certificate
+      if (ssl.engine().session.peerCertificates.isEmpty()) {
+        ctx.close().also { return }
+      }
+
+      // get the peer certificate
+      val peerCert = ssl.engine().session.peerCertificates[0] as X509Certificate
+
+      // get CN name from certificate using bouncy castle
+      val x500Name = JcaX509CertificateHolder(peerCert).subject
+      val rdns = x500Name.getRDNs(BCStyle.CN)
+
+      // is does not have CN name
+      if (rdns.isEmpty()) {
+        ctx.close().also { return }
+      }
+
+      // get the CN Name
+      val name = IETFUtils.valueToString(rdns[0].first.value)
+
+      // check is storage has certificate for name
+      if (!storage.hasServerCert(name)) {
+        ctx.close().also { return }
+      }
+
+      // get the certificate from storage
+      val cert = storage.getServerCert(name)!!
+
+      // check if two certificates are same
+      if (cert != peerCert) ctx.close().also { return }
+    }
+  }
+
+  // SSL verifier
+  inner class SSLVerifier : ChannelInboundHandlerAdapter() {
+    override fun channelActive(ctx: ChannelHandlerContext) {
+      // get the Handler for SSL from Pipeline
+      val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
+
+      // check if peer has a valid certificate
+      if (ssl.engine().session.peerCertificates.isEmpty()) {
+        ctx.close().also { return }
+      }
+
+      // get the certificate
+      val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
+
+      // get CN name from certificate using bouncy castle
+      val x500Name = JcaX509CertificateHolder(cert).subject
+      val rdns = x500Name.getRDNs(BCStyle.CN)
+
+      // is does not have CN name
+      if (rdns.isEmpty()) ctx.close().also { return }
+    }
+  }
+
+  // Channel Initializer Secured
+  inner class InitializerSecured: ChannelInitializer<SocketChannel>() {
+    override fun initChannel(ch: SocketChannel) {
+      // create SSL Context from cert and private key
+      val sslContext = SslContextBuilder.forServer(sslConfig?.first, sslConfig?.second)
+        .trustManager(ClipbirdTrustManager()).build()
+
+      // Preprocessing Handlers
+      ch.pipeline().addLast("ssl", sslContext?.newHandler(ch.alloc()))
+      ch.pipeline().addLast(SSLVerifierSecured())
+      ch.pipeline().addLast(AuthenticationEncoder())
+      ch.pipeline().addLast(InvalidPacketEncoder())
+      ch.pipeline().addLast(SyncingPacketEncoder())
+      ch.pipeline().addLast(PacketDecoder())
+
+      // Add the Server Handler
+      ch.pipeline().addLast(this@Client)
+    }
+  }
+
+  // Channel Initializer
+  inner class Initializer: ChannelInitializer<SocketChannel>() {
+    override fun initChannel(ch: SocketChannel) {
+      // create SSL Context from cert and private key
+      val sslContext = SslContextBuilder.forServer(sslConfig?.first, sslConfig?.second)
+        .trustManager(ClipbirdTrustManager()).build()
+
+      // Preprocessing Handlers
+      ch.pipeline().addLast("ssl", sslContext?.newHandler(ch.alloc()))
+      ch.pipeline().addLast(SSLVerifier())
+      ch.pipeline().addLast(AuthenticationEncoder())
+      ch.pipeline().addLast(InvalidPacketEncoder())
+      ch.pipeline().addLast(SyncingPacketEncoder())
+      ch.pipeline().addLast(PacketDecoder())
+
+      // Add the Server Handler
+      ch.pipeline().addLast(this@Client)
+    }
   }
 
   // Ssl configuration
@@ -91,7 +213,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    */
   private fun notifyServerListChanged() {
     for (handler in onServerListChangeHandlers) {
-      handler.OnServerListChanged(servers)
+      handler.onServerListChanged(servers)
     }
   }
 
@@ -100,7 +222,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    */
   private fun notifyServerFound(server: Device) {
     for (handler in onServerFoundHandlers) {
-      handler.OnServerFound(server)
+      handler.onServerFound(server)
     }
   }
 
@@ -109,7 +231,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    */
   private fun notifyServerGone(server: Device) {
     for (handler in onServerGoneHandlers) {
-      handler.OnServerGone(server)
+      handler.onServerGone(server)
     }
   }
 
@@ -118,7 +240,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    */
   private fun notifyServerStatusChanged(isConnected: Boolean) {
     for (handler in onServerStatusChangeHandlers) {
-      handler.OnServerStatusChanged(isConnected)
+      handler.onServerStatusChanged(isConnected)
     }
   }
 
@@ -127,7 +249,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    */
   private fun notifyConnectionError(error: String) {
     for (handler in onConnectionErrorHandlers) {
-      handler.OnConnectionError(error)
+      handler.onConnectionError(error)
     }
   }
 
@@ -136,7 +258,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    */
   private fun notifySyncRequest(items: List<Pair<String, ByteArray>>) {
     for (handler in onSyncRequestHandlers) {
-      handler.OnSyncRequest(items)
+      handler.onSyncRequest(items)
     }
   }
 
@@ -243,14 +365,50 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    * Connect to server Secured
    */
   fun connectToServerSecured(server: Device) {
-    // TODO
+    // create a bootstrap for channel
+    val future = Bootstrap().group(NioEventLoopGroup())
+      .channel(NioSocketChannel::class.java)
+      .handler(InitializerSecured())
+      .connect(server.ip, server.port)
+
+    // Add Listener for connection
+    future.addListener {
+      // If connection Failed
+      if (!future.isSuccess) {
+        return@addListener notifyConnectionError(future.cause().message!!)
+      }
+
+      // if succeed
+      channel = future.channel()
+
+      // notify listeners
+      notifyServerStatusChanged(true)
+    }
   }
 
   /**
    * Connect to server
    */
   fun connectToServer(server: Device) {
-    // TODO
+    // create a bootstrap for channel
+    val future = Bootstrap().group(NioEventLoopGroup())
+      .channel(NioSocketChannel::class.java)
+      .handler(Initializer())
+      .connect(server.ip, server.port)
+
+    // Add Listener for connection
+    future.addListener {
+      // If connection Failed
+      if (!future.isSuccess) {
+        return@addListener notifyConnectionError(future.cause().message!!)
+      }
+
+      // if succeed
+      channel = future.channel()
+
+      // notify listeners
+      notifyServerStatusChanged(true)
+    }
   }
 
   /**
@@ -262,7 +420,9 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
     val addr = channel!!.remoteAddress() as InetSocketAddress
     val ssl = channel!!.pipeline().get("ssl") as SslHandler
     val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
-    val name = cert.subjectDN.name
+    val x500Name = JcaX509CertificateHolder(cert).subject
+    val cn = x500Name.getRDNs(BCStyle.CN)[0]
+    val name = IETFUtils.valueToString(cn.first.value)
 
     return Device(addr.address, addr.port, name)
   }
@@ -274,7 +434,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
     if (!this.isConnected()) {
       throw RuntimeException("Not Connected to server")
     } else {
-      channel!!.close()
+      channel!!.close().also { channel = null }
     }
   }
 
