@@ -13,6 +13,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketE
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
+import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
 import io.netty.bootstrap.Bootstrap
@@ -30,7 +31,6 @@ import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
-import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
 
@@ -197,7 +197,7 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
   }
 
   // Ssl configuration
-  private var sslConfig: Pair<PrivateKey, X509Certificate>? = null;
+  private var sslConfig: SSLConfig? = null;
 
   // List of servers
   private val servers = mutableListOf<Device>()
@@ -324,14 +324,14 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
   /**
    * Set the ssl configuration
    */
-  fun setSslConfig(sslConfig: Pair<PrivateKey, X509Certificate>) {
+  fun setSslConfig(sslConfig: SSLConfig) {
     this.sslConfig = sslConfig
   }
 
   /**
    * Get the ssl configuration
    */
-  fun getSslConfig(): Pair<PrivateKey, X509Certificate>? {
+  fun getSslConfig(): SSLConfig? {
     return this.sslConfig
   }
 
@@ -510,7 +510,7 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
    * The Channel of the ChannelHandlerContext is now active
    */
   override fun channelActive(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 
   /**
@@ -518,7 +518,7 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
    * is now inactive and reached its end of lifetime.
    */
   override fun channelInactive(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    notifyServerStatusChanged(false)
   }
 
   /**

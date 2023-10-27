@@ -12,6 +12,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketE
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
+import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
 import io.netty.bootstrap.ServerBootstrap
@@ -117,7 +118,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   private val register = Register(context)
 
   // Ssl Context for the Server
-  private var sslCert: Pair<PrivateKey, X509Certificate>? = null
+  private var sslCert: SSLConfig? = null
 
   // TAG for logging
   companion object {
@@ -285,7 +286,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   /**
    * Set the SSL certificate and key
    */
-  fun setSslConfig(sslCert: Pair<PrivateKey, X509Certificate>) {
+  fun setSslConfig(sslCert: SSLConfig) {
     if (this.isServerRunning()) {
       throw RuntimeException("Server is already started")
     }
@@ -296,7 +297,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   /**
    * Get the SSL Context
    */
-  fun getSslConfig(): Pair<PrivateKey, X509Certificate>? {
+  fun getSslConfig(): SSLConfig? {
     return sslCert
   }
 
