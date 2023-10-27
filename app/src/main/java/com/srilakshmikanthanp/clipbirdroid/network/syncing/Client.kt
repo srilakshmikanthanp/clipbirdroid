@@ -451,8 +451,12 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
    * Called when a service is lost.
    */
   override fun onServiceRemoved(device: Device) {
-    notifyServerFound(device)
-    this.servers.add(device)
+    if (!this.servers.contains(device)) {
+      return
+    }
+
+    notifyServerGone(device)
+    this.servers.remove(device)
     notifyServerListChanged()
   }
 
@@ -460,12 +464,8 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
    * Called when a service is found.
    */
   override fun onServiceAdded(device: Device) {
-    if (!this.servers.contains(device)) {
-      return
-    }
-
-    notifyServerGone(device)
-    this.servers.remove(device)
+    notifyServerFound(device)
+    this.servers.add(device)
     notifyServerListChanged()
   }
 
