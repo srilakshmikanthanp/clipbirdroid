@@ -16,6 +16,9 @@ class Browser(context: Context) : ResolveListener, DiscoveryListener {
   // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
+  // List of listeners that will be notified of browser events.
+  private val listeners: MutableList<BrowserListener> = mutableListOf()
+
   // TAG for logging.
   companion object {
     private val TAG = "Browser"
@@ -26,9 +29,6 @@ class Browser(context: Context) : ResolveListener, DiscoveryListener {
     fun onServiceRemoved(device: Device)
     fun onServiceAdded(device: Device)
   }
-
-  // List of listeners that will be notified of browser events.
-  private val listeners: MutableList<BrowserListener> = mutableListOf()
 
   /**
    * Adds a listener to the browser.
@@ -62,9 +62,7 @@ class Browser(context: Context) : ResolveListener, DiscoveryListener {
    * Called when a service is lost.
    */
   override fun onServiceLost(info: NsdServiceInfo) {
-    for (listener in listeners) {
-      listener.onServiceRemoved(Device(info.host, info.port, info.serviceName))
-    }
+    for (l in listeners) l.onServiceRemoved(Device(info.host, info.port, info.serviceName))
   }
 
   /**
@@ -78,9 +76,7 @@ class Browser(context: Context) : ResolveListener, DiscoveryListener {
    * Called when a service is resolved.
    */
   override fun onServiceResolved(info: NsdServiceInfo) {
-    for (listener in listeners) {
-      listener.onServiceAdded(Device(info.host, info.port, info.serviceName))
-    }
+    for (l in listeners) l.onServiceAdded(Device(info.host, info.port, info.serviceName))
   }
 
   /**

@@ -1,15 +1,19 @@
 package com.srilakshmikanthanp.clipbirdroid.network.syncing
 
 import android.content.Context
+import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Browser
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandler
+import io.netty.handler.ssl.SslHandler
+import java.net.InetSocketAddress
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
@@ -34,6 +38,11 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
 
   // List handlers for sync request
   private val onSyncRequestHandlers = mutableListOf<OnSyncRequestHandler>()
+
+  // TAG for logging
+  companion object {
+    val TAG = "Client"
+  }
 
   // Interface for On Server List Changed
   interface OnServerListChangeHandler {
@@ -135,21 +144,32 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    * Process the Authentication Packet
    */
   private fun onAuthentication(ctx: ChannelHandlerContext, m: Authentication) {
-    // TODO
+    if (m.getAuthStatus() == AuthStatus.AuthOkay) {
+      notifyServerStatusChanged(true)
+    }
   }
 
   /**
    * Process the InvalidPacket
    */
   private fun onInvalidPacket(ctx: ChannelHandlerContext, m: InvalidPacket) {
-    // TODO
+    Log.e(TAG, "Invalid Packet ${m.getErrorCode()}: ${m.getErrorMessage().toString()}")
   }
 
   /**
    * Process the SyncingPacket
    */
   private fun onSyncingPacket(ctx: ChannelHandlerContext, m: SyncingPacket) {
-    // TODO
+    // list of items to be synced
+    val items = mutableListOf<Pair<String, ByteArray>>()
+
+    // add the items to the list
+    for (item in m.getItems()) {
+      items.add(Pair(String(item.getMimeType()), item.getPayload()))
+    }
+
+    // notify the sync handlers
+    notifySyncRequest(items)
   }
 
   /**
@@ -237,35 +257,56 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    * Get the Connected Server
    */
   fun getConnectedServer(): Device? {
-    TODO()
+    if (!this.isConnected()) throw RuntimeException("Not Connected to server")
+
+    val addr = channel!!.remoteAddress() as InetSocketAddress
+    val ssl = channel!!.pipeline().get("ssl") as SslHandler
+    val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
+    val name = cert.subjectDN.name
+
+    return Device(addr.address, addr.port, name)
   }
 
   /**
    * Disconnect from the server
    */
   fun disconnectFromServer() {
-    // TODO
+    if (!this.isConnected()) {
+      throw RuntimeException("Not Connected to server")
+    } else {
+      channel!!.close()
+    }
   }
 
   /**
    * Get the Connected server Certificate
    */
-  fun getConnectedServerCertificate(): X509Certificate? {
-    TODO()
+  fun getConnectedServerCertificate(): X509Certificate {
+    if (!this.isConnected()) throw RuntimeException("Not Connected to server")
+    val ssl = channel!!.pipeline().get("ssl") as SslHandler
+    return ssl.engine().session.peerCertificates[0] as X509Certificate
   }
 
   /**
    * Called when a service is lost.
    */
   override fun onServiceRemoved(device: Device) {
-    TODO("Not yet implemented")
+    notifyServerFound(device)
+    this.servers.add(device)
+    notifyServerListChanged()
   }
 
   /**
    * Called when a service is found.
    */
   override fun onServiceAdded(device: Device) {
-    TODO("Not yet implemented")
+    if (!this.servers.contains(device)) {
+      return
+    }
+
+    notifyServerGone(device)
+    this.servers.remove(device)
+    notifyServerListChanged()
   }
 
   /**
@@ -273,7 +314,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    * ready to handle events.
    */
   override fun handlerAdded(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 
   /**
@@ -281,28 +322,28 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    * it doesn't handle events anymore.
    */
   override fun handlerRemoved(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 
   /**
    * Gets called if a Throwable was thrown.
    */
-  override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-    TODO("Not yet implemented")
+  override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable?) {
+    Log.e(TAG, cause?.message, cause); ctx.close()
   }
 
   /**
    * The Channel of the ChannelHandlerContext was registered with its EventLoop
    */
   override fun channelRegistered(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 
   /**
    * The Channel of the ChannelHandlerContext was unregistered from its EventLoop
    */
   override fun channelUnregistered(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 
   /**
@@ -313,7 +354,7 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
   }
 
   /**
-   * The [Channel] of the ChannelHandlerContext was registered
+   * The Channel of the ChannelHandlerContext was registered
    * is now inactive and reached its end of lifetime.
    */
   override fun channelInactive(ctx: ChannelHandlerContext?) {
@@ -323,8 +364,12 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
   /**
    * Invoked when the current Channel has read a message from the peer.
    */
-  override fun channelRead(ctx: ChannelHandlerContext?, msg: Any?) {
-    TODO("Not yet implemented")
+  override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+    when (msg) {
+      is Authentication -> onAuthentication(ctx, msg)
+      is InvalidPacket -> onInvalidPacket(ctx, msg)
+      is SyncingPacket -> onSyncingPacket(ctx, msg)
+    }
   }
 
   /**
@@ -334,14 +379,14 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    * Channel will be made until ChannelHandlerContext.read is called.
    */
   override fun channelReadComplete(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 
   /**
    * Gets called if an user event was triggered.
    */
   override fun userEventTriggered(ctx: ChannelHandlerContext?, evt: Any?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 
   /**
@@ -349,6 +394,6 @@ class Client(context: Context): Browser.BrowserListener, ChannelInboundHandler {
    * can check the state with Channel.isWritable
    */
   override fun channelWritabilityChanged(ctx: ChannelHandlerContext?) {
-    TODO("Not yet implemented")
+    // Do Nothing
   }
 }

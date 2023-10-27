@@ -163,7 +163,7 @@ class InvalidPacket(private var errorCode: ErrorCode, private var errorMessage: 
 
       // check the error code
       if (!allowedErrorCodes.contains(errorCode)) {
-        throw MalformedPacket(ErrorCode.CodingError, "Invalid ErrorCode value: $errorCode")
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid ErrorCode value")
       }
 
       // done return

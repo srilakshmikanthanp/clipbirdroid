@@ -86,6 +86,13 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
     }
   }
 
+  // SSL Verifier
+  inner class SSLVerifier : ChannelInboundHandlerAdapter() {
+    override fun channelActive(ctx: ChannelHandlerContext) {
+      TODO("Not yet implemented")
+    }
+  }
+
   // Channel Initializer
   inner class NewChannelInitializer : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
@@ -96,20 +103,23 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
       // Add the SSL Handler
       ch.pipeline().addLast(sslContext?.newHandler(ch.alloc()))
 
+      // Add the Server Filter
+      ch.pipeline().addLast(ServerFilter())
+
+      // Add the SSL Verifier
+      ch.pipeline().addLast(SSLVerifier())
+
       // Add the Packet Encoder
       ch.pipeline().addLast(AuthenticationEncoder())
 
       // Add the Packet Encoder
       ch.pipeline().addLast(InvalidPacketEncoder())
 
-      // Add the Packet Decoder
-      ch.pipeline().addLast(PacketDecoder())
-
       // Add the Packet Encoder
       ch.pipeline().addLast(SyncingPacketEncoder())
 
-      // Add the Server Filter
-      ch.pipeline().addLast(ServerFilter())
+      // Add the Packet Decoder
+      ch.pipeline().addLast(PacketDecoder())
 
       // Add the Server Handler
       ch.pipeline().addLast(this@Server)

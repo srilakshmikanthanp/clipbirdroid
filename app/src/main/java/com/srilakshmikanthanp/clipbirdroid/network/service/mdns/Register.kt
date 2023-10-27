@@ -13,6 +13,9 @@ class Register(context: Context) : RegistrationListener {
   // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
+  // List of listeners that will be notified of browser events.
+  private val listeners: MutableList<RegisterListener> = mutableListOf()
+
   // TAG for logging.
   companion object {
     private val TAG = "Register"
@@ -23,9 +26,6 @@ class Register(context: Context) : RegistrationListener {
     fun onServiceUnregistered()
     fun onServiceRegistered()
   }
-
-  // List of listeners that will be notified of browser events.
-  private val listeners: MutableList<RegisterListener> = mutableListOf()
 
   /**
    * Adds a listener to the browser.

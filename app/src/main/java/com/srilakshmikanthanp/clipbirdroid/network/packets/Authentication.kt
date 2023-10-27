@@ -141,9 +141,8 @@ class Authentication(private var authStatus: AuthStatus) {
 
       // check authStatus
       if (!allowedAuthStatus.contains(authStatus)) {
-        throw MalformedPacket(ErrorCode.CodingError, "Invalid AuthStatus value: $authStatus")
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid AuthStatus value")
       }
-
 
       // done return
       return Authentication(AuthStatus.fromInt(authStatus))
