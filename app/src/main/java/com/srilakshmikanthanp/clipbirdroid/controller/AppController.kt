@@ -107,6 +107,89 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   private var server: Server? = null
   private var client: Client? = null
 
+  //----------------------- private notifiers ------------------------//
+
+  /**
+   * Notify the server list changed (Client)
+   */
+  fun notifyServerListChanged(servers: List<Device>) {
+    for (handler in serverListChangedHandlers) {
+      handler.onServerListChanged(servers)
+    }
+  }
+
+  /**
+   * Notify the server Found (Client)
+   */
+  fun notifyServerFound(server: Device) {
+    for (handler in serverFoundHandlers) {
+      handler.onServerFound(server)
+    }
+  }
+
+  /**
+   * Notify the server gone (Client)
+   */
+  fun notifyServerGone(server: Device) {
+    for (handler in serverGoneHandlers) {
+      handler.onServerGone(server)
+    }
+  }
+
+  /**
+   * Notify the connection error (Client)
+   */
+  fun notifyConnectionError(error: String) {
+    for (handler in connectionErrorHandlers) {
+      handler.onConnectionError(error)
+    }
+  }
+
+  /**
+   * Notify the server status changed (Client)
+   */
+  fun notifyServerStatusChanged(status: Boolean) {
+    for (handler in serverStatusChangedHandlers) {
+      handler.onServerStatusChanged(status)
+    }
+  }
+
+  /**
+   * Notify the client state changed (Server)
+   */
+  fun notifyClientStateChanged(client: Device, connected: Boolean) {
+    for (handler in clientStateChangedHandlers) {
+      handler.onClientStateChanged(client, connected)
+    }
+  }
+
+  /**
+   * Notify the server state changed (Server)
+   */
+  fun notifyServerStateChanged(status: Boolean) {
+    for (handler in serverStateChangedHandlers) {
+      handler.onServerStateChanged(status)
+    }
+  }
+
+  /**
+   * Notify the auth request (Server)
+   */
+  fun notifyAuthRequest(client: Device) {
+    for (handler in authRequestHandlers) {
+      handler.onAuthRequest(client)
+    }
+  }
+
+  /**
+   * Notify the client list changed (Server)
+   */
+  fun notifyClientListChanged(clients: List<Device>) {
+    for (handler in clientListChangedHandlers) {
+      handler.onClientListChanged(clients)
+    }
+  }
+  
   //------------------------- private slots -------------------------//
 
   /**
