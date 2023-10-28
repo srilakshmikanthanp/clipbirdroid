@@ -3,6 +3,11 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnClientStateChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStateChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnSyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
@@ -30,7 +35,6 @@ import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
-import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
 /**
@@ -40,49 +44,95 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
 
+  /**
+   * Add Client State Change Handler
+   */
+  fun addClientStateChangeHandler(handler: OnClientStateChangeHandler) {
+    clientStateChangeHandlers.add(handler)
+  }
+
+  /**
+   * Remove Client State Change Handler
+   */
+  fun removeClientStateChangeHandler(handler: OnClientStateChangeHandler) {
+    clientStateChangeHandlers.remove(handler)
+  }
+
+
   // Server State Change Handlers
   private val serverStateChangeHandlers = mutableListOf<OnServerStateChangeHandler>()
+
+  /**
+   * Add Server State Change Handler
+   */
+  fun addServerStateChangeHandler(handler: OnServerStateChangeHandler) {
+    serverStateChangeHandlers.add(handler)
+  }
+
+  /**
+   * Remove Server State Change Handler
+   */
+  fun removeServerStateChangeHandler(handler: OnServerStateChangeHandler) {
+    serverStateChangeHandlers.remove(handler)
+  }
+
 
   // Auth Request Handlers
   private val authRequestHandlers = mutableListOf<OnAuthRequestHandler>()
 
+  /**
+   * Add Auth Request Handler
+   */
+  fun addAuthRequestHandler(handler: OnAuthRequestHandler) {
+    authRequestHandlers.add(handler)
+  }
+
+  /**
+   * Remove Auth Request Handler
+   */
+  fun removeAuthRequestHandler(handler: OnAuthRequestHandler) {
+    authRequestHandlers.remove(handler)
+  }
+
   // Sync Request Handlers
   private val syncRequestHandlers = mutableListOf<OnSyncRequestHandler>()
 
+  /**
+   * Add Sync Request Handler
+   */
+  fun addSyncRequestHandler(handler: OnSyncRequestHandler) {
+    syncRequestHandlers.add(handler)
+  }
+
+  /**
+   * Remove Sync Request Handler
+   */
+  fun removeSyncRequestHandler(handler: OnSyncRequestHandler) {
+    syncRequestHandlers.remove(handler)
+  }
+
   // Client List Change Handlers
   private val clientListChangeHandlers = mutableListOf<OnClientListChangeHandler>()
+
+  /**
+   * Add Client List Change Handler
+   */
+  fun addClientListChangeHandler(handler: OnClientListChangeHandler) {
+    clientListChangeHandlers.add(handler)
+  }
+
+  /**
+   * Remove Client List Change Handler
+   */
+  fun removeClientListChangeHandler(handler: OnClientListChangeHandler) {
+    clientListChangeHandlers.remove(handler)
+  }
 
   // List of clients unauthenticated
   private val unauthenticatedClients = mutableListOf<ChannelHandlerContext>()
 
   // List of clients authenticated
   private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
-
-  // Client State Change Handler
-  fun interface OnClientStateChangeHandler {
-    fun onClientStateChanged(device: Device, connected: Boolean)
-  }
-
-  // Server State Change Handler
-  fun interface OnServerStateChangeHandler {
-    fun onServerStateChanged(started: Boolean)
-  }
-
-  // Auth Request Handler
-  fun interface OnAuthRequestHandler {
-    fun onAuthRequest(client: Device)
-  }
-
-  // Sync Request Handler
-  fun interface OnSyncRequestHandler {
-    fun onSyncRequest(items: List<Pair<String, ByteArray>>)
-  }
-
-
-  // Client List Change Handler
-  fun interface OnClientListChangeHandler {
-    fun onClientListChanged(clients: List<Device>)
-  }
 
   // Filter for the Server
   inner class ChannelsFilter : ChannelInboundHandlerAdapter() {
@@ -437,76 +487,6 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
     // close the channel
     fut.addListener { ctx.close() }
-  }
-
-  /**
-   * Add Client State Change Handler
-   */
-  fun addClientStateChangeHandler(handler: OnClientStateChangeHandler) {
-    clientStateChangeHandlers.add(handler)
-  }
-
-  /**
-   * Remove Client State Change Handler
-   */
-  fun removeClientStateChangeHandler(handler: OnClientStateChangeHandler) {
-    clientStateChangeHandlers.remove(handler)
-  }
-
-  /**
-   * Add Server State Change Handler
-   */
-  fun addServerStateChangeHandler(handler: OnServerStateChangeHandler) {
-    serverStateChangeHandlers.add(handler)
-  }
-
-  /**
-   * Remove Server State Change Handler
-   */
-  fun removeServerStateChangeHandler(handler: OnServerStateChangeHandler) {
-    serverStateChangeHandlers.remove(handler)
-  }
-
-  /**
-   * Add Auth Request Handler
-   */
-  fun addAuthRequestHandler(handler: OnAuthRequestHandler) {
-    authRequestHandlers.add(handler)
-  }
-
-  /**
-   * Remove Auth Request Handler
-   */
-  fun removeAuthRequestHandler(handler: OnAuthRequestHandler) {
-    authRequestHandlers.remove(handler)
-  }
-
-  /**
-   * Add Sync Request Handler
-   */
-  fun addSyncRequestHandler(handler: OnSyncRequestHandler) {
-    syncRequestHandlers.add(handler)
-  }
-
-  /**
-   * Remove Sync Request Handler
-   */
-  fun removeSyncRequestHandler(handler: OnSyncRequestHandler) {
-    syncRequestHandlers.remove(handler)
-  }
-
-  /**
-   * Add Client List Change Handler
-   */
-  fun addClientListChangeHandler(handler: OnClientListChangeHandler) {
-    clientListChangeHandlers.add(handler)
-  }
-
-  /**
-   * Remove Client List Change Handler
-   */
-  fun removeClientListChangeHandler(handler: OnClientListChangeHandler) {
-    clientListChangeHandlers.remove(handler)
   }
 
   /**

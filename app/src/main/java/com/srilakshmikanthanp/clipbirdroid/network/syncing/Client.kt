@@ -3,6 +3,12 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.intface.OnConnectionErrorHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnServerFoundHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnServerGoneHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnServerListChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnSyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
@@ -33,7 +39,6 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
 
-
 /**
  * Client Class for Syncing the Clipboard
  */
@@ -41,54 +46,84 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
   // List handlers for server list changed
   private val onServerListChangeHandlers = mutableListOf<OnServerListChangeHandler>()
 
+  // Add handler for server list changed
+  fun addServerListChangeHandler(handler: OnServerListChangeHandler) {
+    onServerListChangeHandlers.add(handler)
+  }
+
+  // Remove handler for server list changed
+  fun removeServerListChangeHandler(handler: OnServerListChangeHandler) {
+    onServerListChangeHandlers.remove(handler)
+  }
+
   // List handlers for server found
   private val onServerFoundHandlers = mutableListOf<OnServerFoundHandler>()
+
+  // Add handler for server found
+  fun addServerFoundHandler(handler: OnServerFoundHandler) {
+    onServerFoundHandlers.add(handler)
+  }
+
+  // Remove handler for server found
+  fun removeServerFoundHandler(handler: OnServerFoundHandler) {
+    onServerFoundHandlers.remove(handler)
+  }
 
   // List handlers for server gone
   private val onServerGoneHandlers = mutableListOf<OnServerGoneHandler>()
 
+  // Add handler for server gone
+  fun addServerGoneHandler(handler: OnServerGoneHandler) {
+    onServerGoneHandlers.add(handler)
+  }
+
+  // Remove handler for server gone
+  fun removeServerGoneHandler(handler: OnServerGoneHandler) {
+    onServerGoneHandlers.remove(handler)
+  }
+
   // List handlers for server status changed
   private val onServerStatusChangeHandlers = mutableListOf<OnServerStatusChangeHandler>()
+
+  // Add handler for server status changed
+  fun addServerStatusChangeHandler(handler: OnServerStatusChangeHandler) {
+    onServerStatusChangeHandlers.add(handler)
+  }
+
+  // Remove handler for server status changed
+  fun removeServerStatusChangeHandler(handler: OnServerStatusChangeHandler) {
+    onServerStatusChangeHandlers.remove(handler)
+  }
 
   // List handlers for connection error
   private val onConnectionErrorHandlers = mutableListOf<OnConnectionErrorHandler>()
 
+  // Add handler for connection error
+  fun addConnectionErrorHandler(handler: OnConnectionErrorHandler) {
+    onConnectionErrorHandlers.add(handler)
+  }
+
+  // Remove handler for connection error
+  fun removeConnectionErrorHandler(handler: OnConnectionErrorHandler) {
+    onConnectionErrorHandlers.remove(handler)
+  }
+
   // List handlers for sync request
   private val onSyncRequestHandlers = mutableListOf<OnSyncRequestHandler>()
+
+  // Add handler for sync request
+  fun addSyncRequestHandler(handler: OnSyncRequestHandler) {
+    onSyncRequestHandlers.add(handler)
+  }
+
+  // Remove handler for sync request
+  fun removeSyncRequestHandler(handler: OnSyncRequestHandler) {
+    onSyncRequestHandlers.remove(handler)
+  }
 
   // TAG for logging
   companion object {
     val TAG = "Client"
-  }
-
-  // Interface for On Server List Changed
-  fun interface OnServerListChangeHandler {
-    fun onServerListChanged(servers: List<Device>)
-  }
-
-  // Interface for On Server Found
-  fun interface OnServerFoundHandler {
-    fun onServerFound(server: Device)
-  }
-
-  // Interface for On Server Gone
-  fun interface OnServerGoneHandler {
-    fun onServerGone(server: Device)
-  }
-
-  // Interface for On Server state changed
-  fun interface OnServerStatusChangeHandler {
-    fun onServerStatusChanged(isConnected: Boolean)
-  }
-
-  // Interface for On Connection Error
-  fun interface OnConnectionErrorHandler {
-    fun onConnectionError(error: String)
-  }
-
-  // Interface for On Sync Request
-  fun interface OnSyncRequestHandler {
-    fun onSyncRequest(items: List<Pair<String, ByteArray>>)
   }
 
   // SSL Verifier Secured
@@ -414,7 +449,7 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
   /**
    * Get the Connected Server
    */
-  fun getConnectedServer(): Device? {
+  fun getConnectedServer(): Device {
     if (!this.isConnected()) throw RuntimeException("Not Connected to server")
 
     val addr = channel!!.remoteAddress() as InetSocketAddress
@@ -445,6 +480,20 @@ class Client(private val context: Context): Browser.BrowserListener, ChannelInbo
     if (!this.isConnected()) throw RuntimeException("Not Connected to server")
     val ssl = channel!!.pipeline().get("ssl") as SslHandler
     return ssl.engine().session.peerCertificates[0] as X509Certificate
+  }
+
+  /**
+   * Start the browser
+   */
+  fun startBrowsing() {
+    this.browser.start()
+  }
+
+  /**
+   * Stop the browser
+   */
+  fun stopBrowsing() {
+    this.browser.stop()
   }
 
   /**

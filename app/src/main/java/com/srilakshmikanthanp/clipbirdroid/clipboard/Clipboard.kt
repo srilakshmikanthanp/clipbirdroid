@@ -75,14 +75,14 @@ class Clipboard(private val context: Context) {
   /**
    * Add ClipboardChangeListener
    */
-  fun addListener(listener: ClipboardChangeListener) {
+  fun addClipboardChangeListener(listener: ClipboardChangeListener) {
     listeners.add(listener)
   }
 
   /**
    * Remove ClipboardChangeListener
    */
-  fun removeListener(listener: ClipboardChangeListener) {
+  fun removeClipboardChangeListener(listener: ClipboardChangeListener) {
     listeners.remove(listener)
   }
 
@@ -91,7 +91,7 @@ class Clipboard(private val context: Context) {
    * @param contents List of Pair<String, ByteArray>
    * first -> MIME Type, second -> Raw Data
    */
-  fun setClipboardContent(contents: MutableList<Pair<String, ByteArray>>) {
+  fun setClipboardContent(contents: List<Pair<String, ByteArray>>) {
     // Enumerate all Mime Types
     val mimeTypes = contents.map { it.first }.toTypedArray()
 
