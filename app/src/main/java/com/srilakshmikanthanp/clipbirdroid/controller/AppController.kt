@@ -249,12 +249,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // if the data is Client Instance
     if (obj is Client) {
       // disconnect the signals from Client
-      obj.removeServerListChangeHandler(::notifyServerListChanged)
-      obj.removeServerFoundHandler(::handleServerFound)
-      obj.removeServerFoundHandler(::notifyServerFound)
-      obj.removeServerGoneHandler(::notifyServerGone)
       obj.removeServerStatusChangeHandler(::handleServerStatusChanged)
       obj.removeServerStatusChangeHandler(::notifyServerStatusChanged)
+      obj.removeServerFoundHandler(::handleServerFound)
+      obj.removeServerFoundHandler(::notifyServerFound)
+      obj.removeServerListChangeHandler(::notifyServerListChanged)
+      obj.removeServerGoneHandler(::notifyServerGone)
       obj.removeSyncRequestHandler(::notifySyncRequest)
       obj.removeConnectionErrorHandler(::notifyConnectionError)
 
@@ -351,12 +351,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // set the ssl configuration
     server.setSslConfig(sslConfig)
 
-    // connect the server state changed signal
-    server.addServerStateChangeHandler(::notifyServerStateChanged)
-
     // connect the client state changed signal
     server.addClientStateChangeHandler(::handleClientStateChanged)
     server.addClientStateChangeHandler(::notifyClientStateChanged)
+
+    // connect the OnClipboardChange signal to the server
+    clipboard.addClipboardChangeListener(server::syncItems)
 
     // connect the auth request signal
     server.addAuthRequestHandler(::notifyAuthRequest)
@@ -365,11 +365,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     server.addSyncRequestHandler(clipboard::setClipboardContent)
     server.addSyncRequestHandler(::notifySyncRequest)
 
-    // connect the OnClipboardChange signal to the server
-    clipboard.addClipboardChangeListener(server::syncItems)
-
     // connect the client list changed signal
     server.addClientListChangeHandler(::notifyClientListChanged)
+
+    // connect the server state changed signal
+    server.addServerStateChangeHandler(::notifyServerStateChanged)
 
     // set the host is server
     storage.setHostIsLastlyServer(true)
@@ -388,19 +388,19 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // Set the SSL Configuration
     client.setSslConfig(sslConfig)
 
+    // Connect the server status changed signal
+    client.addServerStatusChangeHandler(::handleServerStatusChanged)
+    client.addServerStatusChangeHandler(::notifyServerStatusChanged)
+
+    // Connect the server gone signal
+    client.addServerGoneHandler(::notifyServerGone)
+
     // Connect the server list changed signal
     client.addServerListChangeHandler(::notifyServerListChanged)
 
     // Connect the server found signal
     client.addServerFoundHandler(::handleServerFound)
     client.addServerFoundHandler(::notifyServerFound)
-
-    // Connect the server gone signal
-    client.addServerGoneHandler(::notifyServerGone)
-
-    // Connect the server status changed signal
-    client.addServerStatusChangeHandler(::handleServerStatusChanged)
-    client.addServerStatusChangeHandler(::notifyServerStatusChanged)
 
     // Connect the sync request signal
     client.addSyncRequestHandler(clipboard::setClipboardContent)
@@ -441,11 +441,16 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Get the Clients that are connected to the server
    */
   fun getConnectedClientsList(): List<Device> {
+    // if the host is not server then throw
     if (!host.holds(Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
-    return (host.get() as Server).getClients()
+    // get the server
+    val server = host.get() as Server
+
+    // return the clients
+    return server.getClients()
   }
 
   /**
@@ -480,8 +485,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       throw RuntimeException("Host is not server")
     }
 
+    // get the server
+    val server = host.get() as Server
+
     // disconnect all the clients
-    (host.get() as Server).disconnectAllClients()
+    server.disconnectAllClients()
   }
 
   /**
@@ -493,8 +501,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       throw RuntimeException("Host is not server")
     }
 
+    // get the server
+    val server = host.get() as Server
+
     // return the server address and port
-    return (host.get() as Server).getServerInfo()
+    return server.getServerInfo()
   }
 
   /**
@@ -541,8 +552,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       throw RuntimeException("Host is not client")
     }
 
+    // get the client
+    val client = host.get() as Client
+
     // return the server list
-    return (host.get() as Client).getServerList()
+    return client.getServerList()
   }
 
   /**
@@ -571,8 +585,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       throw RuntimeException("Host is not client")
     }
 
+    // get the client
+    val client = host.get() as Client
+
     // return the connection status
-    return (host.get() as Client).isConnected()
+    return client.isConnected()
   }
 
   /**
@@ -584,8 +601,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       throw RuntimeException("Host is not client")
     }
 
+    // get the client
+    val client = host.get() as Client
+
     // return the server address and port
-    return (host.get() as Client).getConnectedServer()
+    return client.getConnectedServer()
   }
 
   /**
@@ -597,8 +617,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       throw RuntimeException("Host is not client")
     }
 
+    // get the client
+    val client = host.get() as Client
+
     // disconnect from the server
-    (host.get() as Client).disconnectFromServer()
+    client.disconnectFromServer()
   }
 
   //----------------------- Common functions -------------------------//
