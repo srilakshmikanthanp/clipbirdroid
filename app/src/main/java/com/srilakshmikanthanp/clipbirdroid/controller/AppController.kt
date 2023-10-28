@@ -261,6 +261,31 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     TODO()
   }
 
+  //----------------------- Common functions -------------------------//
+
+  /**
+   * @brief Sync the clipboard data with the Group
+   */
+  fun syncClipboard(data: List<Pair<String, ByteArray>>) {
+    TODO()
+  }
+
+  //---------------------- Clipboard functions -----------------------//
+
+  /**
+   * @brief Get the Clipboard data
+   */
+  fun getClipboard(): List<Pair<String, ByteArray>> {
+    TODO()
+  }
+
+  /**
+   * @brief Set the Clipboard data
+   */
+  fun setClipboard(data: List<Pair<String, ByteArray>>) {
+    TODO()
+  }
+
   //---------------------- General functions -----------------------//
 
   /**
