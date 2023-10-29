@@ -56,7 +56,7 @@ fun appIssuesPage(): String {
  * @return string
  */
 fun appMdnsServiceName(): String {
-  return Build.HOST
+  return Build.MODEL
 }
 
 /**
@@ -75,4 +75,11 @@ fun appMdnsServiceType(): String {
  */
 fun appOrgName(): String {
   return BuildConfig.APP_ORG
+}
+
+/**
+ * @brief Get the App File Provider
+ */
+fun appProvider(): String {
+  return BuildConfig.APPLICATION_ID + ".provider"
 }

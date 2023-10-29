@@ -2,7 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 
 import android.content.Context
 import android.util.Log
-import com.srilakshmikanthanp.clipbirdroid.common.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
 import com.srilakshmikanthanp.clipbirdroid.intface.OnConnectionErrorHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerFoundHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerGoneHandler
@@ -33,6 +33,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
+import io.netty.handler.ssl.SslHandshakeCompletionEvent
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
@@ -128,9 +129,15 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
 
   // SSL Verifier Secured
   inner class SSLVerifierSecured: ChannelInboundHandlerAdapter() {
-    override fun channelActive(ctx: ChannelHandlerContext) {
+    override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any) {
+      // check if event is SSL Handshake Completed
+      if (evt !is SslHandshakeCompletionEvent) return
+
+      // if handshake is not completed
+      if (!evt.isSuccess) ctx.close().also { return }
+
       // get the Handler for SSL from Pipeline
-      val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
+      val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
 
       // get the Storage Instance
       val storage = Storage.getInstance(context)
@@ -165,14 +172,23 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
 
       // check if two certificates are same
       if (cert != peerCert) ctx.close().also { return }
+
+      // Next Handler
+      ctx.fireUserEventTriggered(evt)
     }
   }
 
   // SSL verifier
   inner class SSLVerifier : ChannelInboundHandlerAdapter() {
-    override fun channelActive(ctx: ChannelHandlerContext) {
+    override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any) {
+      // check if event is SSL Handshake Completed
+      if (evt !is SslHandshakeCompletionEvent) return
+
+      // if handshake is not completed
+      if (!evt.isSuccess) ctx.close().also { return }
+
       // get the Handler for SSL from Pipeline
-      val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
+      val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
 
       // check if peer has a valid certificate
       if (ssl.engine().session.peerCertificates.isEmpty()) {
@@ -188,6 +204,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
 
       // is does not have CN name
       if (rdns.isEmpty()) ctx.close().also { return }
+
+      // Next Handler
+      ctx.fireUserEventTriggered(evt)
     }
   }
 
@@ -195,11 +214,12 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   inner class InitializerSecured: ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
       // create SSL Context from cert and private key
-      val sslContext = SslContextBuilder.forServer(sslConfig?.first, sslConfig?.second)
+      val sslContext = SslContextBuilder.forClient()
+        .keyManager(sslConfig?.first, sslConfig?.second)
         .trustManager(ClipbirdTrustManager()).build()
 
       // Preprocessing Handlers
-      ch.pipeline().addLast("ssl", sslContext?.newHandler(ch.alloc()))
+      ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
       ch.pipeline().addLast(SSLVerifierSecured())
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
@@ -215,11 +235,12 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   inner class Initializer: ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
       // create SSL Context from cert and private key
-      val sslContext = SslContextBuilder.forServer(sslConfig?.first, sslConfig?.second)
+      val sslContext = SslContextBuilder.forClient()
+        .keyManager(sslConfig?.first, sslConfig?.second)
         .trustManager(ClipbirdTrustManager()).build()
 
       // Preprocessing Handlers
-      ch.pipeline().addLast("ssl", sslContext?.newHandler(ch.alloc()))
+      ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
       ch.pipeline().addLast(SSLVerifier())
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
@@ -401,24 +422,10 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun connectToServerSecured(server: Device) {
     // create a bootstrap for channel
-    val future = Bootstrap().group(NioEventLoopGroup())
+    Bootstrap().group(NioEventLoopGroup())
       .channel(NioSocketChannel::class.java)
       .handler(InitializerSecured())
       .connect(server.ip, server.port)
-
-    // Add Listener for connection
-    future.addListener {
-      // If connection Failed
-      if (!future.isSuccess) {
-        return@addListener notifyConnectionError(future.cause().message!!)
-      }
-
-      // if succeed
-      channel = future.channel()
-
-      // notify listeners
-      notifyServerStatusChanged(true)
-    }
   }
 
   /**
@@ -426,24 +433,10 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun connectToServer(server: Device) {
     // create a bootstrap for channel
-    val future = Bootstrap().group(NioEventLoopGroup())
+    Bootstrap().group(NioEventLoopGroup())
       .channel(NioSocketChannel::class.java)
       .handler(Initializer())
       .connect(server.ip, server.port)
-
-    // Add Listener for connection
-    future.addListener {
-      // If connection Failed
-      if (!future.isSuccess) {
-        return@addListener notifyConnectionError(future.cause().message!!)
-      }
-
-      // if succeed
-      channel = future.channel()
-
-      // notify listeners
-      notifyServerStatusChanged(true)
-    }
   }
 
   /**
@@ -453,7 +446,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     if (!this.isConnected()) throw RuntimeException("Not Connected to server")
 
     val addr = channel!!.remoteAddress() as InetSocketAddress
-    val ssl = channel!!.pipeline().get("ssl") as SslHandler
+    val ssl = channel!!.pipeline().get(SslHandler::class.java) as SslHandler
     val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
     val x500Name = JcaX509CertificateHolder(cert).subject
     val cn = x500Name.getRDNs(BCStyle.CN)[0]
@@ -478,7 +471,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun getConnectedServerCertificate(): X509Certificate {
     if (!this.isConnected()) throw RuntimeException("Not Connected to server")
-    val ssl = channel!!.pipeline().get("ssl") as SslHandler
+    val ssl = channel!!.pipeline().get(SslHandler::class.java) as SslHandler
     return ssl.engine().session.peerCertificates[0] as X509Certificate
   }
 
@@ -594,8 +587,15 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   /**
    * Gets called if an user event was triggered.
    */
-  override fun userEventTriggered(ctx: ChannelHandlerContext?, evt: Any?) {
-    // Do Nothing
+  override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
+    // check if event is SSL Handshake Completed
+    if (evt !is SslHandshakeCompletionEvent) return
+
+    // if handshake is not completed
+    if (!evt.isSuccess) ctx.close().also { return }
+
+    // set the channel
+    this.channel = ctx.channel()
   }
 
   /**

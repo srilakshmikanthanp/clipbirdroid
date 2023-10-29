@@ -2,7 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 
 import android.content.Context
 import android.util.Log
-import com.srilakshmikanthanp.clipbirdroid.common.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
 import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientStateChangeHandler
@@ -29,8 +29,10 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.handler.ssl.ClientAuth
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
+import io.netty.handler.ssl.SslHandshakeCompletionEvent
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
@@ -146,10 +148,12 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     override fun initChannel(ch: SocketChannel) {
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forServer(sslCert?.first, sslCert?.second)
-       .trustManager(ClipbirdTrustManager()).build()
+        .trustManager(ClipbirdTrustManager())
+        .clientAuth(ClientAuth.REQUIRE)
+        .build()
 
       // Preprocessing Handlers
-      ch.pipeline().addLast("ssl", sslContext?.newHandler(ch.alloc()))
+      ch.pipeline().addLast(sslContext?.newHandler(ch.alloc()))
       ch.pipeline().addLast(ChannelsFilter())
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
@@ -376,7 +380,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   fun getClients(): List<Device> {
     return authenticatedClients.map {
       val addr = it.channel().remoteAddress() as InetSocketAddress
-      val ssl = it.channel().pipeline().get("ssl") as SslHandler
+      val ssl = it.channel().pipeline().get(SslHandler::class.java) as SslHandler
       val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
       val x500Name = JcaX509CertificateHolder(cert).subject
       val cn = x500Name.getRDNs(BCStyle.CN)[0]
@@ -389,7 +393,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
    * Disconnect the client from the server and delete the client
    */
   fun disconnectClient(client: Device) {
-    (getChannel(client) ?: throw RuntimeException("Client not found")).close().sync()
+    (getChannel(client) ?: throw RuntimeException("Client not found")).close()
   }
 
   /**
@@ -398,7 +402,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   fun disconnectAllClients() {
     // close all the clients
     for (client in authenticatedClients) {
-      client.close().sync()
+      client.close()
     }
 
     // clear the list
@@ -435,7 +439,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     val ctx = getChannel(client) ?: throw RuntimeException("Client not found")
 
     // get the certificate
-    val sslHandler = ctx.channel().pipeline().get("ssl") as SslHandler
+    val sslHandler = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
     val cert = sslHandler.engine().session.peerCertificates[0]
 
     // return the certificate
@@ -532,48 +536,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
    * The Channel of the ChannelHandlerContext is now active
    */
   override fun channelActive(ctx: ChannelHandlerContext) {
-    // get the Handler for SSL from Pipeline
-    val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
-
-    // get the Storage Instance
-    val storage = Storage.getInstance(context)
-
-    // check if client has certificate
-    if(ssl.engine().session.peerCertificates.isEmpty()) {
-      ctx.close().also { return }
-    }
-
-    // get the Peer Certificate
-    val peerCert = ssl.engine().session.peerCertificates[0] as X509Certificate
-
-    // get name
-    val addr = ctx.channel().remoteAddress() as InetSocketAddress
-
-    // get CN name from certificate using bouncy castle
-    val x500Name = JcaX509CertificateHolder(peerCert).subject
-    val rdns = x500Name.getRDNs(BCStyle.CN)
-
-    // is does not have CN name
-    if (rdns.isEmpty()) ctx.close().also { return }
-
-    // get the CN name
-    val name = IETFUtils.valueToString(rdns[0].first.value)
-
-    // if Storage dis not have name
-    if (!storage.hasClientCert(name)) {
-      return this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
-    }
-
-    // get cert for name
-    val cert = storage.getClientCert(name)
-
-    // if matches then connect
-    if (peerCert == cert) {
-      this.onClientAuthenticated(Device(addr.address, addr.port, name))
-    }
-
-    // Notify Auth Request Handlers
-    this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
+    // Do Nothing
   }
 
   /**
@@ -628,8 +591,55 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   /**
    * Gets called if an user event was triggered.
    */
-  override fun userEventTriggered(ctx: ChannelHandlerContext?, evt: Any?) {
-    // Do Nothing
+  override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
+    // check if event is SSL Handshake Completed
+    if (evt !is SslHandshakeCompletionEvent) return
+
+    // if handshake is not completed
+    if (!evt.isSuccess) ctx.close().also { return }
+
+    // get the Handler for SSL from Pipeline
+    val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
+
+    // get the Storage Instance
+    val storage = Storage.getInstance(context)
+
+    // check if client has certificate
+    if(ssl.engine().session.peerCertificates.isEmpty()) {
+      ctx.close().also { return }
+    }
+
+    // get the Peer Certificate
+    val peerCert = ssl.engine().session.peerCertificates[0] as X509Certificate
+
+    // get name
+    val addr = ctx.channel().remoteAddress() as InetSocketAddress
+
+    // get CN name from certificate using bouncy castle
+    val x500Name = JcaX509CertificateHolder(peerCert).subject
+    val rdns = x500Name.getRDNs(BCStyle.CN)
+
+    // is does not have CN name
+    if (rdns.isEmpty()) ctx.close().also { return }
+
+    // get the CN name
+    val name = IETFUtils.valueToString(rdns[0].first.value)
+
+    // if Storage dis not have name
+    if (!storage.hasClientCert(name)) {
+      return this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
+    }
+
+    // get cert for name
+    val cert = storage.getClientCert(name)
+
+    // if matches then connect
+    if (peerCert == cert) {
+      return this.onClientAuthenticated(Device(addr.address, addr.port, name))
+    }
+
+    // Notify Auth Request Handlers
+    this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
   }
 
   /**

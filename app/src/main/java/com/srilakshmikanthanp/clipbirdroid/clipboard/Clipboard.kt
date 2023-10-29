@@ -7,6 +7,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import com.srilakshmikanthanp.clipbirdroid.constant.appName
+import com.srilakshmikanthanp.clipbirdroid.constant.appProvider
 import java.io.File
 
 
@@ -15,7 +16,7 @@ import java.io.File
  */
 class Clipboard(private val context: Context) {
   /// clipboard Manager to manage the clipboard
-  private val clipboard: ClipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+  private val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
   /// List of ClipboardChangeListener
   private val listeners: MutableList<ClipboardChangeListener> = mutableListOf()
@@ -26,10 +27,12 @@ class Clipboard(private val context: Context) {
   }
 
   /// MIME Types
-  private val MIME_TYPE_TEXT: String = "text/plain"
-  private val MIME_TYPE_PNG: String = "image/png"
-  private val MIME_TYPE_COLOR: String = "application/x-color"
-  private val MIME_TYPE_HTML: String = "text/html"
+  companion object {
+    private val MIME_TYPE_TEXT: String = "text/plain"
+    private val MIME_TYPE_PNG: String = "image/png"
+    private val MIME_TYPE_COLOR: String = "application/x-color"
+    private val MIME_TYPE_HTML: String = "text/html"
+  }
 
   /**
    * Get the Content from the URI
@@ -58,6 +61,12 @@ class Clipboard(private val context: Context) {
    * ClipBoard Change Implementation
    */
   private fun onClipboardChanged() {
+    // if the content is put by clipbird
+    if (clipboard.primaryClipDescription?.label == appName()) {
+      return
+    }
+
+    // get the content
     val contents = this.getClipboardContent()
     for (listener in listeners) {
       listener.onClipboardChange(contents)
@@ -98,10 +107,20 @@ class Clipboard(private val context: Context) {
     val uris = mutableListOf<Uri>()
 
     // create Files for contents
-    for (i in contents.indices) {
-      val file = File.createTempFile(appName(), ".tmp", context.cacheDir)
-      file.writeBytes(contents[i].second)
-      uris.add(FileProvider.getUriForFile(context, context.packageName, file))
+    for ((mime, value) in contents) {
+      // infer the File Extension
+      val ext = when (mime) {
+        MIME_TYPE_TEXT -> ".txt"
+        MIME_TYPE_PNG -> ".png"
+        MIME_TYPE_COLOR -> ".color"
+        MIME_TYPE_HTML -> ".html"
+        else -> "tmp"
+      }
+
+      // create URI
+      val file = File.createTempFile(appName(), ext, context.cacheDir)
+      file.writeBytes(value)
+      uris.add(FileProvider.getUriForFile(context, appProvider(), file))
     }
 
     // if less than 1 return
@@ -133,11 +152,11 @@ class Clipboard(private val context: Context) {
    * @return MutableList<Pair<String, ByteArray>>
    */
   fun getClipboardContent(): MutableList<Pair<String, ByteArray>> {
-    // create a list of Pair<String, ByteArray>
-    val contents = mutableListOf<Pair<String, ByteArray>>()
-
     // get the clip data
     val clipData = this.clipboard.primaryClip ?: return mutableListOf()
+
+    // create a list of Pair<String, ByteArray>
+    val contents = mutableListOf<Pair<String, ByteArray>>()
 
     // iterate through all the items
     for (i in 0 until clipData.itemCount) {

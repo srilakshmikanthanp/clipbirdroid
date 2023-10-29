@@ -17,7 +17,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.Server
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
-import com.srilakshmikanthanp.clipbirdroid.types.variant.Variant
+import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 
 class AppController(private val sslConfig: SSLConfig, private val context: Context) {
   //----------------------- client Signals -------------------------//

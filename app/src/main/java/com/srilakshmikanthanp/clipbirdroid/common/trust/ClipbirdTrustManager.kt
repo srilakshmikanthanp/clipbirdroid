@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common
+package com.srilakshmikanthanp.clipbirdroid.common.trust
 
 import android.annotation.SuppressLint
 import java.security.cert.X509Certificate

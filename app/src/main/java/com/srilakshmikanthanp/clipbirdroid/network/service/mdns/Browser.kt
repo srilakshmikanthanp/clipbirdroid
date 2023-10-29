@@ -4,20 +4,58 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdManager.DiscoveryListener
 import android.net.nsd.NsdManager.ResolveListener
+import android.net.nsd.NsdManager.ServiceInfoCallback
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 /**
  * Browser that allows to discover services of a given type.
  */
-class Browser(context: Context) : ResolveListener, DiscoveryListener {
+class Browser(context: Context) : DiscoveryListener {
   // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
   // List of listeners that will be notified of browser events.
   private val listeners: MutableList<BrowserListener> = mutableListOf()
+
+  // Executor instance for running tasks in the background.
+  private val executor: Executor = Executors.newSingleThreadExecutor()
+
+  // Resolve Listener for Network Service Discovery API 28
+  private inner class ResolverOld: ResolveListener {
+    override fun onServiceResolved(info: NsdServiceInfo) {
+      for (l in listeners) l.onServiceAdded(Device(info.host, info.port, info.serviceName))
+    }
+
+    override fun onResolveFailed(p0: NsdServiceInfo?, p1: Int) {
+      Log.e(TAG, "Failed to resolve service: $p0")
+    }
+  }
+
+  // Resolve Listener for Network Service Discovery API 34
+  @RequiresApi(34)
+  private inner class ResolverNew: ServiceInfoCallback {
+    override fun onServiceInfoCallbackRegistrationFailed(p0: Int) {
+      Log.e(TAG, "Failed to resolve service: $p0")
+    }
+
+    override fun onServiceUpdated(p0: NsdServiceInfo) {
+      for (l in listeners) l.onServiceAdded(Device(p0.hostAddresses.first(), p0.port, p0.serviceName))
+    }
+
+    override fun onServiceLost() {
+      Log.e(TAG, "Failed to resolve service")
+    }
+
+    override fun onServiceInfoCallbackUnregistered() {
+      Log.d(TAG, "onServiceInfoCallbackUnregistered")
+    }
+  }
 
   // TAG for logging.
   companion object {
@@ -68,22 +106,12 @@ class Browser(context: Context) : ResolveListener, DiscoveryListener {
   /**
    * Called when a service is found.
    */
-  override fun onServiceFound(info: NsdServiceInfo?) {
-    nsdManager.resolveService(info, this)
-  }
-
-  /**
-   * Called when a service is resolved.
-   */
-  override fun onServiceResolved(info: NsdServiceInfo) {
-    for (l in listeners) l.onServiceAdded(Device(info.host, info.port, info.serviceName))
-  }
-
-  /**
-   * Called when a resolve fails. [Not Used]
-   */
-  override fun onResolveFailed(p0: NsdServiceInfo?, p1: Int) {
-    Log.e(TAG, "Failed to resolve service: $p0")
+  override fun onServiceFound(info: NsdServiceInfo) {
+    if (android.os.Build.VERSION.SDK_INT >= 34) {
+      nsdManager.registerServiceInfoCallback(info, executor, ResolverNew())
+    } else {
+      nsdManager.resolveService(info, ResolverOld())
+    }
   }
 
   /**

@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.types.variant
+package com.srilakshmikanthanp.clipbirdroid.common.variant
 
 /**
  * A Helper class to hold two different types of data
