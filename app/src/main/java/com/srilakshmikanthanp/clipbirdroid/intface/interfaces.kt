@@ -47,7 +47,6 @@ fun interface OnSyncRequestHandler {
   fun onSyncRequest(items: List<Pair<String, ByteArray>>)
 }
 
-
 // Client List Change Handler
 fun interface OnClientListChangeHandler {
   fun onClientListChanged(clients: List<Device>)
