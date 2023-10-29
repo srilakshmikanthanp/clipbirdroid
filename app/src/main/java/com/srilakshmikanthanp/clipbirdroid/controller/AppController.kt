@@ -2,6 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.controller
 
 import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
+import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientStateChangeHandler
@@ -17,7 +18,6 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.Server
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
-import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 
 class AppController(private val sslConfig: SSLConfig, private val context: Context) {
   //----------------------- client Signals -------------------------//
@@ -359,7 +359,6 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     server.addAuthRequestHandler(::notifyAuthRequest)
 
     // connect the sync request signal
-    server.addSyncRequestHandler(clipboard::setClipboardContent)
     server.addSyncRequestHandler(::notifySyncRequest)
 
     // connect the client list changed signal
@@ -400,7 +399,6 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     client.addServerFoundHandler(::notifyServerFound)
 
     // Connect the sync request signal
-    client.addSyncRequestHandler(clipboard::setClipboardContent)
     client.addSyncRequestHandler(::notifySyncRequest)
 
     // Connect the connection error signal
