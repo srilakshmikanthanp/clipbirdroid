@@ -30,7 +30,6 @@ class Clipboard(private val context: Context) {
   companion object {
     private val MIME_TYPE_TEXT: String = "text/plain"
     private val MIME_TYPE_PNG: String = "image/png"
-    private val MIME_TYPE_COLOR: String = "application/x-color"
     private val MIME_TYPE_HTML: String = "text/html"
   }
 
@@ -39,7 +38,7 @@ class Clipboard(private val context: Context) {
    */
   private fun getContentFromUri(uri: Uri): Pair<String, ByteArray>? {
     // List of Allowed Types
-    val allowedTypes = arrayOf(MIME_TYPE_TEXT, MIME_TYPE_PNG, MIME_TYPE_COLOR, MIME_TYPE_HTML)
+    val allowedTypes = arrayOf(MIME_TYPE_TEXT, MIME_TYPE_PNG, MIME_TYPE_HTML)
 
     // get the content
     val result = context.contentResolver.openInputStream(uri).use {
@@ -112,7 +111,6 @@ class Clipboard(private val context: Context) {
       val ext = when (mime) {
         MIME_TYPE_TEXT -> ".txt"
         MIME_TYPE_PNG -> ".png"
-        MIME_TYPE_COLOR -> ".color"
         MIME_TYPE_HTML -> ".html"
         else -> "tmp"
       }
