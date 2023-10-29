@@ -11,7 +11,7 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnSyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
-import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Register
+import com.srilakshmikanthanp.clipbirdroid.network.service.Register
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder

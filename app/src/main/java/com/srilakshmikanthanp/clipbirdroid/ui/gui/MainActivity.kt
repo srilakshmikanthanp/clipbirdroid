@@ -93,7 +93,7 @@ class MyService : Service() {
     // 192.168.206.45
     controller.connectToServer(
       Device(
-        InetAddress.getByName("192.168.206.45"), 64535, "LAPTOP-JC2M372A"
+        InetAddress.getByName("192.168.206.45"), 58609, "LAPTOP-JC2M372A"
       )
     )
 

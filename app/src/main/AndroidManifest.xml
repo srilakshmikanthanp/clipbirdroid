@@ -28,7 +28,7 @@
     </activity>
 
     <provider
-      android:name="androidx.core.content.FileProvider"
+      android:name=".common.provider.ClipbirdFileProvider"
       android:authorities="${applicationId}.provider"
       android:exported="false"
       android:grantUriPermissions="true">
@@ -44,5 +44,4 @@
 
     <service android:name=".ui.gui.MyService" />
   </application>
-
 </manifest>

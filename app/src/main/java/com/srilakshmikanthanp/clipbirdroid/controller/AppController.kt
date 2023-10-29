@@ -400,6 +400,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // Connect the sync request signal
     client.addSyncRequestHandler(::notifySyncRequest)
+    client.addSyncRequestHandler(clipboard::setClipboardContent)
 
     // Connect the connection error signal
     client.addConnectionErrorHandler(::notifyConnectionError)

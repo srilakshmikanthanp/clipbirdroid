@@ -1,7 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.clipboard
 
 import android.content.ClipData
-import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
@@ -20,6 +19,9 @@ class Clipboard(private val context: Context) {
 
   /// List of ClipboardChangeListener
   private val listeners: MutableList<ClipboardChangeListener> = mutableListOf()
+
+  // Max Size of the Clipboard
+  private val maxClipboardSize: Int = 800 * 1024
 
   // ClipboardChangeListener Interface
   fun interface ClipboardChangeListener {
@@ -54,6 +56,94 @@ class Clipboard(private val context: Context) {
 
     // return result
     return result
+  }
+
+  /**
+   * Try to get both Text and HTML from contents
+   */
+  private fun doItAsTextAndHtml(contents: List<Pair<String, ByteArray>>): Boolean {
+    // get the text and html
+    val textBytes = contents.find { it.first == MIME_TYPE_TEXT }
+    val htmlBytes = contents.find { it.first == MIME_TYPE_HTML }
+
+    // if any one null
+    if (textBytes == null || htmlBytes == null) {
+      return false
+    }
+
+    // text and Html
+    val text = String(textBytes.second)
+    val html = String(htmlBytes.second)
+
+    // if content is > 800kb
+    val clipData = if (text.length + html.length >= maxClipboardSize) {
+      val file = File.createTempFile(appName(), ".html", context.cacheDir)
+      file.writeBytes(htmlBytes.second)
+      val uri = FileProvider.getUriForFile(context, appProvider(), file)
+      ClipData.newUri(context.contentResolver, appName(), uri)
+    } else {
+      ClipData.newHtmlText(appName(), text, html)
+    }
+
+    // set the clip data
+    clipboard.setPrimaryClip(clipData).also { return true }
+  }
+
+  /**
+   * Try to get Only Text from contents
+   */
+  private fun doItAsOnlyText(contents: List<Pair<String, ByteArray>>): Boolean {
+    // get the text from contents
+    val text = contents.find { it.first == MIME_TYPE_TEXT } ?: return false
+
+    // if content is > 800kb
+    val clipData = if (text.second.size >= maxClipboardSize) {
+      val file = File.createTempFile(appName(), ".txt", context.cacheDir)
+      file.writeBytes(text.second)
+      val uri = FileProvider.getUriForFile(context, appProvider(), file)
+      ClipData.newUri(context.contentResolver, appName(), uri)
+    } else {
+      ClipData.newPlainText(appName(), String(text.second))
+    }
+
+    // set the clip data
+    clipboard.setPrimaryClip(clipData).also { return true }
+  }
+
+  /**
+   * Try to get Only HTML from contents
+   */
+  private fun doItAsOnlyHtml(contents: List<Pair<String, ByteArray>>): Boolean {
+    // get the html from contents
+    val html = contents.find { it.first == MIME_TYPE_HTML } ?: return false
+
+    // if content is > 800kb
+    val clipData = if (html.second.size >= maxClipboardSize) {
+      val file = File.createTempFile(appName(), ".html", context.cacheDir)
+      file.writeBytes(html.second)
+      val uri = FileProvider.getUriForFile(context, appProvider(), file)
+      ClipData.newUri(context.contentResolver, appName(), uri)
+    } else {
+      ClipData.newHtmlText(appName(), String(html.second), String(html.second))
+    }
+
+    // set the clip data
+    clipboard.setPrimaryClip(clipData).also { return true }
+  }
+
+  /**
+   * Try to get Only Image from contents
+   */
+  private fun doItAsOnlyImage(contents: List<Pair<String, ByteArray>>): Boolean {
+    // get the image
+    val image = contents.find { it.first == MIME_TYPE_PNG } ?: return false
+    val file = File.createTempFile(appName(), ".png", context.cacheDir)
+    file.writeBytes(image.second)
+    val uri = FileProvider.getUriForFile(context, appProvider(), file)
+
+    // create clip data
+    val clipData = ClipData.newUri(context.contentResolver, appName(), uri)
+    clipboard.setPrimaryClip(clipData).also { return true }
   }
 
   /**
@@ -99,42 +189,25 @@ class Clipboard(private val context: Context) {
    * first -> MIME Type, second -> Raw Data
    */
   fun setClipboardContent(contents: List<Pair<String, ByteArray>>) {
-    // Enumerate all Mime Types
-    val mimeTypes = contents.map { it.first }.toTypedArray()
-
-    // List of URI's
-    val uris = mutableListOf<Uri>()
-
-    // create Files for contents
-    for ((mime, value) in contents) {
-      // infer the File Extension
-      val ext = when (mime) {
-        MIME_TYPE_TEXT -> ".txt"
-        MIME_TYPE_PNG -> ".png"
-        MIME_TYPE_HTML -> ".html"
-        else -> "tmp"
-      }
-
-      // create URI
-      val file = File.createTempFile(appName(), ext, context.cacheDir)
-      file.writeBytes(value)
-      uris.add(FileProvider.getUriForFile(context, appProvider(), file))
+    // if only image
+    if (doItAsOnlyImage(contents)) {
+      return  // Since Image is First Priority
     }
 
-    // if less than 1 return
-    if (uris.size < 1) return
-
-    // create ClipData
-    val clipDescription = ClipDescription(appName(), mimeTypes)
-    val clipData = ClipData(clipDescription, ClipData.Item(uris[0]))
-
-    // add all the items
-    for (i in 1 until uris.size) {
-      clipData.addItem(ClipData.Item(uris[i]))
+    // if text and html both
+    if (doItAsTextAndHtml(contents)) {
+      return  // Since Text and Html is Second Priority
     }
 
-    // set the clip data
-    this.clipboard.setPrimaryClip(clipData)
+    // if only html
+    if (doItAsOnlyHtml(contents)) {
+      return  // Since Html is Third Priority
+    }
+
+    // if only text
+    if (doItAsOnlyText(contents)) {
+      return  // Since Text is Fourth Priority
+    }
   }
 
   /**

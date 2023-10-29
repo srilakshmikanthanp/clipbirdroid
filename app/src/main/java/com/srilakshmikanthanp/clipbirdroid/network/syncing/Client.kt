@@ -13,7 +13,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
-import com.srilakshmikanthanp.clipbirdroid.network.service.mdns.Browser
+import com.srilakshmikanthanp.clipbirdroid.network.service.Browser
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder

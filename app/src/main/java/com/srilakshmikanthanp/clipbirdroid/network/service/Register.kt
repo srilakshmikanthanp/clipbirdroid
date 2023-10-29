@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.network.service.mdns
+package com.srilakshmikanthanp.clipbirdroid.network.service
 
 import android.content.Context
 import android.net.nsd.NsdManager
