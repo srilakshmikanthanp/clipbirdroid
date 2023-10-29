@@ -20,6 +20,16 @@ class Clipboard(private val context: Context) {
   /// List of ClipboardChangeListener
   private val listeners: MutableList<ClipboardChangeListener> = mutableListOf()
 
+  // Add ClipboardChangeListener
+  fun addClipboardChangeListener(listener: ClipboardChangeListener) {
+    listeners.add(listener)
+  }
+
+  // Remove ClipboardChangeListener
+  fun removeClipboardChangeListener(listener: ClipboardChangeListener) {
+    listeners.remove(listener)
+  }
+  
   // Max Size of the Clipboard
   private val maxClipboardSize: Int = 800 * 1024
 
@@ -50,12 +60,26 @@ class Clipboard(private val context: Context) {
     } ?: return null
 
     // if allowed type
-    if (!allowedTypes.contains(result.first)) {
-      return null
+    return if (allowedTypes.contains(result.first)) {
+      result
+    } else {
+      null
     }
+  }
 
-    // return result
-    return result
+  /**
+   * Try to get Only Image from contents
+   */
+  private fun doItAsOnlyImage(contents: List<Pair<String, ByteArray>>): Boolean {
+    // get the image
+    val image = contents.find { it.first == MIME_TYPE_PNG } ?: return false
+    val file = File.createTempFile(appName(), ".png", context.cacheDir)
+    file.writeBytes(image.second)
+    val uri = FileProvider.getUriForFile(context, appProvider(), file)
+
+    // create clip data
+    val clipData = ClipData.newUri(context.contentResolver, appName(), uri)
+    clipboard.setPrimaryClip(clipData).also { return true }
   }
 
   /**
@@ -132,21 +156,6 @@ class Clipboard(private val context: Context) {
   }
 
   /**
-   * Try to get Only Image from contents
-   */
-  private fun doItAsOnlyImage(contents: List<Pair<String, ByteArray>>): Boolean {
-    // get the image
-    val image = contents.find { it.first == MIME_TYPE_PNG } ?: return false
-    val file = File.createTempFile(appName(), ".png", context.cacheDir)
-    file.writeBytes(image.second)
-    val uri = FileProvider.getUriForFile(context, appProvider(), file)
-
-    // create clip data
-    val clipData = ClipData.newUri(context.contentResolver, appName(), uri)
-    clipboard.setPrimaryClip(clipData).also { return true }
-  }
-
-  /**
    * ClipBoard Change Implementation
    */
   private fun onClipboardChanged() {
@@ -170,43 +179,22 @@ class Clipboard(private val context: Context) {
   }
 
   /**
-   * Add ClipboardChangeListener
-   */
-  fun addClipboardChangeListener(listener: ClipboardChangeListener) {
-    listeners.add(listener)
-  }
-
-  /**
-   * Remove ClipboardChangeListener
-   */
-  fun removeClipboardChangeListener(listener: ClipboardChangeListener) {
-    listeners.remove(listener)
-  }
-
-  /**
    * @brief Set the clipboard content with the given contents
    * @param contents List of Pair<String, ByteArray>
    * first -> MIME Type, second -> Raw Data
    */
   fun setClipboardContent(contents: List<Pair<String, ByteArray>>) {
-    // if only image
-    if (doItAsOnlyImage(contents)) {
-      return  // Since Image is First Priority
-    }
+    // list of function ordered with priority
+    val functions = listOf(
+      this::doItAsOnlyImage,
+      this::doItAsTextAndHtml,
+      this::doItAsOnlyHtml,
+      this::doItAsOnlyText
+    )
 
-    // if text and html both
-    if (doItAsTextAndHtml(contents)) {
-      return  // Since Text and Html is Second Priority
-    }
-
-    // if only html
-    if (doItAsOnlyHtml(contents)) {
-      return  // Since Html is Third Priority
-    }
-
-    // if only text
-    if (doItAsOnlyText(contents)) {
-      return  // Since Text is Fourth Priority
+    // iterate through all the functions
+    for (function in functions) {
+      if (function(contents)) return
     }
   }
 
