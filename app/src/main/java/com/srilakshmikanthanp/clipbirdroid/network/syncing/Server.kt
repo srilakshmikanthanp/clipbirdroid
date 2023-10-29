@@ -40,7 +40,7 @@ import java.security.cert.X509Certificate
 /**
  * A SSl Server Using Netty as a Backend
  */
-class Server(private val context: Context) : ChannelInboundHandler, Register.RegisterListener {
+open class Server(private val context: Context) : ChannelInboundHandler, Register.RegisterListener {
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
 

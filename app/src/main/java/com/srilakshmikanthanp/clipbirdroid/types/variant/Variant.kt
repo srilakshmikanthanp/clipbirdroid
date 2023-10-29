@@ -1,42 +1,20 @@
 package com.srilakshmikanthanp.clipbirdroid.types.variant
 
-import com.srilakshmikanthanp.clipbirdroid.intface.OnVariantDataDestroyHandler
-
 /**
  * A Helper class to hold two different types of data
  * but only one at a time.
  */
 class Variant {
-  // List on On Data Destroy Handlers
-  private val onDataDestroyHandlers: MutableList<OnVariantDataDestroyHandler> = mutableListOf()
-
-  // add On Data Destroy Handler
-  fun addOnDataDestroyHandler(handler: OnVariantDataDestroyHandler) {
-    onDataDestroyHandlers.add(handler)
-  }
-
-  // remove On Data Destroy Handler
-  fun removeOnDataDestroyHandler(handler: OnVariantDataDestroyHandler) {
-    onDataDestroyHandlers.remove(handler)
-  }
-
-  /**
-   * Notify all the On Data Destroy Handlers
-   */
-  private fun notifyOnDataDestroyHandlers(obj: Any) {
-    onDataDestroyHandlers.forEach { it.onVariantDataDestroy(obj) }
-  }
-
   // Instance of data to be held
-  private var obj: Any? = null
+  private var obj: AutoCloseable? = null
 
   /**
    * Set the data to be held
    */
-  fun set(obj: Any): Any {
+  fun set(obj: AutoCloseable): Any {
     // if data is already held
     if (hasObject()) {
-      notifyOnDataDestroyHandlers(this.obj!!)
+      this.obj!!.close()
     }
 
     // set the data
@@ -56,7 +34,7 @@ class Variant {
   /**
    * Get the data held
    */
-  fun get(): Any? {
+  fun get(): AutoCloseable? {
     return obj
   }
 

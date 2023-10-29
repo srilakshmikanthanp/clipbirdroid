@@ -125,11 +125,56 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     syncRequestHandlers.remove(handler)
   }
 
+  //----------------------- Extended classes ---------------------------//
+
+  // Server With Destroyable Type
+  private inner class ServerCloseable : Server(context), AutoCloseable {
+    override fun close() {
+       // disconnect the signals from Server
+      this.removeServerStateChangeHandler(::notifyServerStateChanged)
+      this.removeClientStateChangeHandler(::handleClientStateChanged)
+      this.removeClientStateChangeHandler(::notifyClientStateChanged)
+      this.removeAuthRequestHandler(::notifyAuthRequest)
+      this.removeSyncRequestHandler(::notifySyncRequest)
+      this.removeClientListChangeHandler(::notifyClientListChanged)
+
+      // Disconnect the signals to Server
+      clipboard.removeClipboardChangeListener(this::syncItems)
+
+      // stop the server
+      this.stopServer()
+    }
+  }
+
+  // Client With Destroyable Type
+  private inner class ClientCloseable: Client(context), AutoCloseable {
+    override fun close() {
+      // disconnect the signals from Client
+      this.removeServerStatusChangeHandler(::handleServerStatusChanged)
+      this.removeServerStatusChangeHandler(::notifyServerStatusChanged)
+      this.removeServerFoundHandler(::handleServerFound)
+      this.removeServerFoundHandler(::notifyServerFound)
+      this.removeServerListChangeHandler(::notifyServerListChanged)
+      this.removeServerGoneHandler(::notifyServerGone)
+      this.removeSyncRequestHandler(::notifySyncRequest)
+      this.removeConnectionErrorHandler(::notifyConnectionError)
+
+      // Disconnect the signals to Client
+      clipboard.removeClipboardChangeListener(this::syncItems)
+
+      // stop the client
+      this.stopBrowsing()
+
+      // if connected to server then disconnect
+      if (this.isConnected()) this.disconnectFromServer()
+    }
+  }
+
   //------------------------- Member Variables -------------------------//
 
   private val storage: Storage = Storage.getInstance(context)
   private val host: Variant = Variant()
-  private val clipboard : Clipboard = Clipboard(context)
+  private val clipboard: Clipboard = Clipboard(context)
 
   //----------------------- private notifiers ------------------------//
 
@@ -226,50 +271,6 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   //------------------------- private slots -------------------------//
 
   /**
-   * Handle the Data going to destroy on Variant
-   */
-  private fun handleVariantDataDestroy(obj: Any) {
-    // if the data is Server Instance
-    if (obj is Server) {
-      // disconnect the signals from Server
-      obj.removeServerStateChangeHandler(::notifyServerStateChanged)
-      obj.removeClientStateChangeHandler(::handleClientStateChanged)
-      obj.removeClientStateChangeHandler(::notifyClientStateChanged)
-      obj.removeAuthRequestHandler(::notifyAuthRequest)
-      obj.removeSyncRequestHandler(::notifySyncRequest)
-      obj.removeClientListChangeHandler(::notifyClientListChanged)
-
-      // Disconnect the signals to Server
-      clipboard.removeClipboardChangeListener(obj::syncItems)
-
-      // stop the server
-      obj.stopServer()
-    }
-
-    // if the data is Client Instance
-    if (obj is Client) {
-      // disconnect the signals from Client
-      obj.removeServerStatusChangeHandler(::handleServerStatusChanged)
-      obj.removeServerStatusChangeHandler(::notifyServerStatusChanged)
-      obj.removeServerFoundHandler(::handleServerFound)
-      obj.removeServerFoundHandler(::notifyServerFound)
-      obj.removeServerListChangeHandler(::notifyServerListChanged)
-      obj.removeServerGoneHandler(::notifyServerGone)
-      obj.removeSyncRequestHandler(::notifySyncRequest)
-      obj.removeConnectionErrorHandler(::notifyConnectionError)
-
-      // Disconnect the signals to Client
-      clipboard.removeClipboardChangeListener(obj::syncItems)
-
-      // stop the client
-      obj.stopBrowsing()
-
-      // if connected to server then disconnect
-      if (obj.isConnected()) obj.disconnectFromServer()
-    }
-  }
-
-  /**
    * Handle the Client State Changes (From server)
    */
   private fun handleClientStateChanged(client: Device, connected: Boolean) {
@@ -335,10 +336,6 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
   }
 
-  //------------------------- Initializer -------------------------//
-
-  init { host.addOnDataDestroyHandler(::handleVariantDataDestroy) }
-
   //------------------------- public slots -------------------------//
 
   /**
@@ -346,7 +343,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun setCurrentHostAsServer() {
     // create the server object with context
-    val server: Server = host.set(Server(context)) as Server
+    val server: Server = host.set(ServerCloseable()) as Server
 
     // set the ssl configuration
     server.setSslConfig(sslConfig)
@@ -383,7 +380,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun setCurrentHostAsClient() {
     // Create the Client object with context
-    val client: Client = host.set(Client(context)) as Client
+    val client: Client = host.set(ClientCloseable()) as Client
 
     // Set the SSL Configuration
     client.setSslConfig(sslConfig)
@@ -458,22 +455,27 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * the client
    */
   fun disconnectClient(client: Device) {
+    // find the client with the given host and ip
+    val match = { i: Device -> i.ip == client.ip && i.port == client.port }
+
     // if the host is not server then throw
     if (!host.holds(Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
-    // find the client with the given host and ip
-    val match = { i: Device -> i.name == client.name }
-
     // get the list of clients
     val clients = getConnectedClientsList()
 
     // find the client
-    val it = clients.find(match) ?: throw RuntimeException("Client not found")
+    val ctx = clients.find(match).also {
+      if (it == null) throw RuntimeException("Client not found")
+    }
+
+    // get the Server
+    val server = host.get() as Server
 
     // disconnect the client
-    (host.get() as Server).disconnectClient(client)
+    server.disconnectClient(client)
   }
 
   /**

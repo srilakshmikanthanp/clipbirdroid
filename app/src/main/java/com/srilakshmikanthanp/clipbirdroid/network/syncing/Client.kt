@@ -42,7 +42,7 @@ import java.security.cert.X509Certificate
 /**
  * Client Class for Syncing the Clipboard
  */
-class Client(private val context: Context): Browser.BrowserListener, ChannelInboundHandler {
+open class Client(private val context: Context): Browser.BrowserListener, ChannelInboundHandler {
   // List handlers for server list changed
   private val onServerListChangeHandlers = mutableListOf<OnServerListChangeHandler>()
 

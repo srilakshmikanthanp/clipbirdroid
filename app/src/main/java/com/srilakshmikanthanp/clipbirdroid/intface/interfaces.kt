@@ -52,8 +52,3 @@ fun interface OnSyncRequestHandler {
 fun interface OnClientListChangeHandler {
   fun onClientListChanged(clients: List<Device>)
 }
-
-// Variant Data going to destroy
-fun interface OnVariantDataDestroyHandler {
-  fun onVariantDataDestroy(data: Any)
-}

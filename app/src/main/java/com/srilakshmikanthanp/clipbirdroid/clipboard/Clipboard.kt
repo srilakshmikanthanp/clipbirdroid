@@ -9,12 +9,6 @@ import androidx.core.content.FileProvider
 import com.srilakshmikanthanp.clipbirdroid.constant.appName
 import java.io.File
 
-/**
- * Clipboard Change Listener Interface
- */
-fun interface ClipboardChangeListener {
-  fun onClipboardChange(content: MutableList<Pair<String, ByteArray>>)
-}
 
 /**
  * Class For Managing the Clipboard
@@ -25,6 +19,11 @@ class Clipboard(private val context: Context) {
 
   /// List of ClipboardChangeListener
   private val listeners: MutableList<ClipboardChangeListener> = mutableListOf()
+
+  // ClipboardChangeListener Interface
+  fun interface ClipboardChangeListener {
+    fun onClipboardChange(content: MutableList<Pair<String, ByteArray>>)
+  }
 
   /// MIME Types
   private val MIME_TYPE_TEXT: String = "text/plain"
