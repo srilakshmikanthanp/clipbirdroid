@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -15,6 +16,11 @@ import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import java.net.InetAddress
 import java.util.Locale
+
+/**
+ * DeviceActionable Type Alias
+ */
+typealias DeviceActionable = Pair<Device, DeviceAction>
 
 /**
  * Device Action Enum To Represent Connect or Disconnect
@@ -30,11 +36,6 @@ enum class DeviceAction {
     }
   }
 }
-
-/**
- * DeviceActionable Type Alias
- */
-typealias DeviceActionable = Pair<Device, DeviceAction>
 
 /**
  * Device Composable to Represent the Device
@@ -56,8 +57,9 @@ fun Device(
   ) {
     // Align Test the Center both horizontally and vertically
     Text(
+      style = MaterialTheme.typography.labelLarge,
       text = deviceActionable.first.name,
-      modifier = Modifier.padding(5.dp)
+      modifier = Modifier.padding(start = 10.dp)
     )
 
     // Connect or Disconnect Button
@@ -76,7 +78,7 @@ fun Device(
 @Composable
 private fun DevicePreview() {
   // A Constant Device Value to Preview
-  val device = Device(InetAddress.getLocalHost(), 8080, "LAPTOP-HP")
+  val device = Device(InetAddress.getLocalHost(), 8080, "Apple MacBook Air")
 
   // Preview the Device
   Column() {
