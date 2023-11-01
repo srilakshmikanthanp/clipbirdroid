@@ -9,7 +9,7 @@ import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
 
-class Register(context: Context) : RegistrationListener {
+class Register(private val context: Context) : RegistrationListener {
   // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
@@ -49,7 +49,7 @@ class Register(context: Context) : RegistrationListener {
     val serviceInfo: NsdServiceInfo = NsdServiceInfo()
 
     // set the info
-    serviceInfo.serviceName = appMdnsServiceName()
+    serviceInfo.serviceName = appMdnsServiceName(context)
     serviceInfo.serviceType = appMdnsServiceType()
     serviceInfo.port = port
 

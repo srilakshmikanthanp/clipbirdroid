@@ -84,7 +84,7 @@ class MyService : Service() {
   override fun onCreate() {
     super.onCreate()
 
-    val ssl = generateX509Certificate(1024)
+    val ssl = generateX509Certificate(this  )
 
     val controller = AppController(ssl, this)
 

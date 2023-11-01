@@ -1,9 +1,9 @@
 package com.srilakshmikanthanp.clipbirdroid.constant
 
+import android.content.Context
 import android.os.Build
 import android.provider.Settings
 import com.srilakshmikanthanp.clipbirdroid.BuildConfig
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainApp
 
 /**
  * @brief Get the Application Version
@@ -57,9 +57,9 @@ fun appIssuesPage(): String {
  * @brief Get the MDns Service Name
  * @return string Device name
  */
-fun appMdnsServiceName(): String {
+fun appMdnsServiceName(context: Context): String {
   return Settings.Secure.getString(
-    MainApp.getContext().contentResolver,
+    context.contentResolver,
     "device_name"
   ) ?: Build.MODEL
 }

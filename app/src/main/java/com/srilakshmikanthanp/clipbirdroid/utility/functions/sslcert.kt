@@ -1,5 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.utility.functions
 
+import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appName
 import com.srilakshmikanthanp.clipbirdroid.constant.appOrgName
@@ -17,7 +18,7 @@ import java.util.Date
 /**
  * Generate RSA key pair
  */
-fun generateRSAKeyPair(bits: Int): KeyPair {
+private fun generateRSAKeyPair(bits: Int): KeyPair {
   val kpg = KeyPairGenerator.getInstance("RSA")
   kpg.initialize(bits)
   return kpg.generateKeyPair()
@@ -26,13 +27,13 @@ fun generateRSAKeyPair(bits: Int): KeyPair {
 /**
  * Generate X509 certificate
  */
-fun generateX509Certificate(bits: Int): Pair<PrivateKey, X509Certificate> {
+fun generateX509Certificate(context: Context, bits: Int = 1024): Pair<PrivateKey, X509Certificate> {
   // create Expiry dates
   val expiryBefore = Date(System.currentTimeMillis() - (365 * 24 * 60 * 60))
   val expiryAfter = Date(System.currentTimeMillis() + (365 * 24 * 60 * 60))
 
   // create the names
-  val cname = appMdnsServiceName()
+  val cname = appMdnsServiceName(context)
   val orgName = appOrgName()
   val unit = appName()
   val issuer = X500Name("CN=$cname, O=$orgName, OU=$unit")
