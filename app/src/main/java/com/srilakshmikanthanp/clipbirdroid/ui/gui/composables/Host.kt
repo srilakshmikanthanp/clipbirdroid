@@ -1,7 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.composables
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,12 +19,12 @@ import java.util.Locale
 /**
  * DeviceActionable Type Alias
  */
-typealias DeviceActionable = Pair<Device, DeviceAction>
+typealias DeviceActionable = Pair<Device, HostAction>
 
 /**
  * Device Action Enum To Represent Connect or Disconnect
  */
-enum class DeviceAction {
+enum class HostAction {
   // Allowed Types connect or disconnect
   CONNECT, DISCONNECT;
 
@@ -41,13 +40,13 @@ enum class DeviceAction {
  * Device Composable to Represent the Device
  */
 @Composable
-fun Device(
+fun Host(
   deviceActionable: DeviceActionable,
   modifier: Modifier,
-  onAction: (DeviceAction) -> Unit
+  onAction: (DeviceActionable) -> Unit
 ) {
   // Click Handler for the Device Action Clicked either Connect or Disconnect
-  val onClickHandler = { onAction(deviceActionable.second) }
+  val onClickHandler = { onAction(deviceActionable) }
 
   // Hostname And Action placed in row name left and action right
   Row(
@@ -76,28 +75,14 @@ fun Device(
  */
 @Preview(showBackground = true)
 @Composable
-private fun DevicePreview() {
+private fun HostPreview() {
   // A Constant Device Value to Preview
   val device = Device(InetAddress.getLocalHost(), 8080, "Apple MacBook Air")
 
   // Preview the Device
-  Column() {
-    Device(
-      deviceActionable = DeviceActionable(device, DeviceAction.DISCONNECT),
-      modifier = Modifier.fillMaxWidth(),
-      onAction = {}
-    )
-
-    Device(
-      deviceActionable = DeviceActionable(device, DeviceAction.CONNECT),
-      modifier = Modifier.fillMaxWidth(),
-      onAction = {}
-    )
-
-    Device(
-      deviceActionable = DeviceActionable(device, DeviceAction.DISCONNECT),
-      modifier = Modifier.fillMaxWidth(),
-      onAction = {}
-    )
-  }
+  Host(
+    deviceActionable = DeviceActionable(device, HostAction.DISCONNECT),
+    modifier = Modifier.fillMaxWidth(),
+    onAction = {}
+  )
 }
