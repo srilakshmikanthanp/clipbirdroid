@@ -48,10 +48,10 @@ class MyService : Service() {
     )
 
     val notificationBuilder = NotificationCompat.Builder(context, channelId)
-      .setSmallIcon(R.drawable.ic_launcher_foreground)
+      .setSmallIcon(R.mipmap.ic_launcher_foreground)
       .setContentTitle("Notification Title")
       .setContentText("Click the button to Copy!")
-      .addAction(R.drawable.ic_launcher_foreground, "Copy", getHelloPendingIntent(context))
+      .addAction(R.mipmap.ic_launcher_foreground, "Copy", getHelloPendingIntent(context))
       .setOngoing(true)
 
     val notificationManager = NotificationManagerCompat.from(context)

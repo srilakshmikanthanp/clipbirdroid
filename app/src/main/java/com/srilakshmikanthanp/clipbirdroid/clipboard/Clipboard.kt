@@ -29,7 +29,7 @@ class Clipboard(private val context: Context) {
   fun removeClipboardChangeListener(listener: ClipboardChangeListener) {
     listeners.remove(listener)
   }
-  
+
   // Max Size of the Clipboard
   private val maxClipboardSize: Int = 800 * 1024
 
@@ -40,9 +40,9 @@ class Clipboard(private val context: Context) {
 
   /// MIME Types
   companion object {
-    private val MIME_TYPE_TEXT: String = "text/plain"
-    private val MIME_TYPE_PNG: String = "image/png"
-    private val MIME_TYPE_HTML: String = "text/html"
+    public val MIME_TYPE_TEXT: String = "text/plain"
+    public val MIME_TYPE_PNG: String = "image/png"
+    public val MIME_TYPE_HTML: String = "text/html"
   }
 
   /**
@@ -114,27 +114,6 @@ class Clipboard(private val context: Context) {
   }
 
   /**
-   * Try to get Only Text from contents
-   */
-  private fun doItAsOnlyText(contents: List<Pair<String, ByteArray>>): Boolean {
-    // get the text from contents
-    val text = contents.find { it.first == MIME_TYPE_TEXT } ?: return false
-
-    // if content is > 800kb
-    val clipData = if (text.second.size >= maxClipboardSize) {
-      val file = File.createTempFile(appName(), ".txt", context.cacheDir)
-      file.writeBytes(text.second)
-      val uri = FileProvider.getUriForFile(context, appProvider(), file)
-      ClipData.newUri(context.contentResolver, appName(), uri)
-    } else {
-      ClipData.newPlainText(appName(), String(text.second))
-    }
-
-    // set the clip data
-    clipboard.setPrimaryClip(clipData).also { return true }
-  }
-
-  /**
    * Try to get Only HTML from contents
    */
   private fun doItAsOnlyHtml(contents: List<Pair<String, ByteArray>>): Boolean {
@@ -149,6 +128,27 @@ class Clipboard(private val context: Context) {
       ClipData.newUri(context.contentResolver, appName(), uri)
     } else {
       ClipData.newHtmlText(appName(), String(html.second), String(html.second))
+    }
+
+    // set the clip data
+    clipboard.setPrimaryClip(clipData).also { return true }
+  }
+
+  /**
+   * Try to get Only Text from contents
+   */
+  private fun doItAsOnlyText(contents: List<Pair<String, ByteArray>>): Boolean {
+    // get the text from contents
+    val text = contents.find { it.first == MIME_TYPE_TEXT } ?: return false
+
+    // if content is > 800kb
+    val clipData = if (text.second.size >= maxClipboardSize) {
+      val file = File.createTempFile(appName(), ".txt", context.cacheDir)
+      file.writeBytes(text.second)
+      val uri = FileProvider.getUriForFile(context, appProvider(), file)
+      ClipData.newUri(context.contentResolver, appName(), uri)
+    } else {
+      ClipData.newPlainText(appName(), String(text.second))
     }
 
     // set the clip data
