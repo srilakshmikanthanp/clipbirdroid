@@ -54,7 +54,7 @@ fun Status(
   // Status Box
   Box(
     contentAlignment = Alignment.Center,
-    modifier = modifier,
+    modifier = modifier
   ) {
     Text(
       fontWeight = FontWeight.Bold,
@@ -72,7 +72,9 @@ fun Status(
 @Composable
 private fun StatusPreview() {
   Status(
-    modifier = Modifier.padding(vertical = 70.dp).fillMaxWidth(),
+    modifier = Modifier
+      .padding(vertical = 70.dp)
+      .fillMaxWidth(),
     hostName = "Google Pixel",
     status = StatusType.CONNECTED,
     fontSize = 45.sp

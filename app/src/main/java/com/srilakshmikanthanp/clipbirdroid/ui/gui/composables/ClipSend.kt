@@ -16,7 +16,10 @@ import androidx.compose.ui.unit.dp
  * ClipSend Composable
  */
 @Composable
-fun ClipSend(onSend: () -> Unit = {}, modifier: Modifier = Modifier) {
+fun ClipSend(
+  modifier: Modifier = Modifier,
+  onSend: () -> Unit = {}
+) {
   // Row for the Text and send Button
   Row(
     horizontalArrangement = Arrangement.SpaceBetween,
@@ -26,6 +29,7 @@ fun ClipSend(onSend: () -> Unit = {}, modifier: Modifier = Modifier) {
     Text(
       text = "Send the Latest Clipboard to other Devices",
     )
+
     Button(onClick = onSend) {
       Text(text = "Send")
     }

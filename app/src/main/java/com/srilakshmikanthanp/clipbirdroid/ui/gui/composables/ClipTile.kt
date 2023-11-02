@@ -128,7 +128,7 @@ fun ClipTile(
 
     // Row that presents content from end
     Row(
-      horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.End),
+      horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
       modifier = rowModifierEnd,
       verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -139,7 +139,6 @@ fun ClipTile(
       DeleteAction(onDelete)
     }
   }
-
 }
 
 /**

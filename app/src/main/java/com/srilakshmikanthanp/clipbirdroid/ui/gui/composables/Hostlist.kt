@@ -1,10 +1,12 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.composables
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import java.net.InetAddress
 
@@ -17,13 +19,9 @@ fun HostList(
   onAction: (DeviceActionable) -> Unit,
   modifier: Modifier = Modifier
 ) {
-  LazyColumn {
+  LazyColumn(contentPadding = PaddingValues(5.dp), modifier = modifier) {
     items(devicesActionable.size) { i ->
-      Host(
-        deviceActionable = devicesActionable[i],
-        modifier = modifier,
-        onAction = onAction
-      )
+      Host(devicesActionable[i], Modifier.fillMaxWidth(), onAction)
     }
   }
 }
@@ -35,7 +33,9 @@ fun HostList(
 @Composable
 fun HostListPreview() {
   // A Constant Device Value to Preview
-  val device = Device(InetAddress.getLocalHost(), 8080, "Apple MacBook Air")
+  val device = Device(InetAddress.getByAddress(
+    byteArrayOf(127, 0, 0, 1)
+  ), 8080, "Apple MacBook Air")
 
   // List of Devices Actionable
   val devicesActionable = listOf<DeviceActionable>(
