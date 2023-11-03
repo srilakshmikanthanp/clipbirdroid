@@ -5,20 +5,21 @@ package com.srilakshmikanthanp.clipbirdroid.common.variant
  * but only one at a time.
  */
 class Variant {
-  // Instance of data to be held
-  private var obj: AutoCloseable? = null
+  // Auxiliary datum to be held
+  private var aux = HashMap<String, Any>()
+
+  // Instance to be held
+  private var obj: Any? = null
 
   /**
    * Set the data to be held
    */
-  fun set(obj: AutoCloseable): Any {
-    // if data is already held
-    if (hasObject()) {
-      this.obj!!.close()
-    }
-
-    // set the data
+  fun set(obj: Any): Any {
+    // set the data to be held
     this.obj = obj
+
+    // clear
+    aux.clear()
 
     // return the data
     return obj
@@ -34,8 +35,26 @@ class Variant {
   /**
    * Get the data held
    */
-  fun get(): AutoCloseable? {
+  fun get(): Any? {
     return obj
+  }
+
+  /**
+   * Add auxiliary data
+   */
+  fun addAux(key: String, value: Any): Any {
+    // set the data to be held
+    aux[key] = value
+
+    // return the data
+    return value
+  }
+
+  /**
+   * Get the auxiliary data
+   */
+  fun getAux(key: String): Any {
+    return aux[key] ?: throw Exception("No such key")
   }
 
   /**

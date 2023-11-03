@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -105,38 +106,40 @@ fun ClipTile(
   onCopy: () -> Unit = {},
   onDelete: () -> Unit = {}
 ) {
-  Column(modifier = modifier) {
-    // Modifier for Row that presents content from start and end
-    val rowModifierStart = Modifier
-      .padding(horizontal = 5.dp, vertical = 10.dp)
-      .fillMaxWidth()
+  ElevatedCard(modifier = modifier) {
+    Column {
+      // Modifier for Row that presents content from start and end
+      val rowModifierStart = Modifier
+        .padding(horizontal = 10.dp, vertical = 10.dp)
+        .fillMaxWidth()
 
-    // Row that presents content from start
-    Row(
-      verticalAlignment = Alignment.CenterVertically,
-      modifier = rowModifierStart,
-      horizontalArrangement = Arrangement.Start,
-    ) {
-      // Show the Clipboard Content
-      content.ToTile()
-    }
+      // Row that presents content from start
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = rowModifierStart,
+        horizontalArrangement = Arrangement.Start,
+      ) {
+        // Show the Clipboard Content
+        content.ToTile()
+      }
 
-    // Modifier for Row that presents content from end
-    val rowModifierEnd = Modifier
-      .padding(horizontal = 5.dp, vertical = 10.dp)
-      .fillMaxWidth()
+      // Modifier for Row that presents content from end
+      val rowModifierEnd = Modifier
+        .padding(horizontal = 10.dp, vertical = 10.dp)
+        .fillMaxWidth()
 
-    // Row that presents content from end
-    Row(
-      horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
-      modifier = rowModifierEnd,
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      // Show the Copy Action Button
-      CopyAction(onCopy)
+      // Row that presents content from end
+      Row(
+        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
+        modifier = rowModifierEnd,
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        // Show the Copy Action Button
+        CopyAction(onCopy)
 
-      // Show the Delete Action
-      DeleteAction(onDelete)
+        // Show the Delete Action
+        DeleteAction(onDelete)
+      }
     }
   }
 }

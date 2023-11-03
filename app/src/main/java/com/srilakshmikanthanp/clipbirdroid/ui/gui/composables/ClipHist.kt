@@ -1,15 +1,12 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.composables
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
@@ -25,8 +22,7 @@ fun ClipHist(
   onDelete: (Int) -> Unit
 ) {
   // Item Modifier for the ClipTile Composable
-  val itemModifier = Modifier.fillMaxWidth().shadow(1.dp).padding(5.dp)
-    .background(MaterialTheme.colorScheme.background)
+  val itemModifier = Modifier.fillMaxWidth().padding(2.dp)
 
   // Lazy Column for the Clip History
   LazyColumn(

@@ -40,9 +40,9 @@ class Clipboard(private val context: Context) {
 
   /// MIME Types
   companion object {
-    public val MIME_TYPE_TEXT: String = "text/plain"
-    public val MIME_TYPE_PNG: String = "image/png"
-    public val MIME_TYPE_HTML: String = "text/html"
+    val MIME_TYPE_TEXT: String = "text/plain"
+    val MIME_TYPE_PNG: String = "image/png"
+    val MIME_TYPE_HTML: String = "text/html"
   }
 
   /**

@@ -37,7 +37,7 @@ enum class StatusType {
  * Status Composable
  */
 @Composable
-fun Status(
+fun Group(
   hostName: String,
   status: StatusType,
   fontSize: TextUnit,
@@ -71,7 +71,7 @@ fun Status(
 @Preview(showBackground = true)
 @Composable
 private fun StatusPreview() {
-  Status(
+  Group(
     modifier = Modifier
       .padding(vertical = 70.dp)
       .fillMaxWidth(),

@@ -125,48 +125,50 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     syncRequestHandlers.remove(handler)
   }
 
-  //----------------------- Extended classes ---------------------------//
+  //----------------------- Helper Functions ---------------------------//
 
-  // Server With Destroyable Type
-  private inner class ServerCloseable : Server(context), AutoCloseable {
-    override fun close() {
-       // disconnect the signals from Server
-      this.removeServerStateChangeHandler(::notifyServerStateChanged)
-      this.removeClientStateChangeHandler(::handleClientStateChanged)
-      this.removeClientStateChangeHandler(::notifyClientStateChanged)
-      this.removeAuthRequestHandler(::notifyAuthRequest)
-      this.removeSyncRequestHandler(::notifySyncRequest)
-      this.removeClientListChangeHandler(::notifyClientListChanged)
-
-      // Disconnect the signals to Server
-      clipboard.removeClipboardChangeListener(this::syncItems)
+  private fun destroyHost() {
+    if (host.holds(Server::class.java)) {
+      // get the server and disconnect the signals
+      val server : Server = host.get() as Server
 
       // stop the server
-      this.stopServer()
+      server.stopServer()
+
+      // disconnect the signals from Server
+      server.removeServerStateChangeHandler(::notifyServerStateChanged)
+      server.removeClientStateChangeHandler(::handleClientStateChanged)
+      server.removeClientStateChangeHandler(::notifyClientStateChanged)
+      server.removeAuthRequestHandler(::notifyAuthRequest)
+      server.removeSyncRequestHandler(::notifySyncRequest)
+      server.removeClientListChangeHandler(::notifyClientListChanged)
+
+      // Disconnect the signals to Server
+      clipboard.removeClipboardChangeListener(server::syncItems)
     }
-  }
 
-  // Client With Destroyable Type
-  private inner class ClientCloseable: Client(context), AutoCloseable {
-    override fun close() {
-      // disconnect the signals from Client
-      this.removeServerStatusChangeHandler(::handleServerStatusChanged)
-      this.removeServerStatusChangeHandler(::notifyServerStatusChanged)
-      this.removeServerFoundHandler(::handleServerFound)
-      this.removeServerFoundHandler(::notifyServerFound)
-      this.removeServerListChangeHandler(::notifyServerListChanged)
-      this.removeServerGoneHandler(::notifyServerGone)
-      this.removeSyncRequestHandler(::notifySyncRequest)
-      this.removeConnectionErrorHandler(::notifyConnectionError)
-
-      // Disconnect the signals to Client
-      clipboard.removeClipboardChangeListener(this::syncItems)
-
-      // stop the client
-      this.stopBrowsing()
+    if (host.holds(Client::class.java)) {
+      // get the client and disconnect the signals
+      val client : Client = host.get() as Client
 
       // if connected to server then disconnect
-      if (this.isConnected()) this.disconnectFromServer()
+      if (client.isConnected()) client.disconnectFromServer()
+
+      // stop the client
+      client.stopBrowsing()
+
+      // disconnect the signals from Client
+      client.removeServerStatusChangeHandler(::handleServerStatusChanged)
+      client.removeServerStatusChangeHandler(::notifyServerStatusChanged)
+      client.removeServerFoundHandler(::handleServerFound)
+      client.removeServerFoundHandler(::notifyServerFound)
+      client.removeServerListChangeHandler(::notifyServerListChanged)
+      client.removeServerGoneHandler(::notifyServerGone)
+      client.removeSyncRequestHandler(::notifySyncRequest)
+      client.removeConnectionErrorHandler(::notifyConnectionError)
+
+      // Disconnect the signals to Client
+      clipboard.removeClipboardChangeListener(client::syncItems)
     }
   }
 
@@ -175,6 +177,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   private val storage: Storage = Storage.getInstance(context)
   private val host: Variant = Variant()
   private val clipboard: Clipboard = Clipboard(context)
+  private val SERVER_LIST = "server_list"
+  private val CLIENT_LIST = "client_list"
 
   //----------------------- private notifiers ------------------------//
 
@@ -342,8 +346,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Set Current Host As Server
    */
   fun setCurrentHostAsServer() {
+    // destroy the host if already exists
+    if (host.hasObject()) this.destroyHost()
+
     // create the server object with context
-    val server: Server = host.set(ServerCloseable()) as Server
+    val server: Server = host.set(Server(context)) as Server
 
     // set the ssl configuration
     server.setSslConfig(sslConfig)
@@ -378,8 +385,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Set Current Host As Client
    */
   fun setCurrentHostAsClient() {
+    // destroy the host if already exists
+    if (host.hasObject()) this.destroyHost()
+
     // Create the Client object with context
-    val client: Client = host.set(ClientCloseable()) as Client
+    val client: Client = host.set(Client(context)) as Client
 
     // Set the SSL Configuration
     client.setSslConfig(sslConfig)
@@ -542,6 +552,19 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     server.onClientNotAuthenticated(client)
   }
 
+  /**
+   * Dispose the Server
+   */
+  fun disposeServer() {
+    // if the host is not server then throw
+    if (!host.holds(Server::class.java)) {
+      throw RuntimeException("Host is not server")
+    }
+
+    // Dispose the host
+    this.destroyHost()
+  }
+
   //---------------------- Client functions -----------------------//
 
   /**
@@ -623,6 +646,19 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // disconnect from the server
     client.disconnectFromServer()
+  }
+
+  /**
+   * Dispose the Client
+   */
+  fun disposeClient() {
+    // if the host is not client then throw
+    if (!host.holds(Client::class.java)) {
+      throw RuntimeException("Host is not client")
+    }
+
+    // Dispose the host
+    this.destroyHost()
   }
 
   //----------------------- Common functions -------------------------//
