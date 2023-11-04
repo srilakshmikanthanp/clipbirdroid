@@ -8,6 +8,7 @@ import androidx.core.content.FileProvider
 import com.srilakshmikanthanp.clipbirdroid.constant.appName
 import com.srilakshmikanthanp.clipbirdroid.constant.appProvider
 import java.io.File
+import java.io.FileNotFoundException
 
 
 /**
@@ -53,7 +54,11 @@ class Clipboard(private val context: Context) {
     val allowedTypes = arrayOf(MIME_TYPE_TEXT, MIME_TYPE_PNG, MIME_TYPE_HTML)
 
     // get the content
-    val result = context.contentResolver.openInputStream(uri).use {
+    val result = try {
+      context.contentResolver.openInputStream(uri)
+    } catch (e: FileNotFoundException) {
+      return null
+    }.use {
       val mimeType = context.contentResolver.getType(uri) ?: return@use null
       val content = it?.readBytes() ?: return@use null
       return@use Pair(mimeType, content)

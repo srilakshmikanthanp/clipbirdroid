@@ -2,7 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.constant
 
 import android.content.Context
 import android.os.Build
-import android.provider.Settings
+import android.provider.Settings.Secure.getString
 import com.srilakshmikanthanp.clipbirdroid.BuildConfig
 
 /**
@@ -58,10 +58,7 @@ fun appIssuesPage(): String {
  * @return string Device name
  */
 fun appMdnsServiceName(context: Context): String {
-  return Settings.Secure.getString(
-    context.contentResolver,
-    "device_name"
-  ) ?: Build.MODEL
+  return getString(context.contentResolver, "bluetooth_name") ?: Build.MODEL
 }
 
 /**
@@ -87,4 +84,11 @@ fun appOrgName(): String {
  */
 fun appProvider(): String {
   return BuildConfig.APPLICATION_ID + ".provider"
+}
+
+/**
+ * Max Number of Clipboard History
+ */
+fun appMaxHistory(): Int {
+  return 10
 }

@@ -7,20 +7,28 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults.smallTopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,9 +44,7 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnServerListChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStateChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipbirdBar
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceActionable
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.GTab
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Group
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostList
@@ -165,7 +171,7 @@ private fun ActionsDropDownMenu(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Groups(controller: AppController, onMenuClick: () -> Unit = {}, ) {
+fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // is the Host is lastly server or client
   var isServer by remember { mutableStateOf(controller.isLastlyHostIsServer()) }
 
@@ -276,10 +282,12 @@ fun Groups(controller: AppController, onMenuClick: () -> Unit = {}, ) {
   // Actions Drop Down Menu
   val actionsDropDownMenu = @Composable  {
     Box {
+      // More Icon Image Icon
       IconButton(onClick = { expanded = true }) {
         Image(painter = painterResource(R.drawable.more), contentDescription = "More",)
       }
 
+      // Content
       ActionsDropDownMenu(
         onQRCodeClick = { expanded = false; onQRCodeClick()},
         onJoinClick = { expanded = false; onJoinClick()},
@@ -293,32 +301,47 @@ fun Groups(controller: AppController, onMenuClick: () -> Unit = {}, ) {
     }
   }
 
+  // Menu Icon for the Top Bar
+  val menuIcon = @Composable {
+    IconButton(onClick = onMenuClick) {
+      Image(painter = painterResource(R.drawable.menu), contentDescription = "Menu",)
+    }
+  }
+
   // A Inner Composable just to make code more readable
-  val groupsTopBar = @Composable {
-    ElevatedCard {
-      Column {
+  val devicesTopBar = @Composable {
+    Card (shape = RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)) {
+      Column (horizontalAlignment = Alignment.CenterHorizontally) {
         // Top Bar for Navigation & Actions
-        ClipbirdBar(
-          title = { Text("ClipBird Devices", modifier = Modifier.padding(horizontal = 10.dp)) },
+        TopAppBar(
+          navigationIcon = { menuIcon() },
+          title = { Text("Clipbird Devices", modifier = Modifier.padding(horizontal = 10.dp)) },
           modifier = Modifier.padding(3.dp),
-          onMenuClick = onMenuClick,
-          actions = { actionsDropDownMenu() }
+          actions = { actionsDropDownMenu() },
+          colors = smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         )
 
-        // Server Status 40% of parent
+        // Server Status % of parent
         Group(
-          modifier = Modifier.fillMaxHeight(0.25f).fillMaxWidth(),
-          fontSize = 20.sp,
+          modifier = Modifier.fillMaxHeight(0.15f).fillMaxWidth(),
+          fontSize = 24.sp,
           status = status,
           hostName = hostName,
         )
 
         // Tab of Server & Client
-        GTab(
-          selectedTab = if (isServer) SERVER_TAB.first else CLIENT_TAB.first,
-          tabs = listOf(SERVER_TAB.second, CLIENT_TAB.second),
-          onTabClick = tabClickHandler
-        )
+        val selectedTab = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
+        val tabs = listOf(SERVER_TAB.second, CLIENT_TAB.second)
+        val tabIndex = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
+
+        // Compose the Tab Row
+        TabRow(selectedTabIndex = tabIndex, containerColor = Color.Transparent, divider = { }) {
+          tabs.forEachIndexed { index, title ->
+            Tab(onClick = { tabClickHandler(index) }, selected = (selectedTab == index)) {
+              Text(text = title, fontSize = 16.sp, modifier = Modifier.padding(16.dp))
+            }
+          }
+        }
       }
     }
   }
@@ -332,7 +355,7 @@ fun Groups(controller: AppController, onMenuClick: () -> Unit = {}, ) {
 
   // Scaffold Composable
   Scaffold (
-    topBar = groupsTopBar,
+    topBar = devicesTopBar,
     content = content,
   )
 }
@@ -342,6 +365,6 @@ fun Groups(controller: AppController, onMenuClick: () -> Unit = {}, ) {
  */
 @Preview(showBackground = true)
 @Composable
-private fun GroupsPreview() {
-  Groups(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
+private fun DevicesPreview() {
+  Devices(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
 }

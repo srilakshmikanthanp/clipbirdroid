@@ -2,7 +2,6 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.composables
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,7 +9,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Card
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,15 +26,8 @@ import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
 /**
  * Convert the ByteArray to Bitmap
  */
-private fun convertPngToBitmap(content: ByteArray): ImageBitmap {
-  return BitmapFactory.decodeByteArray(content, 0, content.size).asImageBitmap()
-}
-
-/**
- * Convert the ByteArray to String
- */
-private fun convertTextToString(content: ByteArray): String {
-  return String(content)
+private fun ByteArray.toBitmap(): ImageBitmap {
+  return BitmapFactory.decodeByteArray(this, 0, this.size).asImageBitmap()
 }
 
 /**
@@ -43,19 +36,17 @@ private fun convertTextToString(content: ByteArray): String {
 typealias ClipData = List<Pair<String, ByteArray>>
 
 /**
- * Is the ClipData can be inferred as Image
+ * Is the ClipData can be inferred as Text
  */
-private fun ClipData.isImage(): ImageBitmap? {
-  val content = firstOrNull { it.first == Clipboard.MIME_TYPE_PNG }?.second ?: return null
-  return convertPngToBitmap(content)
+private fun ClipData.asText(): String? {
+  firstOrNull { it.first == Clipboard.MIME_TYPE_TEXT }?.second?.let { return String(it) } ?: return null
 }
 
 /**
- * Is the ClipData can be inferred as Text
+ * Is the ClipData can be inferred as Image
  */
-private fun ClipData.isText(): String? {
-  val content = firstOrNull { it.first == Clipboard.MIME_TYPE_TEXT }?.second ?: return null
-  return convertTextToString(content)
+private fun ClipData.asImage(): ImageBitmap? {
+  firstOrNull { it.first == Clipboard.MIME_TYPE_PNG }?.second?.let { return it.toBitmap() } ?: return null
 }
 
 /**
@@ -75,30 +66,6 @@ private fun TextTile(text: String) {
 }
 
 /**
- * ClipData to Tile
- */
-@Composable
-private fun ClipData.ToTile() {
-  isImage()?.let { ImageTile(it) } ?: isText()?.let { TextTile(it) } ?: throw Exception("Unknown")
-}
-
-/**
- * Copy Action
- */
-@Composable
-private fun CopyAction(onClick: () -> Unit = {}) {
-  Image(painterResource(R.drawable.copy), "copy", Modifier.clickable { onClick })
-}
-
-/**
- * Delete Action
- */
-@Composable
-private fun DeleteAction(onClick: () -> Unit = {}) {
-  Image(painterResource(R.drawable.delete), "delete", Modifier.clickable { onClick })
-}
-
-/**
  * ClipTile Composable
  */
 @Composable
@@ -108,12 +75,10 @@ private fun ClipTile(
   onCopy: () -> Unit = {},
   onDelete: () -> Unit = {}
 ) {
-  ElevatedCard(modifier = modifier) {
+  Card(modifier = modifier) {
     Column {
       // Modifier for Row that presents content from start and end
-      val rowModifierStart = Modifier
-        .padding(horizontal = 10.dp, vertical = 10.dp)
-        .fillMaxWidth()
+      val rowModifierStart = Modifier.padding(horizontal = 10.dp, vertical = 15.dp).fillMaxWidth()
 
       // Row that presents content from start
       Row(
@@ -122,25 +87,27 @@ private fun ClipTile(
         horizontalArrangement = Arrangement.Start,
       ) {
         // Show the Clipboard Content
-        content.ToTile()
+        content.asImage()?.let { ImageTile(it) } ?: content.asText()?.let { TextTile(it) }
       }
 
       // Modifier for Row that presents content from end
-      val rowModifierEnd = Modifier
-        .padding(horizontal = 10.dp, vertical = 10.dp)
-        .fillMaxWidth()
+      val rowModifierEnd = Modifier.fillMaxWidth()
 
       // Row that presents content from end
       Row(
-        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.End),
+        horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.End),
         modifier = rowModifierEnd,
         verticalAlignment = Alignment.CenterVertically,
       ) {
         // Show the Copy Action Button
-        CopyAction(onCopy)
+        IconButton(onClick = onCopy) {
+          Image(painterResource(R.drawable.copy), "copy")
+        }
 
         // Show the Delete Action
-        DeleteAction(onDelete)
+        IconButton(onClick = onDelete) {
+          Image(painterResource(R.drawable.delete), "delete")
+        }
       }
     }
   }
@@ -166,23 +133,20 @@ private fun ClipTilePreview() {
  * Clip History Composable
  */
 @Composable
-fun ClipHist(
+fun ClipHistory(
   clipHistory: List<ClipData>,
   modifier: Modifier = Modifier,
   onCopy: (Int) -> Unit,
   onDelete: (Int) -> Unit
 ) {
-  // Item Modifier for the ClipTile Composable
-  val itemModifier = Modifier.fillMaxWidth().padding(2.dp)
-
   // Lazy Column for the Clip History
   LazyColumn(
-    verticalArrangement = Arrangement.spacedBy(4.dp),
+    contentPadding = PaddingValues(top = 5.dp, bottom = 5.dp),
     modifier = modifier,
-    contentPadding = PaddingValues(5.dp)
+    verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
     items(clipHistory.size) {
-      ClipTile(clipHistory[it], itemModifier, { onCopy(it) }, { onDelete(it) })
+      ClipTile(clipHistory[it], Modifier.fillMaxWidth(), { onCopy(it) }, { onDelete(it) })
     }
   }
 }
@@ -200,7 +164,7 @@ private fun ClipHistPreview() {
   )
 
   // Clip History
-  ClipHist(
+  ClipHistory(
     clipHistory = clipHistory,
     modifier = Modifier.fillMaxWidth(),
     onCopy = {},

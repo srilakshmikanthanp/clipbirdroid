@@ -1,6 +1,9 @@
 package com.srilakshmikanthanp.clipbirdroid.store
 
 import android.content.Context
+import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator
+import org.bouncycastle.util.io.pem.PemWriter
+import java.io.StringWriter
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
@@ -15,10 +18,19 @@ class Storage private constructor(context: Context) {
   private val serverPref = context.getSharedPreferences("SERVER", Context.MODE_PRIVATE);
 
   // From string to Certificate
-  private fun String.toCertificate(): X509Certificate {
+  private fun String.asCertificate(): X509Certificate {
     val certFactory = CertificateFactory.getInstance("X.509")
     val inStream = this.byteInputStream(Charsets.UTF_8)
     return certFactory.generateCertificate(inStream) as X509Certificate
+  }
+
+  // From Certificate to string
+  private fun X509Certificate.asString(): String {
+    val stringWriter = StringWriter()
+    PemWriter(stringWriter).use {
+      it.writeObject(JcaMiscPEMGenerator(this))
+    }
+    return stringWriter.toString()
   }
 
   // companion Object
@@ -39,7 +51,7 @@ class Storage private constructor(context: Context) {
    * Set the client name and cert
    */
   fun setClientCert(name: String, cert: X509Certificate) {
-    clientPref.edit().putString(name, cert.toString()).apply()
+    clientPref.edit().putString(name, cert.asString()).apply()
   }
 
   /**
@@ -67,21 +79,21 @@ class Storage private constructor(context: Context) {
    * Get the client cert
    */
   fun getClientCert(name: String): X509Certificate? {
-    return clientPref.getString(name, null)?.toCertificate()
+    return clientPref.getString(name, null)?.asCertificate()
   }
 
   /**
    * Get all client cert
    */
   fun getAllClientCert(): List<X509Certificate> {
-    return clientPref.all.values.map { (it as String).toCertificate() }
+    return clientPref.all.values.map { (it as String).asCertificate() }
   }
 
   /**
    * Set the server name and cert
    */
   fun setServerCert(name: String, cert: X509Certificate) {
-    serverPref.edit().putString(name, cert.toString()).apply()
+    serverPref.edit().putString(name, cert.asString()).apply()
   }
 
   /**
@@ -109,14 +121,14 @@ class Storage private constructor(context: Context) {
    * Get the server cert
    */
   fun getServerCert(name: String): X509Certificate? {
-    return serverPref.getString(name, null)?.toCertificate()
+    return serverPref.getString(name, null)?.asCertificate()
   }
 
   /**
    * Get all server cert
    */
   fun getAllServerCert(): List<X509Certificate> {
-    return serverPref.all.values.map { (it as String).toCertificate() }
+    return serverPref.all.values.map { (it as String).asCertificate() }
   }
 
   /**
