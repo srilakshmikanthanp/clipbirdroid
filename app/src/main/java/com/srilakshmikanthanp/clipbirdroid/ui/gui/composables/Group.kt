@@ -70,11 +70,9 @@ fun Group(
  */
 @Preview(showBackground = true)
 @Composable
-private fun StatusPreview() {
+private fun GroupPreview() {
   Group(
-    modifier = Modifier
-      .padding(vertical = 70.dp)
-      .fillMaxWidth(),
+    modifier = Modifier.padding(vertical = 70.dp).fillMaxWidth(),
     hostName = "Google Pixel",
     status = StatusType.CONNECTED,
     fontSize = 45.sp

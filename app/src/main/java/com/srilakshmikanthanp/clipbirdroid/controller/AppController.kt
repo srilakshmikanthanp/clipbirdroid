@@ -132,6 +132,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       // get the server and disconnect the signals
       val server : Server = host.get() as Server
 
+      // set null
+      host.set(null)
+
       // stop the server
       server.stopServer()
 
@@ -150,6 +153,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     if (host.holds(Client::class.java)) {
       // get the client and disconnect the signals
       val client : Client = host.get() as Client
+
+      // set null
+      host.set(null)
 
       // if connected to server then disconnect
       if (client.isConnected()) client.disconnectFromServer()

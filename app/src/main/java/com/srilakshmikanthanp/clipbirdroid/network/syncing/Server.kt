@@ -323,18 +323,10 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
    */
   fun stopServer() {
     // check for the non null assertion
-    if (!this.isServerRunning()) throw RuntimeException("Server is not started")
+    if (!this.isServerRunning()) return
 
-    // close the server
-    val fut = sslServer?.closeFuture()
-
-    // Assign Null Value
-    this.sslServer = null
-
-    // Add Listener for complete
-    fut?.addListener {
-      register.unRegisterService()
-    }
+    // Unregister the service
+    register.unRegisterService()
   }
 
   /**
@@ -654,7 +646,16 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
    * Gets called if NSD service is un registered
    */
   override fun onServiceUnregistered() {
-    notifyServerStateChangeHandlers(false)
+    // close the server
+    val fut = sslServer?.closeFuture()
+
+    // Assign Null Value
+    this.sslServer = null
+
+    // Add Listener for complete
+    fut?.addListener {
+      notifyServerStateChangeHandlers(false)
+    }
   }
 
   /**

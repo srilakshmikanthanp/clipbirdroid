@@ -8,44 +8,122 @@ import android.net.nsd.NsdManager.ServiceInfoCallback
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import java.net.InetAddress
+import java.net.NetworkInterface
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 /**
  * Browser that allows to discover services of a given type.
  */
-class Browser(context: Context) : DiscoveryListener {
+class Browser(private val context: Context) : DiscoveryListener {
   // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-
-  // List of listeners that will be notified of browser events.
-  private val listeners: MutableList<BrowserListener> = mutableListOf()
 
   // Executor instance for running tasks in the background.
   private val executor: Executor = Executors.newSingleThreadExecutor()
 
-  // Resolve Listener for Network Service Discovery API 28
-  private inner class ResolverOld: ResolveListener {
-    override fun onServiceResolved(info: NsdServiceInfo) {
-      for (l in listeners) l.onServiceAdded(Device(info.host, info.port, info.serviceName))
+  // List of listeners that will be notified of browser events.
+  private val listeners: MutableList<BrowserListener> = mutableListOf()
+
+  // List of Map of service name and ip
+  private val serviceMap: MutableMap<String, Pair<InetAddress, Int>> = mutableMapOf()
+
+  /**
+   * Removes a listener from the browser.
+   */
+  fun removeListener(listener: BrowserListener) {
+    listeners.remove(listener)
+  }
+
+  /**
+   * Adds a listener to the browser.
+   */
+  fun addListener(listener: BrowserListener) {
+    listeners.add(listener)
+  }
+
+  /**
+   * Notifies the listeners that a service has been removed.
+   */
+  private fun notifyServiceRemoved(device: Device) {
+    for (l in listeners) l.onServiceRemoved(device)
+  }
+
+  /**
+   * Notifies the listeners that a service has been added.
+   */
+  private fun notifyServiceAdded(device: Device) {
+    for (l in listeners) l.onServiceAdded(device)
+  }
+
+  /**
+   * service Resolved
+   */
+  private fun serviceResolved(info: NsdServiceInfo) {
+    // ignore the service of this app
+    if (info.serviceName == appMdnsServiceName(context)) return
+
+    // notify the listeners
+    val host: InetAddress = info.host ?: return
+    val port: Int = info.port
+    val serviceName: String = info.serviceName
+
+    // Check the ip is my device ip
+    val interfaces = NetworkInterface.getNetworkInterfaces()
+
+    // Iterate all the network interfaces
+    while (interfaces.hasMoreElements()) {
+      val addresses = interfaces.nextElement().inetAddresses
+      if (addresses.asSequence().any { it == host }) return
     }
 
+    // Add to the service map
+    serviceMap[serviceName] = host to port
+
+    // notify the listeners
+    notifyServiceAdded(Device(host, port, serviceName))
+  }
+
+  /**
+   * service Lost Call Back
+   */
+  private fun serviceLost(info: NsdServiceInfo) {
+    // ignore the service of this app
+    if (info.serviceName == appMdnsServiceName(context)) return
+
+    // get the ip for the service
+    val serviceName: String = info.serviceName
+    val ip = serviceMap[serviceName]?.first ?: return
+    val port = serviceMap[serviceName]?.second ?: return
+
+    // notify the listeners
+    notifyServiceRemoved(Device(ip, port, serviceName))
+  }
+
+  // Resolve Listener for Network Service Discovery API 28
+  private inner class ResolverOld : ResolveListener {
     override fun onResolveFailed(p0: NsdServiceInfo?, p1: Int) {
       Log.e(TAG, "Failed to resolve service: $p0")
+    }
+
+    override fun onServiceResolved(info: NsdServiceInfo) {
+      serviceResolved(info)
     }
   }
 
   // Resolve Listener for Network Service Discovery API 34
   @RequiresApi(34)
-  private inner class ResolverNew: ServiceInfoCallback {
+  private inner class ResolverNew : ServiceInfoCallback {
     override fun onServiceInfoCallbackRegistrationFailed(p0: Int) {
       Log.e(TAG, "Failed to resolve service: $p0")
     }
 
-    override fun onServiceUpdated(p0: NsdServiceInfo) {
-      for (l in listeners) l.onServiceAdded(Device(p0.hostAddresses.first(), p0.port, p0.serviceName))
+    override fun onServiceUpdated(info: NsdServiceInfo) {
+      serviceResolved(info)
     }
 
     override fun onServiceLost() {
@@ -69,20 +147,6 @@ class Browser(context: Context) : DiscoveryListener {
   }
 
   /**
-   * Adds a listener to the browser.
-   */
-  fun addListener(listener: BrowserListener) {
-    listeners.add(listener)
-  }
-
-  /**
-   * Removes a listener from the browser.
-   */
-  fun removeListener(listener: BrowserListener) {
-    listeners.remove(listener)
-  }
-
-  /**
    * Starts the browser.
    */
   fun start() {
@@ -93,14 +157,18 @@ class Browser(context: Context) : DiscoveryListener {
    * Stops the browser.
    */
   fun stop() {
-    nsdManager.stopServiceDiscovery(this)
+    try {
+      nsdManager.stopServiceDiscovery(this)
+    } catch (e: IllegalStateException) {
+      Log.w(TAG, e.message, e)
+    }
   }
 
   /**
    * Called when a service is lost.
    */
   override fun onServiceLost(info: NsdServiceInfo) {
-    for (l in listeners) l.onServiceRemoved(Device(info.host, info.port, info.serviceName))
+    serviceLost(info)
   }
 
   /**

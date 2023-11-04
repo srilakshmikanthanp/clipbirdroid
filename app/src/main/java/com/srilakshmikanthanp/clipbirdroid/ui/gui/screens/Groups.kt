@@ -1,18 +1,24 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.screens
 
-import android.content.Context
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
@@ -22,19 +28,19 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStateChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceActionable
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.GTab
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Group
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostList
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavBar
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.StatusType
+import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 
 /**
  * Server Group Composable That gonna active when user Clicks Server Tab
  */
 @Composable
-private fun ServerGroup() {
-  // get the Controller instance from compositionLocal
-  val controller = compositionLocalOf<AppController> { error("No AppController provided") }.current
-
+private fun ServerGroup(controller: AppController) {
   // list of client devices
   var clients by remember { mutableStateOf<List<DeviceActionable>>(emptyList()) }
 
@@ -45,25 +51,17 @@ private fun ServerGroup() {
 
   // Setup the Server
   val setupServer = {
-    // Add Change Handler for the list of clients
     controller.addClientListChangedHandler(clientListChangeHandler)
-
-    // set the Current Host as Server
-    controller.setCurrentHostAsServer()
   }
 
   // dispose the Server
   val disposeServer = {
-    // Remove Change Handler for the list of clients
     controller.removeClientListChangedHandler(clientListChangeHandler)
-
-    // Dispose the Server After Un Registering Signals
-    controller.disposeServer()
   }
 
   // Setup & Dispose the Server
-  DisposableEffect(Unit) {
-    setupServer(); onDispose { disposeServer() }
+  DisposableEffect(clients) {
+    setupServer(); onDispose(disposeServer)
   }
 
   // HostList
@@ -78,10 +76,7 @@ private fun ServerGroup() {
  * Client Group Composable That gonna active when user Clicks Client Tab
  */
 @Composable
-private fun ClientGroup() {
-  // get the Controller instance from compositionLocal
-  val controller = compositionLocalOf<AppController> { error("No AppController provided") }.current
-
+private fun ClientGroup(controller: AppController) {
   // list of client devices (state)
   var servers by remember { mutableStateOf<List<DeviceActionable>>(emptyList()) }
 
@@ -93,6 +88,11 @@ private fun ClientGroup() {
     }
   }
 
+  // Change Handler for Server Status
+  val serverStatusChangeHandler = OnServerStatusChangeHandler {
+    serverListChangeHandler.onServerListChanged((controller.getServerList()))
+  }
+
   // Action Handler
   val actionHandler = { device: Device, action: HostAction ->
     if (action == HostAction.CONNECT) controller.connectToServer(device)
@@ -101,25 +101,19 @@ private fun ClientGroup() {
 
   // set up the Client
   val setupClient = {
-    // Add Change Handler for the list of servers
+    controller.addServerStatusChangedHandler(serverStatusChangeHandler)
     controller.addServerListChangedHandler(serverListChangeHandler)
-
-    // set the Current Host as Client
-    controller.setCurrentHostAsClient()
   }
 
   // dispose the Client
   val disposeClient = {
-    // Remove Change Handler for the list of servers
     controller.removeServerListChangedHandler(serverListChangeHandler)
-
-    // Dispose the Client After Un Registering Signals
-    controller.disposeClient()
+    controller.removeServerStatusChangedHandler(serverStatusChangeHandler)
   }
 
   // Setup & Dispose the Client
-  DisposableEffect(Unit) {
-    setupClient(); onDispose { disposeClient() }
+  DisposableEffect(servers) {
+    setupClient(); onDispose(disposeClient)
   }
 
   // HostList
@@ -133,46 +127,56 @@ private fun ClientGroup() {
 /**
  * Groups Composable That manage the Server & Client Groups
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Groups() {
-  // get the Controller instance from compositionLocal
-  val controller = compositionLocalOf<AppController> { error("No AppController provided") }.current
-
-  // get the Context instance from compositionLocal
-  val context = compositionLocalOf<Context> { error("No Context provided") }.current
-
+fun Groups(
+  controller: AppController,
+  onMenuClick: () -> Unit = {},
+  onQRCodeClick: () -> Unit = {},
+  onJoinClick: () -> Unit = {},
+  onResetClick: () -> Unit = {},
+  onAboutClick: () -> Unit = {},
+  onIssueClick: () -> Unit = {},
+) {
   // is the Host is lastly server or client
   var isServer by remember { mutableStateOf(controller.isLastlyHostIsServer()) }
 
+  // get the Context instance from compositionLocal
+  val context = LocalContext.current
+
+  // initial host name
+  val inferHostName = { if (isServer) appMdnsServiceName(context) else "Join to a Group" }
+
+  // initial Status
+  val inferStatus = { if (isServer) StatusType.CONNECTED else StatusType.DISCONNECTED }
+
   // status of the Host
-  var status by remember { mutableStateOf(if (isServer) StatusType.INACTIVE else StatusType.DISCONNECTED) }
+  var status by remember { mutableStateOf(inferStatus()) }
 
-  // Infer the Host name from available details
-  val inferHostName : () -> String = {
-    // If the host is client and connected to server
-    if (!isServer && controller.isConnectedToServer()) {
-      controller.getConnectedServer().name
-    }
+  // Host Name
+  var hostName by remember { mutableStateOf(inferHostName()) }
 
-    // if the host if client and not connected
-    else if (!isServer) {
-      "Join to a Group"
-    }
+  // Server Tab Index
+  val SERVER_TAB = Pair(0, "Create Group")
 
-    // if the host is currently server the return service name
-    else {
-      appMdnsServiceName(context)
-    }
-  }
+  // Client Tab Index
+  val CLIENT_TAB = Pair(1, "Join Group")
 
   // Handler for Server Status
   val serverStatusChangeHandler = OnServerStatusChangeHandler {
-    status = if (it) StatusType.CONNECTED else StatusType.DISCONNECTED
+    hostName = if (it) controller.getConnectedServer().name else "Join to a Group"
+    status   = if (it) StatusType.CONNECTED else StatusType.DISCONNECTED
   }
 
   // Handler for Server State
   val serverStateChangeHandler = OnServerStateChangeHandler {
-    status = if (it) StatusType.ACTIVE else StatusType.INACTIVE
+    hostName = if (it) controller.getServerInfo().name else appMdnsServiceName(context)
+    status   = if (it) StatusType.ACTIVE else StatusType.INACTIVE
+  }
+
+  // Handler for Tab Click Event
+  val tabClickHandler = { index: Int ->
+    isServer = index == SERVER_TAB.first
   }
 
   // Set up lambda
@@ -183,11 +187,15 @@ fun Groups() {
     // Add Change Handler for the server state
     controller.addServerStateChangedHandler(serverStateChangeHandler)
 
-    // if is Server then set current host as server
-    if (isServer) controller.setCurrentHostAsServer()
+    // initialize the Host as Server or Client
+    if (isServer) {
+      controller.setCurrentHostAsServer()
+    } else {
+      controller.setCurrentHostAsClient()
+    }
 
-    // if is Client then set current host as client
-    if (!isServer) controller.setCurrentHostAsClient()
+    // Set the Initial HostName & Status for Group
+    hostName = inferHostName(); status = inferStatus()
   }
 
   // Dispose lambda
@@ -200,18 +208,62 @@ fun Groups() {
   }
 
   // Setup & Dispose
-  DisposableEffect(Unit) {
-    setup(); onDispose { dispose() }
+  DisposableEffect (isServer) {
+    setup(); onDispose(dispose)
   }
 
-  // First Show the Server Status and then a tab to switch between Server & Client
-  Column {
-    // Server Status
-    Group(
-      modifier = Modifier.padding(vertical = 70.dp).fillMaxWidth(),
-      fontSize = 20.sp,
-      status = status,
-      hostName = inferHostName(),
-    )
+  // A Inner Composable just to make code more readable
+  val groupTobBar = @Composable {
+    ElevatedCard {
+      Column {
+        // Top Bar for Navigation
+        NavBar(
+          title = { Text("ClipBird Devices") },
+          onMenuClick = onMenuClick,
+          onQRCodeClick = onQRCodeClick,
+          onJoinClick = onJoinClick,
+          onResetClick = onResetClick,
+          onAboutClick = onAboutClick,
+          onIssueClick = onIssueClick
+        )
+
+        // Server Status 40% of parent
+        Group(
+          modifier = Modifier.fillMaxHeight(0.25f).fillMaxWidth(),
+          fontSize = 20.sp,
+          status = status,
+          hostName = hostName,
+        )
+
+        // Tab of Server & Client
+        GTab(
+          selectedTab = if (isServer) SERVER_TAB.first else CLIENT_TAB.first,
+          tabs = listOf(SERVER_TAB.second, CLIENT_TAB.second),
+          onTabClick = tabClickHandler
+        )
+      }
+    }
   }
+
+  // Content Composable
+  val content = @Composable { padding : PaddingValues ->
+    Box (Modifier.padding(padding)) {
+      if (isServer) ServerGroup(controller) else ClientGroup(controller)
+    }
+  }
+
+  // Scaffold Composable
+  Scaffold (
+    topBar = groupTobBar,
+    content = content,
+  )
+}
+
+/**
+ * Preview for Groups Composable
+ */
+@Preview(showBackground = true)
+@Composable
+private fun GroupsPreview() {
+  Groups(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
 }

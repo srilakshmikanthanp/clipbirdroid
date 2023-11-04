@@ -14,7 +14,7 @@ class Variant {
   /**
    * Set the data to be held
    */
-  fun set(obj: Any): Any {
+  fun set(obj: Any?): Any? {
     // set the data to be held
     this.obj = obj
 
