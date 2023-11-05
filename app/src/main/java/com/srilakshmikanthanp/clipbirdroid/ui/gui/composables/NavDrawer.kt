@@ -2,8 +2,8 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.composables
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.Divider
@@ -31,9 +31,7 @@ import com.srilakshmikanthanp.clipbirdroid.constant.appName
  * Enum Class for Drawer Items
  */
 enum class DrawerItems {
-  DEVICES,
-  HISTORY,
-  ABOUT,
+  DEVICES, HISTORY, ABOUT
 }
 
 /**
@@ -50,12 +48,13 @@ private fun DrawerContent(
     modifier = Modifier.requiredWidth(280.dp),
   ) {
     // Header for the Drawer
-    Row (verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(15.dp)) {
+    Column (
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.padding(15.dp).fillMaxWidth()
+    ) {
       Image(painter = painterResource(R.drawable.phone), contentDescription = "Phone")
-      Column {
-        Text(style = MaterialTheme.typography.headlineMedium, text = appName())
-        Text(text = appMdnsServiceName(LocalContext.current), color = Color.Gray)
-      }
+      Text(style = MaterialTheme.typography.headlineMedium, text = appName())
+      Text(text = appMdnsServiceName(LocalContext.current), color = Color.Gray)
     }
 
     // Divider for Drawer
