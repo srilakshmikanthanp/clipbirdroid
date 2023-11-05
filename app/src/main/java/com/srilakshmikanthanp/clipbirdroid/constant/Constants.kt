@@ -30,6 +30,13 @@ fun appPatchVersion(): String {
 }
 
 /**
+ * App Version
+ */
+fun appVersion(): String {
+  return BuildConfig.VERSION_NAME
+}
+
+/**
  * @brief Get the Application Name
  * @return string
  */
