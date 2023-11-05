@@ -35,8 +35,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.constant.appHomePage
-import com.srilakshmikanthanp.clipbirdroid.constant.appIssuesPage
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
@@ -45,9 +43,9 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStateChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceActionable
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Group
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostList
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Status
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.StatusType
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 
@@ -148,8 +146,6 @@ private fun ActionsDropDownMenu(
   onQRCodeClick: () -> Unit,
   onJoinClick: () -> Unit,
   onResetClick: () -> Unit,
-  onAboutClick: () -> Unit,
-  onIssueClick: () -> Unit,
   expanded: Boolean,
   onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
@@ -161,8 +157,6 @@ private fun ActionsDropDownMenu(
 
     // Show the common menu items
     DropdownMenuItem(text = { Text("Reset") }, onClick = onResetClick)
-    DropdownMenuItem(text = { Text("About") }, onClick = onAboutClick)
-    DropdownMenuItem(text = { Text("Report Issue") }, onClick = onIssueClick)
   }
 }
 
@@ -232,20 +226,6 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     controller.clearServerCertificates()
   }
 
-  // Handler for About Click Event
-  val onAboutClick = {
-    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-    intent.data = android.net.Uri.parse(appHomePage())
-    context.startActivity(intent)
-  }
-
-  // Handler for Issue Click Event
-  val onIssueClick = {
-    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-    intent.data = android.net.Uri.parse(appIssuesPage())
-    context.startActivity(intent)
-  }
-
   // Set up lambda
   val setup = {
     // Add Change Handler for the server status
@@ -292,8 +272,6 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
         onQRCodeClick = { expanded = false; onQRCodeClick()},
         onJoinClick = { expanded = false; onJoinClick()},
         onResetClick = { expanded = false; onResetClick()},
-        onAboutClick = { expanded = false; onAboutClick()},
-        onIssueClick = { expanded = false; onIssueClick()},
         expanded = expanded,
         isServerGroup = isServer,
         onDismissRequest = { expanded = false }
@@ -322,7 +300,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
         )
 
         // Server Status % of parent
-        Group(
+        Status(
           modifier = Modifier.fillMaxHeight(0.15f).fillMaxWidth(),
           fontSize = 24.sp,
           status = status,

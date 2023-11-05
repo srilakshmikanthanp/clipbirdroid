@@ -33,6 +33,9 @@ import com.srilakshmikanthanp.clipbirdroid.constant.appName
 enum class DrawerItems {
   DEVICES,
   HISTORY,
+  ABOUT,
+  REPORT_ISSUE,
+  DONATE
 }
 
 /**
@@ -72,6 +75,30 @@ private fun DrawerContent(
       onClick =  { onItemClicked(DrawerItems.HISTORY) },
       label = { Text(text = "History") },
       selected = selected == DrawerItems.HISTORY,
+    )
+
+    // Divider for Drawer
+    Divider(modifier = Modifier.padding(vertical = 15.dp))
+
+    // Item For About
+    NavigationDrawerItem(
+      onClick =  { onItemClicked(DrawerItems.ABOUT) },
+      label = { Text(text = "About") },
+      selected = selected == DrawerItems.ABOUT,
+    )
+
+    // Item For Report Issue
+    NavigationDrawerItem(
+      onClick =  { onItemClicked(DrawerItems.REPORT_ISSUE) },
+      label = { Text(text = "Issue") },
+      selected = selected == DrawerItems.REPORT_ISSUE,
+    )
+
+    // Item For Donate
+    NavigationDrawerItem(
+      onClick =  { onItemClicked(DrawerItems.DONATE) },
+      label = { Text(text = "Donate") },
+      selected = selected == DrawerItems.DONATE,
     )
   }
 }
