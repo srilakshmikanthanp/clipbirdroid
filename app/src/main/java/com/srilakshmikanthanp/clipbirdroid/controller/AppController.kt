@@ -706,4 +706,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   fun isLastlyHostIsServer(): Boolean {
     return storage.getHostIsLastlyServer()
   }
+
+  /**
+   * IS the Host is Currently Server
+   */
+  fun isCurrentHostIsServer(): Boolean {
+    return host.holds(Server::class.java)
+  }
 }

@@ -16,6 +16,8 @@
     android:theme="@style/Theme.Clipbird"
     tools:targetApi="31">
 
+    <service android:name=".ui.gui.service.ClipbirdService" />
+
     <activity
       android:name="com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity"
       android:exported="true"
@@ -27,6 +29,22 @@
       </intent-filter>
     </activity>
 
+    <activity
+      android:name=".ui.gui.handlers.SendHandler"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+    <activity
+      android:name=".ui.gui.handlers.QuitHandler"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+    <activity
+      android:name=".ui.gui.handlers.AcceptHandler"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+    <activity
+      android:name=".ui.gui.handlers.RejectHandler"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
     <provider
       android:name=".common.provider.ClipbirdFileProvider"
       android:authorities="${applicationId}.provider"
@@ -36,12 +54,5 @@
         android:name="android.support.FILE_PROVIDER_PATHS"
         android:resource="@xml/provider_paths" />
     </provider>
-
-    <activity
-      android:name=".ui.gui.SendHandler"
-      android:theme="@android:style/Theme.Translucent.NoTitleBar"
-      android:parentActivityName=".ui.gui.MainActivity" />
-
-    <service android:name=".ui.gui.MyService" />
   </application>
 </manifest>

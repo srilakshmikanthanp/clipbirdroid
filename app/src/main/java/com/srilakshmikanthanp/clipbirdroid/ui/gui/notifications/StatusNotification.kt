@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.ui.gui.notifiactions
+package com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -19,13 +19,13 @@ import com.srilakshmikanthanp.clipbirdroid.R
  * will be shown to the user. it has two buttons, one for accept and
  * another for reject.
  */
-class ClipbirdService(private val context: Context, onSend: PendingIntent, onQuit: PendingIntent) {
+class StatusNotification(private val context: Context, onTap: PendingIntent, onSend: PendingIntent, onQuit: PendingIntent) {
   // Notification Manager instance
   private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
   // Notification channel constants
   private val CHANNEL_DESC = "This is the notification for Clipbird Service"
-  private val CHANNEL_ID   = "ClipbirdService"
+  private val CHANNEL_ID   = "StatusNotification"
   private val CHANNEL_NAME = "Clipbird Service"
   private val IMPORTANCE   = NotificationManager.IMPORTANCE_DEFAULT
   private val SERVICE_ID   = 1
@@ -43,18 +43,18 @@ class ClipbirdService(private val context: Context, onSend: PendingIntent, onQui
     }
 
     // Create the notification
-    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+    NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
       .setContentTitle("Clipbird Service")
       .setContentText("Tap to send the latest clipboard content to other devices")
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-      .setContentIntent(onSend)
+      .setContentIntent(onTap)
       .setOngoing(true)
-      .addAction(R.drawable.exit, "Quit", onQuit)
-      .build()
-
-    // Show the notification
-    notificationManager.notify(SERVICE_ID, notification)
+      .addAction(0, "Send", onSend)
+      .addAction(0, "Quit", onQuit)
+      .build().also {
+        notificationManager.notify(SERVICE_ID, it)
+      }
   }
 
   /**

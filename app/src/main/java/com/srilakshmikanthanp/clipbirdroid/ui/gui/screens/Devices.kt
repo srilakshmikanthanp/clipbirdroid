@@ -167,7 +167,7 @@ private fun ActionsDropDownMenu(
 @Composable
 fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // is the Host is lastly server or client
-  var isServer by remember { mutableStateOf(controller.isLastlyHostIsServer()) }
+  var isServer by remember { mutableStateOf(controller.isCurrentHostIsServer()) }
 
   // Expanded state for the Drop Down Menu
   var expanded by remember { mutableStateOf(false) }
