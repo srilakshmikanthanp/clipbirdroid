@@ -1,5 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +15,9 @@ import kotlinx.coroutines.launch
  * An abstract handler for the ClipbirdService
  */
 abstract class AbstractHandler : ComponentActivity() {
+  // Notification Manager instance
+  private val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
   // Service connection to the StatusNotification
   private val connection: ClipbirdServiceConnection = ClipbirdServiceConnection()
 
@@ -42,6 +47,9 @@ abstract class AbstractHandler : ComponentActivity() {
   override fun onDestroy() {
     super.onDestroy().also { disposeService() }
   }
+
+  // get the notification manager
+  fun getNotificationManager(): NotificationManager = notificationManager
 
   // On Window Focus Changed
   override fun onWindowFocusChanged(hasFocus: Boolean) {

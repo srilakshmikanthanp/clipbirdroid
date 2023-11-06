@@ -16,8 +16,6 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotification
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 /**
  * Service for the application
@@ -65,7 +63,7 @@ class ClipbirdService : Service() {
   private fun onAcceptIntent(device: Device): PendingIntent {
     val intent: Intent = Intent(this, AcceptHandler::class.java)
     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
-    intent.putExtra(AcceptHandler.ACCEPT_EXTRA, Json.encodeToString(device))
+    intent.putExtra(AcceptHandler.ACCEPT_EXTRA, device)
     return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
   }
 
@@ -73,7 +71,7 @@ class ClipbirdService : Service() {
   private fun onRejectIntent(device: Device): PendingIntent {
     val intent: Intent = Intent(this, RejectHandler::class.java)
     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
-    intent.putExtra(RejectHandler.REJECT_EXTRA, Json.encodeToString(device))
+    intent.putExtra(RejectHandler.REJECT_EXTRA, device)
     return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
   }
 

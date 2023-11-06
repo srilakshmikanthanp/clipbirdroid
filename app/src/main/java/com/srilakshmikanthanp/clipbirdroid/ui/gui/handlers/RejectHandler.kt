@@ -1,15 +1,15 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotification
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 
 class RejectHandler : AbstractHandler() {
   override fun onConnectionReady(binder: ClipbirdService.ServiceBinder) {
     val controller = binder.getService().getController()
-    val device = Json.decodeFromString<Device>(intent.getStringExtra(REJECT_EXTRA)!!)
+    val device = intent.getSerializableExtra(REJECT_EXTRA) as Device?
     controller.onClientNotAuthenticated(device!!)
+    getNotificationManager().cancel(StatusNotification.REQUEST_ID)
   }
 
   // Companion Object
