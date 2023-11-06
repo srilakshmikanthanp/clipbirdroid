@@ -4,6 +4,7 @@
 
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
   <application
     android:allowBackup="true"
@@ -31,19 +32,23 @@
 
     <activity
       android:name=".ui.gui.handlers.SendHandler"
-      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+      android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
       android:name=".ui.gui.handlers.QuitHandler"
-      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+      android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
       android:name=".ui.gui.handlers.AcceptHandler"
-      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+      android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
       android:name=".ui.gui.handlers.RejectHandler"
-      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+      android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:parentActivityName=".ui.gui.MainActivity"/>
 
     <provider
       android:name=".common.provider.ClipbirdFileProvider"

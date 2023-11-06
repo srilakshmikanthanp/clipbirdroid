@@ -1,11 +1,13 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.content.Intent
+import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.helpers.ClipbirdServiceConnection
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.utilities.ClipbirdServiceConnection
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.SettingUp
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 
@@ -13,8 +15,8 @@ class MainActivity : ComponentActivity() {
   // Service connection to the StatusNotification
   private val serviceConnection: ClipbirdServiceConnection = ClipbirdServiceConnection()
 
-  // Set Up the UI and the Service
-  private fun setUpActivity() {
+  // Set up the Service Connection
+  private fun setUpService() {
     // Create Service
     Intent(this, ClipbirdService::class.java).also { intent ->
       startForegroundService(intent)
@@ -24,17 +26,32 @@ class MainActivity : ComponentActivity() {
     Intent(this, ClipbirdService::class.java).also { intent ->
       bindService(intent, serviceConnection, BIND_AUTO_CREATE)
     }
-
-    // Set the content
-    setContent {
-      val isServiceConnected by serviceConnection.isBound().collectAsState()
-      if (!isServiceConnected) { SettingUp().also { return@setContent } }
-      Clipbird(serviceConnection.getBinder()!!.getService().getController())
-    }
   }
 
-  // On start
-  override fun onStart() {
-    super.onStart().also { setUpActivity() }
+  // set up the UI
+  @Composable
+  private fun setUpUI() {
+    val isServiceConnected by serviceConnection.isBound().collectAsState()
+    val isQuited by serviceConnection.isQuited().collectAsState()
+
+    if ( !isServiceConnected ) SettingUp().also { return }
+    if ( isQuited ) finish().also { return }
+
+    Clipbird(serviceConnection.getBinder()!!.getService().getController())
+  }
+
+  // Set Up the UI and the Service
+  private fun setUpActivity() {
+    setUpService().also { setContent { setUpUI() } }
+  }
+
+  // On Create
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState).also { setUpActivity() }
+  }
+
+  // On Destroy unbind the service
+  override fun onDestroy() {
+    super.onDestroy().also { unbindService(serviceConnection) }
   }
 }

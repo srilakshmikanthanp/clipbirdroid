@@ -5,6 +5,8 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
@@ -18,13 +20,16 @@ import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certifi
  */
 class ClipbirdService : Service() {
   // Create the Status Notification instance for the service instance
-  private val notify = StatusNotification(this, onTapIntent(), onSendIntent(), onQuitIntent())
+  private lateinit var notification: StatusNotification
 
   // Controller foe the Whole Application Designed by GRASP Pattern
   private lateinit var controller: AppController
 
   // Binder instance
   private val binder = ServiceBinder()
+
+  // Notification ID
+  private val NOTIFICATION_ID = 1
 
   // Binder for the service that returns the service instance
   inner class ServiceBinder : Binder() {
@@ -68,13 +73,14 @@ class ClipbirdService : Service() {
 
   // Called when an client wants to join the group
   private fun onJoinRequest(device: Device) {
-    notify.showJoinRequest(device.name, onAcceptIntent(), onRejectIntent())
+    notification.showJoinRequest(device.name, onAcceptIntent(), onRejectIntent())
   }
 
   // Initialize the controller instance
   override fun onCreate() {
     super.onCreate().also {
       controller = AppController(generateX509Certificate(this), this)
+      notification = StatusNotification(this)
     }
   }
 
@@ -97,6 +103,20 @@ class ClipbirdService : Service() {
     } else {
       controller.setCurrentHostAsClient()
     }
+
+    // Create the notification
+    NotificationCompat.Builder(this, notification.getChannelID())
+      .setSmallIcon(R.mipmap.ic_launcher_foreground)
+      .setContentTitle("Clipbird Service")
+      .setContentText("Send latest clipboard content to other devices")
+      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+      .setContentIntent(onTapIntent())
+      .setOngoing(true)
+      .addAction(0, "Send", onSendIntent())
+      .addAction(0, "Quit", onQuitIntent())
+      .build().also {
+        startForeground(NOTIFICATION_ID, it)
+      }
 
     // Return code for the service
     return START_REDELIVER_INTENT
