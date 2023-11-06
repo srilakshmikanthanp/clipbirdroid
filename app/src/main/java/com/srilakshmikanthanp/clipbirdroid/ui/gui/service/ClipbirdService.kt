@@ -16,6 +16,8 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotification
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
+import java.security.PrivateKey
+import java.security.cert.X509Certificate
 
 /**
  * Service for the application
@@ -36,6 +38,21 @@ class ClipbirdService : Service() {
   // Binder for the service that returns the service instance
   inner class ServiceBinder : Binder() {
     fun getService(): ClipbirdService = this@ClipbirdService
+  }
+
+  // Function used to get the Private Key and the Certificate New
+  private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {
+    TODO()
+  }
+
+  // Function used to get the Private Key and the Certificate Old
+  private fun getOldSslConfig(): Pair<PrivateKey, X509Certificate> {
+    TODO()
+  }
+
+  // Function used to get the the Private Key and the Certificate
+  private fun getSslConfig(): Pair<PrivateKey, X509Certificate> {
+    TODO()
   }
 
   // Function used to get the Pending intent for onSend
