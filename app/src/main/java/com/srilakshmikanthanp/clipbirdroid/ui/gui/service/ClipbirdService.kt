@@ -10,42 +10,46 @@ import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.QuitHandler
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotification
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /**
  * Service for the application
  */
 class ClipbirdService : Service() {
-  // Create the Status Notification instance for the service instance
-  private lateinit var notification: StatusNotification
+  // Notification ID for the CLipbird Foreground service notification
+  private val NOTIFICATION_ID = StatusNotification.SERVICE_ID
 
   // Controller foe the Whole Application Designed by GRASP Pattern
   private lateinit var controller: AppController
 
+  // Create the Status Notification instance for the service instance
+  private lateinit var notification: StatusNotification
+
   // Binder instance
   private val binder = ServiceBinder()
-
-  // Notification ID
-  private val NOTIFICATION_ID = 1
 
   // Binder for the service that returns the service instance
   inner class ServiceBinder : Binder() {
     fun getService(): ClipbirdService = this@ClipbirdService
   }
 
-  // Function used to get the Pending intent for onTap
-  private fun onTapIntent(): PendingIntent {
-    Intent(this, MainActivity::class.java).also {
+  // Function used to get the Pending intent for onSend
+  private fun onSendIntent(): PendingIntent {
+    Intent(this, SendHandler::class.java).also {
       return PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
     }
   }
 
-  // Function used to get the Pending intent for onSend
-  private fun onSendIntent(): PendingIntent {
-    Intent(this, SendHandler::class.java).also {
+  // Function used to get the Pending intent for onTap
+  private fun onTapIntent(): PendingIntent {
+    Intent(this, MainActivity::class.java).also {
       return PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
     }
   }
@@ -58,39 +62,33 @@ class ClipbirdService : Service() {
   }
 
   // Function used to get the Pending intent for onAccept
-  private fun onAcceptIntent(): PendingIntent {
-    Intent(this, QuitHandler::class.java).also {
-      return PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
-    }
+  private fun onAcceptIntent(device: Device): PendingIntent {
+    val intent: Intent = Intent(this, AcceptHandler::class.java)
+    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
+    intent.putExtra(AcceptHandler.ACCEPT_EXTRA, Json.encodeToString(device))
+    return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
   }
 
   // Function used to get the Pending intent for onReject
-  private fun onRejectIntent(): PendingIntent {
-    Intent(this, QuitHandler::class.java).also {
-      return PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
-    }
+  private fun onRejectIntent(device: Device): PendingIntent {
+    val intent: Intent = Intent(this, RejectHandler::class.java)
+    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
+    intent.putExtra(RejectHandler.REJECT_EXTRA, Json.encodeToString(device))
+    return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
   }
 
   // Called when an client wants to join the group
   private fun onJoinRequest(device: Device) {
-    notification.showJoinRequest(device.name, onAcceptIntent(), onRejectIntent())
+    notification.showJoinRequest(device.name, onAcceptIntent(device), onRejectIntent(device))
   }
 
   // Initialize the controller instance
   override fun onCreate() {
     super.onCreate().also {
-      controller = AppController(generateX509Certificate(this), this)
-      notification = StatusNotification(this)
+      controller    =   AppController(generateX509Certificate(this), this)
+      notification  =   StatusNotification(this)
     }
-  }
 
-  // Return the binder instance
-  override fun onBind(p0: Intent?): IBinder {
-    return binder
-  }
-
-  // On start command of the service
-  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     // Add the Sync Request Handler
     controller.addSyncRequestHandler(controller::setClipboard)
 
@@ -117,7 +115,15 @@ class ClipbirdService : Service() {
       .build().also {
         startForeground(NOTIFICATION_ID, it)
       }
+  }
 
+  // Return the binder instance
+  override fun onBind(p0: Intent?): IBinder {
+    return binder
+  }
+
+  // On start command of the service
+  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     // Return code for the service
     return START_REDELIVER_INTENT
   }

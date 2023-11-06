@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.controller
 
 import android.content.Context
+import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
 import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
@@ -183,8 +184,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   private val storage: Storage = Storage.getInstance(context)
   private val host: Variant = Variant()
   private val clipboard: Clipboard = Clipboard(context)
-  private val SERVER_LIST = "server_list"
-  private val CLIENT_LIST = "client_list"
+  private val TAG = "AppController"
 
   //----------------------- private notifiers ------------------------//
 
@@ -285,7 +285,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   private fun handleClientStateChanged(client: Device, connected: Boolean) {
     // if the host is not server then throw error
-    if (this.host.holds(Server::class.java)) {
+    if (!this.host.holds(Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
@@ -670,6 +670,23 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   //----------------------- Common functions -------------------------//
 
   /**
+   * @brief Get the UnAuthenticated Clients
+   */
+  fun getUnAuthenticatedClients(): List<Device> {
+    // if the host is not server then throw
+    if (!host.holds(Server::class.java)) {
+      throw RuntimeException("Host is not server")
+    }
+
+    // get the server
+    val server = host.get() as Server
+
+    // return the unauthenticated clients
+    return server.getUnauthenticatedClients()
+  }
+
+
+  /**
    * @brief Sync the clipboard data with the Group
    */
   fun syncClipboard(data: List<Pair<String, ByteArray>>) {
@@ -678,7 +695,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
 
     if (host.holds(Client::class.java)) {
-      (host.get() as Client).syncItems(data)
+      val client = host.get() as Client
+      if (client.isConnected()) {
+        Log.w(TAG, "Client is not connected")
+      } else {
+        client.syncItems(data)
+      }
     }
   }
 

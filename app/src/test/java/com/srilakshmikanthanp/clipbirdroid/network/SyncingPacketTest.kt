@@ -9,7 +9,7 @@ class SyncingPacketTest {
     val (mimeType, payload) = Pair("text/plain", "Hello")
     val syncingItem = SyncingItem(mimeType.toByteArray(), payload.toByteArray())
     val items = Array<SyncingItem>(5) { syncingItem }
-    val packSend = SyncingPacket(5, items)
+    val packSend = SyncingPacket(items)
     val array = packSend.toByteArray()
     val packRecv = SyncingPacket.fromByteArray(array)
 

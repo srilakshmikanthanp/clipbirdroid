@@ -24,11 +24,14 @@ class StatusNotification(private val context: Context) {
   private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
   // Notification channel constants
-  private val CHANNEL_DESC = "This is the notification for Clipbird Service"
-  private val CHANNEL_ID   = "StatusNotification"
-  private val CHANNEL_NAME = "Clipbird"
-  private val IMPORTANCE   = NotificationManager.IMPORTANCE_DEFAULT
-  private val REQUEST_ID   = 1
+  companion object {
+    const val CHANNEL_DESC = "This is the notification for Clipbird Service"
+    const val CHANNEL_ID   = "StatusNotification"
+    const val CHANNEL_NAME = "Clipbird"
+    const val IMPORTANCE   = NotificationManager.IMPORTANCE_DEFAULT
+    const val SERVICE_ID   = 1
+    const val REQUEST_ID   = 2
+  }
 
   /**
    * Initializer that creates Channel and Notification

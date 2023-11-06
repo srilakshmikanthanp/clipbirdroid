@@ -1,10 +1,9 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 
-class QuitHandler : ComponentActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
+class QuitHandler : AbstractHandler() {
+  override fun onConnectionReady(binder: ClipbirdService.ServiceBinder) {
+    binder.getService().stopSelf()
   }
 }

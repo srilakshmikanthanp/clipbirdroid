@@ -24,7 +24,6 @@ import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandler
-import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
@@ -136,13 +135,6 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   // List of clients authenticated
   private val authenticatedClients = mutableListOf<ChannelHandlerContext>()
 
-  // Filter for the Server
-  inner class ChannelsFilter : ChannelInboundHandlerAdapter() {
-    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-      if (authenticatedClients.contains(ctx)) ctx.fireChannelRead(msg)
-    }
-  }
-
   // Channel Initializer
   inner class NewChannelInitializer : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
@@ -154,7 +146,6 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
 
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext?.newHandler(ch.alloc()))
-      ch.pipeline().addLast(ChannelsFilter())
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
       ch.pipeline().addLast(SyncingPacketEncoder())
@@ -367,6 +358,21 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   }
 
   /**
+   * Get the Unauthenticated Clients
+   */
+  fun getUnauthenticatedClients(): List<Device> {
+    return unauthenticatedClients.map {
+      val addr = it.channel().remoteAddress() as InetSocketAddress
+      val ssl = it.channel().pipeline().get(SslHandler::class.java) as SslHandler
+      val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
+      val x500Name = JcaX509CertificateHolder(cert).subject
+      val cn = x500Name.getRDNs(BCStyle.CN)[0]
+      val name = IETFUtils.valueToString(cn.first.value)
+      Device(addr.address, addr.port, name)
+    }
+  }
+
+  /**
    * Get the List of Clients
    */
   fun getClients(): List<Device> {
@@ -444,8 +450,8 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   fun onClientAuthenticated(client: Device) {
     val ctx = unauthenticatedClients.find {
       val addr = it.channel().remoteAddress() as InetSocketAddress
-      return@find addr.address == client.ip && addr.port == client.port
-    } ?: throw RuntimeException("Client not found")
+      (addr.address == client.ip) && (addr.port == client.port)
+    } ?: return
 
     // remove the client from unauthenticated clients
     unauthenticatedClients.remove(ctx)
@@ -472,8 +478,8 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   fun onClientNotAuthenticated(client: Device) {
     val ctx = unauthenticatedClients.find {
       val addr = it.channel().remoteAddress() as InetSocketAddress
-      return@find addr.address == client.ip && addr.port == client.port
-    } ?: throw RuntimeException("Client not found")
+      (addr.address == client.ip) && (addr.port == client.port)
+    } ?: return
 
     // remove the client from unauthenticated clients
     unauthenticatedClients.remove(ctx)
@@ -564,6 +570,8 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
    * Invoked when the current Channel has read a message from the peer.
    */
   override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+    if (!authenticatedClients.contains(ctx)) { return }
+
     when (msg) {
       is SyncingPacket -> return onSyncingPacket(ctx, msg)
     }
@@ -616,6 +624,9 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
 
     // get the CN name
     val name = IETFUtils.valueToString(rdns[0].first.value)
+
+    // Add to unauthenticated clients
+    unauthenticatedClients.add(ctx)
 
     // if Storage dis not have name
     if (!storage.hasClientCert(name)) {

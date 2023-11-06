@@ -234,13 +234,6 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     // Add Change Handler for the server state
     controller.addServerStateChangedHandler(serverStateChangeHandler)
 
-    // initialize the Host as Server or Client
-    if (isServer) {
-      controller.setCurrentHostAsServer()
-    } else {
-      controller.setCurrentHostAsClient()
-    }
-
     // Set the Initial HostName & Status for Group
     hostName = inferHostName(); status = inferStatus()
   }

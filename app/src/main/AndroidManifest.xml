@@ -33,6 +33,8 @@
     <activity
       android:name=".ui.gui.handlers.SendHandler"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:excludeFromRecents="true"
+      android:noHistory="true"
       android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
