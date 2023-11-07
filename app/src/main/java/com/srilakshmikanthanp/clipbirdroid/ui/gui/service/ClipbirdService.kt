@@ -8,6 +8,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
+import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
@@ -42,17 +43,31 @@ class ClipbirdService : Service() {
 
   // Function used to get the Private Key and the Certificate New
   private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {
-    TODO()
+    val sslConfig =  generateX509Certificate(this)
+    val store = Storage.getInstance(this)
+    store.setHostKey(sslConfig.first)
+    store.setHostCert(sslConfig.second)
+    return sslConfig
   }
 
   // Function used to get the Private Key and the Certificate Old
   private fun getOldSslConfig(): Pair<PrivateKey, X509Certificate> {
-    TODO()
+    val store = Storage.getInstance(this)
+    return Pair(store.getHostKey()!!, store.getHostCert()!!)
   }
 
   // Function used to get the the Private Key and the Certificate
   private fun getSslConfig(): Pair<PrivateKey, X509Certificate> {
-    TODO()
+    // Get the Storage instance
+    val store = Storage.getInstance(this)
+
+    // Check the Host key and cert is available
+    if (store.hasHostKey() && store.hasHostCert()) {
+      return getOldSslConfig()
+    }
+
+    // If not available generate new
+    return getNewSslConfig()
   }
 
   // Function used to get the Pending intent for onSend
@@ -100,7 +115,7 @@ class ClipbirdService : Service() {
   // Initialize the controller instance
   override fun onCreate() {
     super.onCreate().also {
-      controller    =   AppController(generateX509Certificate(this), this)
+      controller    =   AppController(getSslConfig(), this)
       notification  =   StatusNotification(this)
     }
 

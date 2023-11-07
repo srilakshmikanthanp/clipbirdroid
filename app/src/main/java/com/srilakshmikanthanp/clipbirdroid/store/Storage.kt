@@ -4,18 +4,34 @@ import android.content.Context
 import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator
 import org.bouncycastle.util.io.pem.PemWriter
 import java.io.StringWriter
+import java.security.KeyFactory
+import java.security.PrivateKey
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.security.spec.PKCS8EncodedKeySpec
+import java.util.Base64
 
 class Storage private constructor(context: Context) {
   // Shared Preference for General Group
-  private val generalPref = context.getSharedPreferences("GENERAL", Context.MODE_PRIVATE);
+  private val generalPref = context.getSharedPreferences("GENERAL", Context.MODE_PRIVATE)
 
   // Shared Preference for Client Group
-  private val clientPref = context.getSharedPreferences("CLIENT", Context.MODE_PRIVATE);
+  private val clientPref = context.getSharedPreferences("CLIENT", Context.MODE_PRIVATE)
 
   // Shared Preference for Server Group
-  private val serverPref = context.getSharedPreferences("SERVER", Context.MODE_PRIVATE);
+  private val serverPref = context.getSharedPreferences("SERVER", Context.MODE_PRIVATE)
+
+  // From PrivateKey to string
+  private fun PrivateKey.asString(): String {
+    Base64.getEncoder().encode(this.encoded).also { return String(it) }
+  }
+
+  // From string to PrivateKey
+  private fun String.asPrivateKey(): PrivateKey {
+    val bytes = Base64.getDecoder().decode(this)
+    val kf = KeyFactory.getInstance("RSA")
+    return PKCS8EncodedKeySpec(bytes).let { kf.generatePrivate(it) }
+  }
 
   // From string to Certificate
   private fun String.asCertificate(): X509Certificate {
@@ -38,6 +54,8 @@ class Storage private constructor(context: Context) {
     // Required variables for Singleton
     @Volatile private var instance: Storage? = null
     private val HOST_STATE = "HOST_STATE"
+    private val HOST_KEY = "HOST_KEY"
+    private val HOST_CERT = "HOST_CERT"
 
     // Get the instance of Storage
     fun getInstance(context: Context): Storage {
@@ -46,6 +64,63 @@ class Storage private constructor(context: Context) {
       }
     }
   }
+
+  /**
+   * Set the Host Private key and cert
+   */
+  fun setHostCert(cert: X509Certificate) {
+    generalPref.edit().putString(HOST_CERT, cert.asString()).apply()
+  }
+
+  /**
+   * Check the Host cert is available
+   */
+  fun hasHostCert(): Boolean {
+    return generalPref.contains(HOST_CERT)
+  }
+
+  /**
+   * Clear the Host cert
+   */
+  fun clearHostCert() {
+    generalPref.edit().remove(HOST_CERT).apply()
+  }
+
+  /**
+   * Get the Host cert
+   */
+  fun getHostCert(): X509Certificate? {
+    return generalPref.getString(HOST_CERT, null)?.asCertificate()
+  }
+
+  /**
+   * Set the Host Private key
+   */
+  fun setHostKey(key: PrivateKey) {
+    generalPref.edit().putString(HOST_KEY, key.asString()).apply()
+  }
+
+  /**
+   * Check the Host key is available
+   */
+  fun hasHostKey(): Boolean {
+    return generalPref.contains(HOST_KEY)
+  }
+
+  /**
+   * Clear the Host key
+   */
+  fun clearHostKey() {
+    generalPref.edit().remove(HOST_KEY).apply()
+  }
+
+  /**
+   * Get the Host key
+   */
+  fun getHostKey(): PrivateKey? {
+    return generalPref.getString(HOST_KEY, null)?.asPrivateKey()
+  }
+
 
   /**
    * Set the client name and cert
