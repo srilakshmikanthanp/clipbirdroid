@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
 import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
+import com.srilakshmikanthanp.clipbirdroid.constant.appMaxHistory
 import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientStateChangeHandler
@@ -19,6 +20,8 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.Server
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class AppController(private val sslConfig: SSLConfig, private val context: Context) {
   //----------------------- client Signals -------------------------//
@@ -181,10 +184,15 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
   //------------------------- Member Variables -------------------------//
 
+  // Private
+  private val _history = MutableStateFlow(emptyList<List<Pair<String, ByteArray>>>().toMutableList())
   private val storage: Storage = Storage.getInstance(context)
   private val host: Variant = Variant()
   private val clipboard: Clipboard = Clipboard(context)
   private val TAG = "AppController"
+
+  // Public
+  public val history = _history.asStateFlow()
 
   //----------------------- private notifiers ------------------------//
 
@@ -346,6 +354,21 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
   }
 
+  /**
+   * Handle Sync Request
+   */
+  private fun handleSyncRequest(clip: List<Pair<String, ByteArray>>) {
+    if (_history.value.size + 1 > appMaxHistory()) {
+      val newClipHist = _history.value.toMutableList()
+      newClipHist.removeLast()
+      _history.value = newClipHist
+    }
+
+    val newClipHist = _history.value.toMutableList()
+    newClipHist.add(clip)
+    _history.value = newClipHist
+  }
+
   //------------------------- public slots -------------------------//
 
   /**
@@ -373,6 +396,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // connect the sync request signal
     server.addSyncRequestHandler(::notifySyncRequest)
+    server.addSyncRequestHandler(::handleSyncRequest)
+    server.addSyncRequestHandler(clipboard::setClipboardContent)
 
     // connect the client list changed signal
     server.addClientListChangeHandler(::notifyClientListChanged)
@@ -416,6 +441,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // Connect the sync request signal
     client.addSyncRequestHandler(::notifySyncRequest)
+    client.addSyncRequestHandler(::handleSyncRequest)
     client.addSyncRequestHandler(clipboard::setClipboardContent)
 
     // Connect the connection error signal
@@ -734,5 +760,14 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun isCurrentHostIsServer(): Boolean {
     return host.holds(Server::class.java)
+  }
+
+  /**
+   * Delete ClipData by Index
+   */
+  fun deleteHistoryAt(index: Int) {
+    val newHist = _history.value.toMutableList()
+    newHist.removeAt(index)
+    _history.value = newHist
   }
 }

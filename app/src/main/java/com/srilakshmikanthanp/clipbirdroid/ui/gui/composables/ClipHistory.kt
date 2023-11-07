@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
@@ -79,12 +81,12 @@ private fun ClipTile(
     Column {
       // Modifier for Row that presents content from start and end
       val rowModifierStart = Modifier.padding(horizontal = 10.dp, vertical = 15.dp).fillMaxWidth()
+        .fillMaxHeight(0.7f)
 
       // Row that presents content from start
       Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = rowModifierStart,
         horizontalArrangement = Arrangement.Start,
+        modifier = rowModifierStart,
       ) {
         // Show the Clipboard Content
         content.asImage()?.let { ImageTile(it) } ?: content.asText()?.let { TextTile(it) }
@@ -146,7 +148,12 @@ fun ClipHistory(
     verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
     items(clipHistory.size) {
-      ClipTile(clipHistory[it], Modifier.fillMaxWidth(), { onCopy(it) }, { onDelete(it) })
+      ClipTile(
+        modifier = Modifier.fillMaxWidth().height(150.dp),
+        content = clipHistory[it],
+        onCopy = { onCopy(it) },
+        onDelete = { onDelete(it) }
+      )
     }
   }
 }

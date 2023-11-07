@@ -55,7 +55,9 @@ import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certifi
 @Composable
 private fun ServerGroup(controller: AppController) {
   // list of client devices
-  var clients by remember { mutableStateOf<List<DeviceActionable>>(emptyList()) }
+  var clients by remember { mutableStateOf(controller.getConnectedClientsList().map {
+    DeviceActionable(it, HostAction.DISCONNECT) }
+  ) }
 
   // Change Handler for the list of clients
   val clientListChangeHandler = OnClientListChangeHandler { list ->
@@ -91,7 +93,10 @@ private fun ServerGroup(controller: AppController) {
 @Composable
 private fun ClientGroup(controller: AppController) {
   // list of client devices (state)
-  var servers by remember { mutableStateOf<List<DeviceActionable>>(emptyList()) }
+  var servers by remember { mutableStateOf(controller.getServerList().map {
+    val server = try { controller.getConnectedServer() } catch (e: RuntimeException) { null }
+    DeviceActionable(it, if (it == server) HostAction.DISCONNECT else HostAction.CONNECT)
+  })}
 
   // Change Handler for the list of servers
   val serverListChangeHandler = OnServerListChangeHandler { list ->
@@ -147,8 +152,8 @@ private fun ActionsDropDownMenu(
   onJoinClick: () -> Unit,
   onResetClick: () -> Unit,
   expanded: Boolean,
-  onDismissRequest: () -> Unit,
   modifier: Modifier = Modifier,
+  onDismissRequest: () -> Unit,
 ) {
   DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {
     // Conditionally show the menu items
@@ -207,7 +212,13 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // Handler for Tab Click Event
   val tabClickHandler = { index: Int ->
-    isServer = index == SERVER_TAB.first
+    isServer = if (index == SERVER_TAB.first) {
+      controller.setCurrentHostAsServer()
+      true
+    } else {
+      controller.setCurrentHostAsClient()
+      false
+    }
   }
 
   // Handler for Group QrCode Click Event
