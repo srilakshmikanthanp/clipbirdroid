@@ -9,7 +9,7 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.toPNG
 import java.io.FileNotFoundException
 
-class ImageShared : AbstractHandler() {
+class ShareHandler : AbstractHandler() {
   // Called when the connection is ready to service
   override fun onConnectionReady(binder: ClipbirdService.ServiceBinder) {
     // Allowed Types image/png, image/jpeg, image/gif
@@ -30,10 +30,10 @@ class ImageShared : AbstractHandler() {
     val result = try {
       this.contentResolver.openInputStream(uri)
     } catch (e: FileNotFoundException) {
-      Log.e("ImageShared", "File not found Exception", e)
+      Log.e("ShareHandler", "File not found Exception", e)
       return
     } catch (e: SecurityException) {
-      Log.e("ImageShared", "Security Exception", e)
+      Log.e("ShareHandler", "Security Exception", e)
       return
     }.use {
       val content = it?.let { toPNG(it.readBytes()) } ?: return@use null
