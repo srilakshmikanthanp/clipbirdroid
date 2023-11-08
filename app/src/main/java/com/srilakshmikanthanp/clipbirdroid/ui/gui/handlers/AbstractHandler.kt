@@ -15,14 +15,18 @@ import kotlinx.coroutines.launch
  * An abstract handler for the ClipbirdService
  */
 abstract class AbstractHandler : ComponentActivity() {
-  // Notification Manager instance
-  private val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
   // Service connection to the StatusNotification
   private val connection: ClipbirdServiceConnection = ClipbirdServiceConnection()
 
+  // Notification Manager instance
+  private lateinit var notificationManager : NotificationManager
+
   // Bind the service
   private fun setUpService() {
+    this.getSystemService(Context.NOTIFICATION_SERVICE).also { manager ->
+      notificationManager = manager as NotificationManager
+    }
+
     Intent(this, ClipbirdService::class.java).also { intent ->
       bindService(intent, connection, BIND_AUTO_CREATE)
     }

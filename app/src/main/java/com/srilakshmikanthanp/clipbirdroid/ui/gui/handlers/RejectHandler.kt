@@ -10,6 +10,7 @@ class RejectHandler : AbstractHandler() {
     val device = intent.getSerializableExtra(REJECT_EXTRA) as Device?
     controller.onClientNotAuthenticated(device!!)
     getNotificationManager().cancel(StatusNotification.REQUEST_ID)
+    this.finish()
   }
 
   // Companion Object

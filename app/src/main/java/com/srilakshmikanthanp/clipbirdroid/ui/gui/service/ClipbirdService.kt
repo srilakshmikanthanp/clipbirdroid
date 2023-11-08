@@ -24,14 +24,14 @@ import java.security.cert.X509Certificate
  * Service for the application
  */
 class ClipbirdService : Service() {
+  // Create the Status Notification instance for the service instance
+  private lateinit var notification: StatusNotification
+
   // Notification ID for the CLipbird Foreground service notification
   private val NOTIFICATION_ID = StatusNotification.SERVICE_ID
 
   // Controller foe the Whole Application Designed by GRASP Pattern
   private lateinit var controller: AppController
-
-  // Create the Status Notification instance for the service instance
-  private lateinit var notification: StatusNotification
 
   // Binder instance
   private val binder = ServiceBinder()
@@ -43,11 +43,7 @@ class ClipbirdService : Service() {
 
   // Function used to get the Private Key and the Certificate New
   private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {
-    val sslConfig =  generateX509Certificate(this)
-    val store = Storage.getInstance(this)
-    store.setHostKey(sslConfig.first)
-    store.setHostCert(sslConfig.second)
-    return sslConfig
+    return generateX509Certificate(this)
   }
 
   // Function used to get the Private Key and the Certificate Old
@@ -58,7 +54,7 @@ class ClipbirdService : Service() {
 
   // Function used to get the the Private Key and the Certificate
   private fun getSslConfig(): Pair<PrivateKey, X509Certificate> {
-    // Get the Storage instance
+    // Get the Storage instance for the application
     val store = Storage.getInstance(this)
 
     // Check the Host key and cert is available
@@ -67,7 +63,10 @@ class ClipbirdService : Service() {
     }
 
     // If not available generate new
-    return getNewSslConfig()
+    val sslConfig = getNewSslConfig()
+    store.setHostKey(sslConfig.first)
+    store.setHostCert(sslConfig.second)
+    return sslConfig
   }
 
   // Function used to get the Pending intent for onSend

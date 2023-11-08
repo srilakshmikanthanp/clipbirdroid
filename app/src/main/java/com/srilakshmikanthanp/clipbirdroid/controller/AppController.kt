@@ -716,18 +716,27 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * @brief Sync the clipboard data with the Group
    */
   fun syncClipboard(data: List<Pair<String, ByteArray>>) {
+    // if the host is server then sync the clipboard
     if (host.holds(Server::class.java)) {
       (host.get() as Server).syncItems(data)
     }
 
-    if (host.holds(Client::class.java)) {
-      val client = host.get() as Client
-      if (client.isConnected()) {
-        Log.w(TAG, "Client is not connected")
-      } else {
-        client.syncItems(data)
-      }
+    // if the host is not client then return
+    if (!host.holds(Client::class.java)) {
+      return
     }
+
+    // get the client from the host
+    val client = host.get() as Client
+
+    // if not connected then return
+    if (!client.isConnected()) {
+      Log.w(TAG, "Client is not connected")
+      return
+    }
+
+    // sync the clipboard
+    client.syncItems(data)
   }
 
   //---------------------- Clipboard functions -----------------------//

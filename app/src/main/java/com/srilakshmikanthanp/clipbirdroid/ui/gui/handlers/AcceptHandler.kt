@@ -10,6 +10,7 @@ class AcceptHandler : AbstractHandler() {
     val device = intent.getSerializableExtra(ACCEPT_EXTRA) as Device?
     controller.onClientAuthenticated(device!!)
     getNotificationManager().cancel(StatusNotification.REQUEST_ID)
+    this.finish()
   }
 
   // Companion Object

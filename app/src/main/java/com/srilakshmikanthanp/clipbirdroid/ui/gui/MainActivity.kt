@@ -7,9 +7,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.utilities.ClipbirdServiceConnection
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.SettingUp
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.utilities.ClipbirdServiceConnection
 
 class MainActivity : ComponentActivity() {
   // Service connection to the StatusNotification
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
   // set up the UI
   @Composable
-  private fun setUpUI() {
+  private fun SetUpUI() {
     val isServiceConnected by serviceConnection.isBound().collectAsState()
     val isQuited by serviceConnection.isQuited().collectAsState()
 
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
   // Set Up the UI and the Service
   private fun setUpActivity() {
-    setUpService().also { setContent { setUpUI() } }
+    setUpService().also { setContent { SetUpUI() } }
   }
 
   // On Create
