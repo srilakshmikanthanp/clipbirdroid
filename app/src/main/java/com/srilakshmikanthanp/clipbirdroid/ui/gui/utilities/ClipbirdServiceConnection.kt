@@ -14,9 +14,6 @@ class ClipbirdServiceConnection : ServiceConnection {
   // LiveData for the service connection status
   private var isBound = MutableStateFlow(false)
 
-  // IS Service Disconnected
-  private var isQuited = MutableStateFlow(false)
-
   // Called when the service is connected
   override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
     isBound.value = true.also { binder = service as ClipbirdService.ServiceBinder }
@@ -24,11 +21,8 @@ class ClipbirdServiceConnection : ServiceConnection {
 
   // Called when the service is disconnected
   override fun onServiceDisconnected(p0: ComponentName?) {
-    isBound.value = false.also { binder = null; isQuited.value = true }
+    isBound.value = false.also { binder = null; }
   }
-
-  // is the service disconnected
-  fun isQuited(): StateFlow<Boolean> = isQuited
 
   // is the service connected
   fun isBound(): StateFlow<Boolean> = isBound

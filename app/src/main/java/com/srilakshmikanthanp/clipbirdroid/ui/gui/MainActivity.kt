@@ -15,28 +15,29 @@ class MainActivity : ComponentActivity() {
   // Service connection to the StatusNotification
   private val serviceConnection: ClipbirdServiceConnection = ClipbirdServiceConnection()
 
+  // companion object
+  companion object {
+    val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity.QUIT_ACTION"
+  }
+
   // Set up the Service Connection
   private fun setUpService() {
     // Create Service
-    Intent(this, ClipbirdService::class.java).also { intent ->
-      startForegroundService(intent)
-    }
+    val intent = Intent(this, ClipbirdService::class.java)
+    startForegroundService(intent)
+    bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+  }
 
-    // Bind the service
-    Intent(this, ClipbirdService::class.java).also { intent ->
-      bindService(intent, serviceConnection, BIND_AUTO_CREATE)
-    }
+  // dispose the service
+  private fun disposeService() {
+    stopService(Intent(this, ClipbirdService::class.java))
   }
 
   // set up the UI
   @Composable
   private fun SetUpUI() {
     val isServiceConnected by serviceConnection.isBound().collectAsState()
-    val isQuited by serviceConnection.isQuited().collectAsState()
-
-    if ( !isServiceConnected ) SettingUp().also { return }
-    if ( isQuited ) finish().also { return }
-
+    if (!isServiceConnected) SettingUp().also { return }
     Clipbird(serviceConnection.getBinder()!!.getService().getController())
   }
 
@@ -48,6 +49,15 @@ class MainActivity : ComponentActivity() {
   // On Create
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState).also { setUpActivity() }
+  }
+
+  // on Start
+  override fun onStart() {
+    super.onStart().also {
+      if (intent?.action == QUIT_ACTION) {
+        disposeService().also { finish() }
+      }
+    }
   }
 
   // On Destroy unbind the service

@@ -12,7 +12,6 @@ import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.QuitHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotification
@@ -97,9 +96,10 @@ class ClipbirdService : Service() {
 
   // Function used to get the Pending intent for onQuit
   private fun onQuitIntent(): PendingIntent {
-    Intent(this, QuitHandler::class.java).also {
-      return PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
-    }
+    val intent: Intent = Intent(this, MainActivity::class.java)
+    intent.action = MainActivity.QUIT_ACTION
+    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+    return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
   }
 
   // Function used to get the Pending intent for onAccept
