@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.R
@@ -64,7 +65,7 @@ private fun ImageTile(image: ImageBitmap) {
  */
 @Composable
 private fun TextTile(text: String) {
-  Text(text = text)
+  Text(text = text, overflow = TextOverflow.Ellipsis, maxLines = 4)
 }
 
 /**
@@ -78,10 +79,10 @@ private fun ClipTile(
   onDelete: () -> Unit = {}
 ) {
   Card(modifier = modifier) {
-    Column {
+    Column (modifier = Modifier.padding(5.dp)) {
       // Modifier for Row that presents content from start and end
       val rowModifierStart = Modifier.padding(horizontal = 10.dp, vertical = 15.dp).fillMaxWidth()
-        .fillMaxHeight(0.7f)
+        .fillMaxHeight(0.65f)
 
       // Row that presents content from start
       Row(
@@ -93,7 +94,7 @@ private fun ClipTile(
       }
 
       // Modifier for Row that presents content from end
-      val rowModifierEnd = Modifier.fillMaxWidth()
+      val rowModifierEnd = Modifier.padding(vertical = 6.dp).fillMaxWidth()
 
       // Row that presents content from end
       Row(
@@ -149,7 +150,7 @@ fun ClipHistory(
   ) {
     items(clipHistory.size) {
       ClipTile(
-        modifier = Modifier.fillMaxWidth().height(150.dp),
+        modifier = Modifier.fillMaxWidth().height(120.dp),
         content = clipHistory[it],
         onCopy = { onCopy(it) },
         onDelete = { onDelete(it) }

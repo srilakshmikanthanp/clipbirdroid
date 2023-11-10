@@ -365,7 +365,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
 
     val newClipHist = _history.value.toMutableList()
-    newClipHist.add(clip)
+    newClipHist.add(0, clip)
     _history.value = newClipHist
   }
 
