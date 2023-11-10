@@ -12,16 +12,11 @@ import java.io.FileNotFoundException
 class ShareHandler : AbstractHandler() {
   // Called when the connection is ready to service
   override fun onConnectionReady(binder: ClipbirdService.ServiceBinder) {
-    // Allowed Types image/png, image/jpeg, image/gif
-    val allowedTypes = arrayOf("image/png", "image/jpeg", "image/gif")
+    // if the Type in image/*
+    if (intent.type?.startsWith("image/") != true) return
 
     // Get the controller
     val controller = binder.getService().getController()
-
-    // if the Type in image png
-    if (!allowedTypes.contains(intent.type)) {
-      return
-    }
 
     // Get the URI
     val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: return

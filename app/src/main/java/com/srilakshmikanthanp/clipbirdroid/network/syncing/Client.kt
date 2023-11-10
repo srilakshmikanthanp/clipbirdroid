@@ -506,6 +506,11 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Called when a service is found.
    */
   override fun onServiceAdded(device: Device) {
+    // if already added
+    if (this.servers.contains(device)) {
+      return
+    }
+
     notifyServerFound(device)
     this.servers.add(device)
     notifyServerListChanged()

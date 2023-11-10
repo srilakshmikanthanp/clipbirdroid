@@ -54,11 +54,8 @@ class Clipboard(private val context: Context) {
     // List of Allowed Types
     val allowedTypes = arrayOf(MIME_TYPE_TEXT, MIME_TYPE_PNG, MIME_TYPE_HTML)
 
-    // Add image/jpg and image/gif if the uri is content
-    allowedTypes.plus(arrayOf("image/jpg", "image/gif"))
-
     // get the content
-    val result = try {
+    var result = try {
       context.contentResolver.openInputStream(uri)
     } catch (e: FileNotFoundException) {
       return null
@@ -66,9 +63,14 @@ class Clipboard(private val context: Context) {
       return null
     }.use {
       val mimeType = context.contentResolver.getType(uri) ?: return@use null
-      val content = it?.let { toPNG(it.readBytes()) } ?: return@use null
+      val content = it?.let { it.readBytes() } ?: return@use null
       return@use Pair(mimeType, content)
     } ?: return null
+
+    // if type is image/*
+    if (result.first.startsWith("image/")) {
+      result = Pair(MIME_TYPE_PNG, toPNG(result.second)!!)
+    }
 
     // if allowed type
     return if (allowedTypes.contains(result.first)) {
