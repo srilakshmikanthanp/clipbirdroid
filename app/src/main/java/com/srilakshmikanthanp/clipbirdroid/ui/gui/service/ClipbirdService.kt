@@ -19,6 +19,7 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotificati
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
+import java.util.Date
 
 /**
  * Service for the application
@@ -43,13 +44,28 @@ class ClipbirdService : Service() {
 
   // Function used to get the Private Key and the Certificate New
   private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {
-    return generateX509Certificate(this)
+    val sslConfig = generateX509Certificate(this)
+    val store = Storage.getInstance(this)
+    store.setHostKey(sslConfig.first)
+    store.setHostCert(sslConfig.second)
+    return sslConfig
   }
 
   // Function used to get the Private Key and the Certificate Old
   private fun getOldSslConfig(): Pair<PrivateKey, X509Certificate> {
     val store = Storage.getInstance(this)
-    return Pair(store.getHostKey()!!, store.getHostCert()!!)
+    val cert = store.getHostCert()!!
+    val key = store.getHostKey()!!
+
+    val nowMilliSec = System.currentTimeMillis()
+    val nowDate = Date(nowMilliSec)
+
+    // is expired
+    if (cert.notAfter < nowDate) {
+      return getNewSslConfig()
+    }
+
+    return Pair(key, cert)
   }
 
   // Function used to get the the Private Key and the Certificate
@@ -58,15 +74,11 @@ class ClipbirdService : Service() {
     val store = Storage.getInstance(this)
 
     // Check the Host key and cert is available
-    if (store.hasHostKey() && store.hasHostCert()) {
-      return getOldSslConfig()
+    return if (store.hasHostKey() && store.hasHostCert()) {
+      getOldSslConfig()
+    } else {
+      getNewSslConfig()
     }
-
-    // If not available generate new
-    val sslConfig = getNewSslConfig()
-    store.setHostKey(sslConfig.first)
-    store.setHostCert(sslConfig.second)
-    return sslConfig
   }
 
   // Function used to get the Pending intent for onSend
