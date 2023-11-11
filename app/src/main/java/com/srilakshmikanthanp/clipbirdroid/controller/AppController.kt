@@ -536,6 +536,22 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   }
 
   /**
+   * Is Server Started
+   */
+  fun isServerStarted(): Boolean {
+    // if the host is not server then throw
+    if (!host.holds(Server::class.java)) {
+      throw RuntimeException("Host is not server")
+    }
+
+    // get the server
+    val server = host.get() as Server
+
+    // return the server status
+    return server.isStarted()
+  }
+
+  /**
    * Get the server QHostAddress and port
    */
   fun getServerInfo(): Device {

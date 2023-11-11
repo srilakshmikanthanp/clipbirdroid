@@ -165,6 +165,9 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   // Ssl Context for the Server
   private var sslCert: SSLConfig? = null
 
+  // is Server Started
+  private var isStarted: Boolean = false
+
   // TAG for logging
   companion object {
     val TAG = "Server"
@@ -405,6 +408,13 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
 
     // clear the list
     authenticatedClients.clear()
+  }
+
+  /**
+   * Is server started
+   */
+  fun isStarted(): Boolean {
+    return isStarted
   }
 
   /**
@@ -663,6 +673,9 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     // Assign Null Value
     this.sslServer = null
 
+    // is started
+    this.isStarted = false
+
     // Add Listener for complete
     fut?.addListener {
       notifyServerStateChangeHandlers(false)
@@ -673,6 +686,6 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
    * Gets called if NSD service is registered
    */
   override fun onServiceRegistered() {
-    notifyServerStateChangeHandlers(true)
+    notifyServerStateChangeHandlers(true).also { isStarted = true }
   }
 }

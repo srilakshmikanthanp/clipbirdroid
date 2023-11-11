@@ -98,7 +98,7 @@ class ClipbirdService : Service() {
   private fun onQuitIntent(): PendingIntent {
     val intent: Intent = Intent(this, MainActivity::class.java)
     intent.action = MainActivity.QUIT_ACTION
-    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+    intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
     return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
   }
 

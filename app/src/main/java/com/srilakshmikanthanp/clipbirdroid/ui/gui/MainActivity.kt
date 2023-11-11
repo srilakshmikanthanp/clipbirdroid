@@ -22,14 +22,13 @@ class MainActivity : ComponentActivity() {
 
   // Set up the Service Connection
   private fun setUpService() {
-    // Create Service
     val intent = Intent(this, ClipbirdService::class.java)
     startForegroundService(intent)
     bindService(intent, serviceConnection, BIND_AUTO_CREATE)
   }
 
   // dispose the service
-  private fun disposeService() {
+  private fun stopService() {
     stopService(Intent(this, ClipbirdService::class.java))
   }
 
@@ -41,22 +40,17 @@ class MainActivity : ComponentActivity() {
     Clipbird(serviceConnection.getBinder()!!.getService().getController())
   }
 
-  // Set Up the UI and the Service
-  private fun setUpActivity() {
-    setUpService().also { setContent { SetUpUI() } }
-  }
-
   // On Create
   override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState).also { setUpActivity() }
+    super.onCreate(savedInstanceState)
+    setUpService()
+    setContent { SetUpUI() }
   }
 
   // on Start
   override fun onStart() {
     super.onStart().also {
-      if (intent?.action == QUIT_ACTION) {
-        disposeService().also { finish() }
-      }
+      if (intent?.action == QUIT_ACTION) stopService().also { this.finishAffinity() }
     }
   }
 
