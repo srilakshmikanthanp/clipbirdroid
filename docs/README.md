@@ -7,4 +7,4 @@
 
 # clipbird docs
 
-This is the documentation folder for clipbird, to learn more about the clipbird designs see [design](https://github.com/srilakshmikanthanp/clipbirdesk/tree/main/docs/design) Directory in clipbirdesk Respository.
+This is the documentation folder for clipbird, to learn more about the clipbird designs see [design](https://github.com/srilakshmikanthanp/clipbirdesk/tree/main/docs/design) Directory in clipbirdesk Repository.
