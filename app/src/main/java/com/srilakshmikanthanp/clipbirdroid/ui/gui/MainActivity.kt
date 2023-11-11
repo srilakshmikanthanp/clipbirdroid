@@ -21,6 +21,11 @@ class MainActivity : ComponentActivity() {
     val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity.QUIT_ACTION"
   }
 
+  // handle Intent
+  private fun handleIntent(intent: Intent?) {
+    if (intent?.action == QUIT_ACTION) stopService().also { this.finishAndRemoveTask() }
+  }
+  
   // Set up the Service Connection
   private fun setUpService() {
     val intent = Intent(this, ClipbirdService::class.java)
@@ -48,11 +53,14 @@ class MainActivity : ComponentActivity() {
     setContent { ClipbirdTheme { SetUpUI() } }
   }
 
+  // on New Intent
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent).also { handleIntent(intent) }
+  }
+
   // on Start
   override fun onStart() {
-    super.onStart().also {
-      if (intent?.action == QUIT_ACTION) stopService().also { this.finishAffinity() }
-    }
+    super.onStart().also { handleIntent(intent) }
   }
 
   // On Destroy unbind the service
