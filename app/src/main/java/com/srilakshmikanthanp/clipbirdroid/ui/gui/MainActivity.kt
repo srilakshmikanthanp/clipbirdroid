@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.compose.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.SettingUp
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.utilities.ClipbirdServiceConnection
@@ -44,7 +45,7 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setUpService()
-    setContent { SetUpUI() }
+    setContent { ClipbirdTheme { SetUpUI() } }
   }
 
   // on Start

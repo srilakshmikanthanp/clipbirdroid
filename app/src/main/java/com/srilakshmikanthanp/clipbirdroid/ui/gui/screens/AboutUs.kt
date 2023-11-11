@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.constant.appHomePage
 import com.srilakshmikanthanp.clipbirdroid.constant.appIssuesPage
@@ -40,7 +41,7 @@ private fun Action(icon: Int, text: String, modifier: Modifier, onClick: () -> U
       modifier = Modifier.padding(10.dp).fillMaxWidth()
     ) {
       Image(painter = painterResource(icon), contentDescription = "Icon")
-      Text(text = text, modifier = Modifier.padding(5.dp))
+      Text(text = text, fontSize = 12.sp, modifier = Modifier.padding(5.dp))
     }
   }
 }

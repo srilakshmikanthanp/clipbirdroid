@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
  * ClipSend Composable
@@ -27,6 +28,7 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
     ) {
       Text(
         text = "Send Latest Clipboard to other Devices",
+        fontSize = 12.sp
       )
 
       Button(onClick = onSend) {
