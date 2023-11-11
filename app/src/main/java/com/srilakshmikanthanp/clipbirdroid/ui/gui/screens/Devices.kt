@@ -180,29 +180,57 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // get the Context instance from compositionLocal
   val context = LocalContext.current
 
-  // initial Status
-  val inferStatus = {
-    if (!isServer && controller.isConnectedToServer()) {
+  // infer client status
+  val inferClientStatus = {
+    if (controller.isConnectedToServer()) {
       StatusType.CONNECTED
-    } else if (isServer && controller.isServerStarted()) {
-      StatusType.ACTIVE
-    } else if (isServer) {
-      StatusType.INACTIVE
     } else {
       StatusType.DISCONNECTED
     }
   }
 
-  // initial host name
-  val inferHostName = {
-    if (!isServer && controller.isConnectedToServer()) {
+  // infer server status
+  val inferServerStatus = {
+    if (controller.isServerStarted()) {
+      StatusType.ACTIVE
+    } else {
+      StatusType.INACTIVE
+    }
+  }
+
+  // initial Status
+  val inferStatus = {
+    if (isServer) {
+      inferServerStatus()
+    } else {
+      inferClientStatus()
+    }
+  }
+
+  // infer group name
+  val inferGroupName = {
+    if(controller.isConnectedToServer()) {
       controller.getConnectedServer().name
-    } else if (isServer && controller.isServerStarted()) {
-      controller.getServerInfo().name
-    } else if (isServer) {
-      appMdnsServiceName(context)
     } else {
       "Join to a Group"
+    }
+  }
+
+  // infer server name
+  val inferServerName = {
+    if(controller.isServerStarted()) {
+      controller.getServerInfo().name
+    } else {
+      appMdnsServiceName(context)
+    }
+  }
+
+  // initial host name
+  val inferHostName = {
+    if (isServer) {
+      inferServerName()
+    } else {
+      inferGroupName()
     }
   }
 
