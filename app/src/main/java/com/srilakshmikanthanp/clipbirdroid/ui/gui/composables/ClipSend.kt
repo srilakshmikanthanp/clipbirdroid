@@ -28,7 +28,7 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
     ) {
       Text(
         text = "Send Latest Clipboard to other Devices",
-        fontSize = 12.sp
+        fontSize = 14.sp
       )
 
       Button(onClick = onSend) {
