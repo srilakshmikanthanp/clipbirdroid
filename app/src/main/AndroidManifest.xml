@@ -61,6 +61,11 @@
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
 
+    <activity
+      android:name="com.journeyapps.barcodescanner.CaptureActivity"
+      android:screenOrientation="fullSensor"
+      tools:replace="screenOrientation" />
+
     <provider
       android:name=".common.provider.ClipbirdFileProvider"
       android:authorities="${applicationId}.provider"

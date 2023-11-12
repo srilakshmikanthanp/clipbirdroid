@@ -26,7 +26,7 @@ fun Group(
   port: Int,
   modifier: Modifier = Modifier,
 ) {
-  // helper function to generate the qrcode text color
+  // generate the qrcode from the code
   val qrcode = encode(code, MaterialTheme.colorScheme.onSurface)?.asImageBitmap()
 
   // dialog

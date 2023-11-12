@@ -47,10 +47,12 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostList
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Status
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.StatusType
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.getAllInterfaceAddresses
 import org.json.JSONObject
+import java.net.InetAddress
 
 /**
  * Server Group Composable That gonna active when user Clicks Server Tab
@@ -180,6 +182,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // Expanded state for the Drop Down Menu
   var expanded by remember { mutableStateOf(false) }
 
+  // is connect dialog open
+  var isConnectDialogOpen by remember { mutableStateOf(false) }
+
   // is group dialog open
   var isGroupDialogOpen by remember { mutableStateOf(false) }
 
@@ -285,6 +290,11 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     }
   }
 
+  // on Connect Handler
+  val onConnect = { ip: InetAddress, port: Int ->
+    controller.connectToServer(Device(ip, port, ip.hostName))
+  }
+
   // Handler for Group QrCode Click Event
   val onQRCodeClick = {
     isGroupDialogOpen = true
@@ -292,7 +302,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // Handler for Join Group Click Event
   val onJoinClick = {
-    // TODO: Join Group
+    isConnectDialogOpen = true
   }
 
   // Handler for Reset Click Event
@@ -400,15 +410,24 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
       if (isServer) ServerGroup(controller) else ClientGroup(controller)
     }
 
-    if (isGroupDialogOpen) {
-      Group(
-        onDismissRequest = { isGroupDialogOpen = false },
-        title = "Group",
-        code = makeJson(),
-        port = controller.getServerInfo().port,
-        modifier = Modifier.padding(top = 20.dp).padding(15.dp)
-      )
-    }
+    if(isGroupDialogOpen) Group(
+      onDismissRequest = { isGroupDialogOpen = false },
+      title = "Group",
+      code = makeJson(),
+      port = controller.getServerInfo().port,
+      modifier = Modifier
+        .padding(top = 20.dp)
+        .padding(15.dp)
+    )
+
+    if(isConnectDialogOpen) Connect(
+      onDismissRequest = { isConnectDialogOpen = false},
+      onConnect = onConnect,
+      title = "Join Group",
+      modifier = Modifier
+        .padding(top = 20.dp)
+        .padding(15.dp)
+    )
   }
 
   // Scaffold Composable
