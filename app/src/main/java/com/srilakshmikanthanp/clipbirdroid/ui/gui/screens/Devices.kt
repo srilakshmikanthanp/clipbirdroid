@@ -47,7 +47,10 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostList
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Status
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.StatusType
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
+import com.srilakshmikanthanp.clipbirdroid.utility.functions.getAllInterfaceAddresses
+import org.json.JSONObject
 
 /**
  * Server Group Composable That gonna active when user Clicks Server Tab
@@ -177,6 +180,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // Expanded state for the Drop Down Menu
   var expanded by remember { mutableStateOf(false) }
 
+  // is group dialog open
+  var isGroupDialogOpen by remember { mutableStateOf(false) }
+
   // get the Context instance from compositionLocal
   val context = LocalContext.current
 
@@ -234,6 +240,16 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     }
   }
 
+  // Helper to make json
+  val makeJson = {
+    val interfaces = getAllInterfaceAddresses()
+    val port = controller.getServerInfo().port
+    val obj = JSONObject()
+    obj.put("ips", interfaces)
+    obj.put("port", port)
+    obj.toString()
+  }
+
   // status of the Host
   var status by remember { mutableStateOf(inferStatus()) }
 
@@ -271,7 +287,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // Handler for Group QrCode Click Event
   val onQRCodeClick = {
-    // TODO: Show QrCode
+    isGroupDialogOpen = true
   }
 
   // Handler for Join Group Click Event
@@ -353,7 +369,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
         // Server Status % of parent
         Status(
-          modifier = Modifier.fillMaxHeight(0.15f).fillMaxWidth(),
+          modifier = Modifier
+            .fillMaxHeight(0.15f)
+            .fillMaxWidth(),
           fontSize = 24.sp,
           status = status,
           hostName = hostName,
@@ -380,6 +398,16 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   val content = @Composable { padding : PaddingValues ->
     Box (Modifier.padding(padding)) {
       if (isServer) ServerGroup(controller) else ClientGroup(controller)
+    }
+
+    if (isGroupDialogOpen) {
+      Group(
+        onDismissRequest = { isGroupDialogOpen = false },
+        title = "Group",
+        code = makeJson(),
+        port = controller.getServerInfo().port,
+        modifier = Modifier.padding(top = 20.dp).padding(15.dp)
+      )
     }
   }
 

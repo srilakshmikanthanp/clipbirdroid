@@ -73,6 +73,8 @@ dependencies {
   implementation 'androidx.compose.ui:ui-tooling-preview'
   implementation 'androidx.compose.material3:material3'
   implementation 'io.netty:netty-all:4.1.100.Final'
+  implementation 'com.google.zxing:core:3.5.2'
+  implementation 'com.google.zxing:android-core:3.3.0'
   testImplementation 'junit:junit:4.13.2'
   debugImplementation 'androidx.compose.ui:ui-tooling'
   debugImplementation 'androidx.compose.ui:ui-test-manifest'
