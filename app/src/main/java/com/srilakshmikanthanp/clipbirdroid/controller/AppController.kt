@@ -692,6 +692,19 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // get the client
     val client = host.get() as Client
 
+    // is not connected then return
+    if (!client.isConnected()) {
+      return
+    }
+
+    // connected server
+    val s = client.getConnectedServer()
+
+    // is not connected to the given server then return
+    if ((s.ip != server.ip) || (s.port != server.port)) {
+      return
+    }
+
     // disconnect from the server
     client.disconnectFromServer()
   }

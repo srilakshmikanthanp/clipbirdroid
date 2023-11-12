@@ -105,9 +105,21 @@ private fun ClientGroup(controller: AppController) {
 
   // Change Handler for the list of servers
   val serverListChangeHandler = OnServerListChangeHandler { list ->
+    // get the current server if connected
+    val server = if (controller.isConnectedToServer()) {
+      controller.getConnectedServer()
+    } else {
+      null
+    }
+
+    // map the list of servers to DeviceActionable
     servers = list.map {
-      val server = try { controller.getConnectedServer() } catch (e: RuntimeException) { null }
       DeviceActionable(it, if (it == server) HostAction.DISCONNECT else HostAction.CONNECT)
+    }
+    
+    // if the server is not in the list
+    if (server != null && !list.contains(server)) {
+      servers = servers + DeviceActionable(server, HostAction.DISCONNECT)
     }
   }
 
