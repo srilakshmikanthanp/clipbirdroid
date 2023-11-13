@@ -2,9 +2,11 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.modals
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.isHostAvailable
@@ -66,20 +69,20 @@ fun Connect(
     return@validator Pair(ipv4, port)
   }
 
-  // submit handler
-  val onSubmit: (String, String) -> Unit = onSubmit@{ ipv4, port ->
-    newSingleThreadExecutor().execute {
-      validator(ipv4, port.toInt())?.let {
-        onConnect(it.first, it.second)
-      }
-    }
-  }
+  // is loading
+  var isLoading by remember { mutableStateOf(false) }
 
   // Bar Code Results processor function
-  val barCodeResult: (String) -> Unit = { result ->
+  val barCodeResult: (ScanIntentResult) -> Unit = barCodeResult@{ result ->
+    // is Result user pressed back button
+    if (result.contents == null) { return@barCodeResult }
+
+    // set loading
+    isLoading = true
+
     // Executor to get the First Reachable IP
     val executor = newSingleThreadExecutor()
-    val json = JSONObject(result)
+    val json = JSONObject(result.contents)
     val ips = json.getJSONArray("ips")
     val port = json.getInt("port")
 
@@ -93,10 +96,21 @@ fun Connect(
     }
   }
 
+  // submit handler
+  val onSubmit: (String, String) -> Unit = onSubmit@{ ipv4, port ->
+    newSingleThreadExecutor().execute {
+      validator(ipv4, port.toInt())?.let {
+        onConnect(it.first, it.second)
+      }
+    }.also {
+      isLoading = true
+    }
+  }
+
   // Scan Launcher
   val launcher = rememberLauncherForActivityResult(
     contract = ScanContract(),
-    onResult = { barCodeResult(it.contents) },
+    onResult = { barCodeResult(it) },
   )
 
   // ip input & port input
@@ -106,7 +120,11 @@ fun Connect(
   // dialog
   Dialog(onDismissRequest = onDismissRequest) {
     Card {
-      Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center
+      ) {
         // Title for the dialog
         Text(
           style = MaterialTheme.typography.headlineSmall,
@@ -130,12 +148,19 @@ fun Connect(
           label = { Text("Port") }
         )
 
+        // Loading
+        if (isLoading) {
+          CircularProgressIndicator(
+            modifier = Modifier.padding(vertical = 5.dp)
+          ).also { return@Column }
+        }
+
         // Submit Button
         TextButton(
           modifier = Modifier.padding(vertical = 5.dp),
           onClick = { onSubmit(ipv4, port) }
         ) {
-          Text("Submit")
+          Text("Join")
         }
 
         // Spacer

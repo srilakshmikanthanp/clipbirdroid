@@ -116,7 +116,7 @@ private fun ClientGroup(controller: AppController) {
     servers = list.map {
       DeviceActionable(it, if (it == server) HostAction.DISCONNECT else HostAction.CONNECT)
     }
-    
+
     // if the server is not in the list
     if (server != null && !list.contains(server)) {
       servers = servers + DeviceActionable(server, HostAction.DISCONNECT)
@@ -267,11 +267,11 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     obj.toString()
   }
 
+  // Host Name of the Group
+  var hostName by remember { mutableStateOf(inferHostName()) }
+
   // status of the Host
   var status by remember { mutableStateOf(inferStatus()) }
-
-  // Host Name
-  var hostName by remember { mutableStateOf(inferHostName()) }
 
   // Server Tab Index
   val SERVER_TAB = Pair(0, "Create Group")
@@ -304,7 +304,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // on Connect Handler
   val onConnect = { ip: InetAddress, port: Int ->
-    controller.connectToServer(Device(ip, port, ip.hostName))
+    controller.connectToServer(Device(ip, port, ip.hostName)).also { isConnectDialogOpen = false }
   }
 
   // Handler for Group QrCode Click Event
