@@ -421,6 +421,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Connect to server Secured
    */
   fun connectToServerSecured(server: Device) {
+    // if already connected to server disconnect
+    if (this.isConnected()) this.disconnectFromServer()
+
     // create a bootstrap for channel
     Bootstrap().group(NioEventLoopGroup())
       .channel(NioSocketChannel::class.java)
@@ -432,6 +435,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Connect to server
    */
   fun connectToServer(server: Device) {
+    // if already connected to server disconnect
+    if (this.isConnected()) this.disconnectFromServer()
+
     // create a bootstrap for channel
     Bootstrap().group(NioEventLoopGroup())
       .channel(NioSocketChannel::class.java)
