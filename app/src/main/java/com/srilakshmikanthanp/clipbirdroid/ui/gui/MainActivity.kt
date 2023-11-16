@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
   private fun handleIntent(intent: Intent?) {
     if (intent?.action == QUIT_ACTION) stopService().also { this.finishAndRemoveTask() }
   }
-  
+
   // Set up the Service Connection
   private fun setUpService() {
     val intent = Intent(this, ClipbirdService::class.java)

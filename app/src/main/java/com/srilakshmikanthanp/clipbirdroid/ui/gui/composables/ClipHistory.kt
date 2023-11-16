@@ -39,20 +39,6 @@ private fun ByteArray.toBitmap(): ImageBitmap {
 typealias ClipData = List<Pair<String, ByteArray>>
 
 /**
- * Is the ClipData can be inferred as Text
- */
-private fun ClipData.asText(): String? {
-  firstOrNull { it.first == Clipboard.MIME_TYPE_TEXT }?.second?.let { return String(it) } ?: return null
-}
-
-/**
- * Is the ClipData can be inferred as Image
- */
-private fun ClipData.asImage(): ImageBitmap? {
-  firstOrNull { it.first == Clipboard.MIME_TYPE_PNG }?.second?.let { return it.toBitmap() } ?: return null
-}
-
-/**
  * Image Tile
  */
 @Composable
@@ -89,8 +75,17 @@ private fun ClipTile(
         horizontalArrangement = Arrangement.Start,
         modifier = rowModifierStart,
       ) {
-        // Show the Clipboard Content
-        content.asImage()?.let { ImageTile(it) } ?: content.asText()?.let { TextTile(it) }
+        for (clip in content) {
+          if (clip.first == Clipboard.MIME_TYPE_TEXT) {
+            TextTile(text = String(clip.second))
+            break
+          }
+
+          if (clip.first == Clipboard.MIME_TYPE_PNG) {
+            ImageTile(clip.second.toBitmap())
+            break
+          }
+        }
       }
 
       // Modifier for Row that presents content from end

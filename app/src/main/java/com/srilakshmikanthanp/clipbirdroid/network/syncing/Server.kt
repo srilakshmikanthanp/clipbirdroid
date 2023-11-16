@@ -263,9 +263,12 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     val items = mutableListOf<Pair<String, ByteArray>>()
 
     // add the items to the list
-    for (item in m.getItems()) {
-      items.add(Pair(String(item.getMimeType()), item.getPayload()))
+    for (i in m.getItems()) {
+      if (i.getPayloadLength() != 0) items.add(Pair(String(i.getMimeType()), i.getPayload()))
     }
+
+    // if list is empty
+    if (items.isEmpty()) return
 
     // notify the sync handlers
     notifySyncRequestHandlers(items)
