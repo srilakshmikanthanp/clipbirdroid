@@ -428,9 +428,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
       title = context.resources.getString(R.string.group),
       code = makeJson(),
       port = controller.getServerInfo().port,
-      modifier = Modifier
-        .padding(top = 20.dp)
-        .padding(15.dp)
+      modifier = Modifier.padding(10.dp)
     )
 
     if(isConnectDialogOpen) Connect(

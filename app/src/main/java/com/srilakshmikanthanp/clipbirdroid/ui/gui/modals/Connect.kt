@@ -83,9 +83,27 @@ fun Connect(
 
     // Executor to get the First Reachable IP
     val executor = newSingleThreadExecutor()
-    val json = JSONObject(result.contents)
-    val ips = json.getJSONArray("ips")
-    val port = json.getInt("port")
+
+    // try to parse the json
+    val json = try {
+      JSONObject(result.contents)
+    } catch (e: Exception) {
+      return@barCodeResult
+    }
+
+    // get the ips
+    val ips = try {
+      json.getJSONArray("ips")
+    } catch (e: Exception) {
+      return@barCodeResult
+    }
+
+    // get the port
+    val port = try {
+      json.getInt("port")
+    } catch (e: Exception) {
+      return@barCodeResult
+    }
 
     // get the first reachable ip
     executor.execute {

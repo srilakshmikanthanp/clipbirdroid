@@ -1,5 +1,5 @@
 <resources>
-  <string name="send_content">Send latest clipboard content to other devices</string>
+  <string name="send_content">Send latest clipboard to other devices</string>
   <string name="notification_content">This is the notification for Clipbird Service</string>
   <string name="join_request_content">wants to connect to your device</string>
 
@@ -12,14 +12,14 @@
   <string name="devices">Devices</string>
   <string name="history">History</string>
   <string name="about">About</string>
-  <string name="ipv4">IPV4</string>
+  <string name="ipv4">Ipv4</string>
   <string name="port">Port</string>
   <string name="join">Join</string>
   <string name="or">OR</string>
   <string name="scan">Scan</string>
   <string name="qrcode">QR Code</string>
   <string name="error">Error</string>
-  <string name="group">GROUP</string>
+  <string name="group">Group</string>
   <string name="code">Code</string>
   <string name="accept">Accept</string>
   <string name="reject">Reject</string>
