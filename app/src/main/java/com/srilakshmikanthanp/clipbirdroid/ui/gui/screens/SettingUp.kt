@@ -33,12 +33,12 @@ fun SettingUp() {
       // Show the Clip Bird Logo
       Image(
         painter = painterResource(R.mipmap.ic_launcher_foreground),
-        contentDescription = stringResource(id = R.string.logo_label)
+        contentDescription = stringResource(id = R.string.logo)
       )
 
       // Show the Version
       Text(
-        text =  stringResource(id = R.string.version_label)+" ${appVersion()}",
+        text =  stringResource(id = R.string.version)+" ${appVersion()}",
         color = Color.Gray
       )
     }

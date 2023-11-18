@@ -44,7 +44,7 @@ typealias ClipData = List<Pair<String, ByteArray>>
  */
 @Composable
 private fun ImageTile(image: ImageBitmap) {
-  Image(image, stringResource(id = R.string.content_label))
+  Image(image, stringResource(id = R.string.clipbird_content))
 }
 
 /**
@@ -104,12 +104,12 @@ private fun ClipTile(
       ) {
         // Show the Copy Action Button
         IconButton(onClick = onCopy) {
-          Image(painterResource(R.drawable.copy), stringResource(id = R.string.copy_label))
+          Image(painterResource(R.drawable.copy), stringResource(id = R.string.copy))
         }
 
         // Show the Delete Action
         IconButton(onClick = onDelete) {
-          Image(painterResource(R.drawable.delete), stringResource(id = R.string.delete_label))
+          Image(painterResource(R.drawable.delete), stringResource(id = R.string.delete))
         }
       }
     }

@@ -25,7 +25,7 @@ class StatusNotification(private val context: Context) {
 
   // Notification channel constants
   private val CHANNEL_DESC = context.resources.getString(R.string.notification_content)
-  private val CHANNEL_ID   = context.resources.getString(R.string.statusnotification_label)
+  private val CHANNEL_ID   = context.resources.getString(R.string.status_notification)
   private val CHANNEL_NAME = context.resources.getString(R.string.app_name)
   private val IMPORTANCE   = NotificationManager.IMPORTANCE_DEFAULT
 
@@ -59,11 +59,11 @@ class StatusNotification(private val context: Context) {
     NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
       .setContentTitle(context.resources.getString(R.string.connection_request))
-      .setContentText("$clientName "+context.resources.getString(R.string.device_request))
+      .setContentText("$clientName "+context.resources.getString(R.string.join_request_content))
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
       .setAutoCancel(true)
-      .addAction(R.mipmap.ic_launcher_foreground, context.resources.getString(R.string.accept_label), onAccept)
-      .addAction(R.mipmap.ic_launcher_foreground, context.resources.getString(R.string.reject_label), onReject)
+      .addAction(R.mipmap.ic_launcher_foreground, context.resources.getString(R.string.accept), onAccept)
+      .addAction(R.mipmap.ic_launcher_foreground, context.resources.getString(R.string.reject), onReject)
       .build().also {
         notificationManager.notify(REQUEST_ID, it)
       }

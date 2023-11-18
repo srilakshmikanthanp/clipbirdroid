@@ -138,7 +138,7 @@ fun Connect(
           modifier = Modifier.padding(vertical = 5.dp),
           onValueChange = { ipv4 = it },
           value = ipv4,
-          label = { Text(stringResource(id = R.string.ipv4_label)) }
+          label = { Text(stringResource(id = R.string.ipv4)) }
         )
 
         // Input Port
@@ -146,7 +146,7 @@ fun Connect(
           modifier = Modifier.padding(vertical = 5.dp),
           onValueChange = { port = it },
           value = port,
-          label = { Text(stringResource(id = R.string.port_label)) }
+          label = { Text(stringResource(id = R.string.port)) }
         )
 
         // Loading
@@ -161,13 +161,13 @@ fun Connect(
           modifier = Modifier.padding(vertical = 5.dp),
           onClick = { onSubmit(ipv4, port) }
         ) {
-          Text(stringResource(id = R.string.join_label))
+          Text(stringResource(id = R.string.join))
         }
 
         // Spacer
         Text(
           modifier = Modifier.padding(vertical = 5.dp),
-          text = stringResource(id = R.string.or_label)
+          text = stringResource(id = R.string.or)
         )
 
         // Scan Options
@@ -183,7 +183,7 @@ fun Connect(
         ) {
           Image(
             painter = painterResource(id = R.drawable.scan),
-            contentDescription = stringResource(id = R.string.scan_label)
+            contentDescription = stringResource(id = R.string.scan)
           )
         }
       }

@@ -149,12 +149,12 @@ class ClipbirdService : Service() {
     NotificationCompat.Builder(this, notification.getChannelID())
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
       .setContentTitle(resources.getString(R.string.app_name))
-      .setContentText(resources.getString(R.string.app_content))
+      .setContentText(resources.getString(R.string.send_content))
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
       .setContentIntent(onTapIntent())
       .setOngoing(true)
-      .addAction(0, resources.getString(R.string.send_label), onSendIntent())
-      .addAction(0, resources.getString(R.string.quit_label), onQuitIntent())
+      .addAction(0, resources.getString(R.string.send), onSendIntent())
+      .addAction(0, resources.getString(R.string.quit), onQuitIntent())
       .build().also {
         startForeground(NOTIFICATION_ID, it)
       }

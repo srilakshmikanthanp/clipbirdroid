@@ -31,12 +31,12 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Text(
-        text = stringResource(id = R.string.app_content),
+        text = stringResource(id = R.string.send_content),
         fontSize = 14.sp
       )
 
       Button(onClick = onSend) {
-        Text(text = stringResource(id = R.string.send_label))
+        Text(text = stringResource(id = R.string.send))
       }
     }
   }
