@@ -148,13 +148,13 @@ class ClipbirdService : Service() {
     // Create the notification
     NotificationCompat.Builder(this, notification.getChannelID())
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
-      .setContentTitle("Clipbird Service")
-      .setContentText("Send latest clipboard content to other devices")
+      .setContentTitle(resources.getString(R.string.app_name))
+      .setContentText(resources.getString(R.string.app_content))
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
       .setContentIntent(onTapIntent())
       .setOngoing(true)
-      .addAction(0, "Send", onSendIntent())
-      .addAction(0, "Quit", onQuitIntent())
+      .addAction(0, resources.getString(R.string.send_label), onSendIntent())
+      .addAction(0, resources.getString(R.string.quit_label), onQuitIntent())
       .build().also {
         startForeground(NOTIFICATION_ID, it)
       }

@@ -24,13 +24,15 @@ class StatusNotification(private val context: Context) {
   private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
   // Notification channel constants
+  private val CHANNEL_DESC = context.resources.getString(R.string.notification_content)
+  private val CHANNEL_ID   = context.resources.getString(R.string.statusnotification_label)
+  private val CHANNEL_NAME = context.resources.getString(R.string.app_name)
+  private val IMPORTANCE   = NotificationManager.IMPORTANCE_DEFAULT
+
+  // Companion object
   companion object {
-    const val CHANNEL_DESC = "This is the notification for Clipbird Service"
-    const val CHANNEL_ID   = "StatusNotification"
-    const val CHANNEL_NAME = "Clipbird"
-    const val IMPORTANCE   = NotificationManager.IMPORTANCE_DEFAULT
-    const val SERVICE_ID   = 1
-    const val REQUEST_ID   = 2
+    val SERVICE_ID   = 1
+    val REQUEST_ID   = 2
   }
 
   /**
@@ -56,12 +58,12 @@ class StatusNotification(private val context: Context) {
     // Create the notification
     NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
-      .setContentTitle("Connect Request")
-      .setContentText("$clientName wants to connect to your device")
+      .setContentTitle(context.resources.getString(R.string.connection_request))
+      .setContentText("$clientName "+context.resources.getString(R.string.device_request))
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
       .setAutoCancel(true)
-      .addAction(R.mipmap.ic_launcher_foreground, "Accept", onAccept)
-      .addAction(R.mipmap.ic_launcher_foreground, "Reject", onReject)
+      .addAction(R.mipmap.ic_launcher_foreground, context.resources.getString(R.string.accept_label), onAccept)
+      .addAction(R.mipmap.ic_launcher_foreground, context.resources.getString(R.string.reject_label), onReject)
       .build().also {
         notificationManager.notify(REQUEST_ID, it)
       }

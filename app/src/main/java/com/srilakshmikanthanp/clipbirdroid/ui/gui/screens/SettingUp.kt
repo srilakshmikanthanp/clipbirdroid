@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.constant.appVersion
 
@@ -32,12 +33,12 @@ fun SettingUp() {
       // Show the Clip Bird Logo
       Image(
         painter = painterResource(R.mipmap.ic_launcher_foreground),
-        contentDescription = "Logo"
+        contentDescription = stringResource(id = R.string.logo_label)
       )
 
       // Show the Version
       Text(
-        text = "Version ${appVersion()}",
+        text =  stringResource(id = R.string.version_label)+" ${appVersion()}",
         color = Color.Gray
       )
     }

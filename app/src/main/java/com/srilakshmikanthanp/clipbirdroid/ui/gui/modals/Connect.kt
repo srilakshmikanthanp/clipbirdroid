@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -137,7 +138,7 @@ fun Connect(
           modifier = Modifier.padding(vertical = 5.dp),
           onValueChange = { ipv4 = it },
           value = ipv4,
-          label = { Text("IPV4") }
+          label = { Text(stringResource(id = R.string.ipv4_label)) }
         )
 
         // Input Port
@@ -145,7 +146,7 @@ fun Connect(
           modifier = Modifier.padding(vertical = 5.dp),
           onValueChange = { port = it },
           value = port,
-          label = { Text("Port") }
+          label = { Text(stringResource(id = R.string.port_label)) }
         )
 
         // Loading
@@ -160,13 +161,13 @@ fun Connect(
           modifier = Modifier.padding(vertical = 5.dp),
           onClick = { onSubmit(ipv4, port) }
         ) {
-          Text("Join")
+          Text(stringResource(id = R.string.join_label))
         }
 
         // Spacer
         Text(
           modifier = Modifier.padding(vertical = 5.dp),
-          text = "OR"
+          text = stringResource(id = R.string.or_label)
         )
 
         // Scan Options
@@ -182,7 +183,7 @@ fun Connect(
         ) {
           Image(
             painter = painterResource(id = R.drawable.scan),
-            contentDescription = "Scan"
+            contentDescription = stringResource(id = R.string.scan_label)
           )
         }
       }

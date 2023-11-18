@@ -1,3 +1,46 @@
 <resources>
-    <string name="app_name">Clipbird</string>
+  <string name="app_name">Clipbird</string>
+  <string name="app_content">Send latest clipboard content to other devices</string>
+  <string name="copy_label">Copy</string>
+  <string name="delete_label">Delete</string>
+  <string name="content_label">Clipbird Content</string>
+  <string name="send_label">Send</string>
+  <string name="phone_label">Phone</string>
+  <string name="devices_label">Devices</string>
+  <string name="history_label2">History</string>
+  <string name="about_label">About</string>
+  <string name="ipv4_label">IPV4</string>
+  <string name="port_label">Port</string>
+  <string name="join_label">Join</string>
+  <string name="or_label">OR</string>
+  <string name="scan_label">Scan</string>
+  <string name="qr_label">QR Code</string>
+  <string name="error_label">Error</string>
+  <string name="group_label">GROUP</string>
+  <string name="code_label">Code</string>
+  <string name="notification_content">This is the notification for Clipbird Service</string>
+  <string name="statusnotification_label">StatusNotification</string>
+  <string name="connection_request">Connection Request</string>
+  <string name="device_request">wants to connect to your device</string>
+  <string name="accept_label">Accept</string>
+  <string name="reject_label">Reject</string>
+  <string name="icon_label">Icon</string>
+  <string name="menu_label">Menu</string>
+  <string name="aboutclipbird_label">About Clipbird</string>
+  <string name="logo_label">Logo</string>
+  <string name="website_label">Website</string>
+  <string name="report_label">Report Issue</string>
+  <string name="donate_label">Donate</string>
+  <string name="groupqr_label">Group QrCode</string>
+  <string name="joingroup_label2">Join Group</string>
+  <string name="reset_label">Reset</string>
+  <string name="joingroup_label1">Join to a Group</string>
+  <string name="ips_label">ips</string>
+  <string name="creategroup_label">Create Group</string>
+  <string name="more_label">More</string>
+  <string name="devices_list">Clipbird Devices</string>
+  <string name="history_label1">Clipbird History</string>
+  <string name="version_label">Version</string>
+  <string name="quit_label">Quit</string>
+
 </resources>

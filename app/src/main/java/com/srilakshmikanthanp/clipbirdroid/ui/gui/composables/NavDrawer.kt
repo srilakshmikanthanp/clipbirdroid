@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.R
@@ -50,9 +51,11 @@ private fun DrawerContent(
     // Header for the Drawer
     Column (
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.padding(15.dp).fillMaxWidth()
+      modifier = Modifier
+        .padding(15.dp)
+        .fillMaxWidth()
     ) {
-      Image(painter = painterResource(R.drawable.phone), contentDescription = "Phone")
+      Image(painter = painterResource(R.drawable.phone), contentDescription = stringResource(id = R.string.phone_label))
       Text(style = MaterialTheme.typography.headlineMedium, text = appName())
       Text(text = appMdnsServiceName(LocalContext.current), color = Color.Gray)
     }
@@ -63,14 +66,14 @@ private fun DrawerContent(
     // Item For Device
     NavigationDrawerItem(
       onClick =  { onItemClicked(DrawerItems.DEVICES) },
-      label = { Text(text = "Devices") },
+      label = { Text(text =  stringResource(id = R.string.devices_label)) },
       selected = selected == DrawerItems.DEVICES,
     )
 
     // Item For History
     NavigationDrawerItem(
       onClick =  { onItemClicked(DrawerItems.HISTORY) },
-      label = { Text(text = "History") },
+      label = { Text(text = stringResource(id = R.string.history_label2)) },
       selected = selected == DrawerItems.HISTORY,
     )
 
@@ -80,7 +83,7 @@ private fun DrawerContent(
     // Item For About
     NavigationDrawerItem(
       onClick =  { onItemClicked(DrawerItems.ABOUT) },
-      label = { Text(text = "About") },
+      label = { Text(text = stringResource(id = R.string.about_label)) },
       selected = selected == DrawerItems.ABOUT,
     )
   }

@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -174,11 +175,11 @@ private fun ActionsDropDownMenu(
 ) {
   DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {
     // Conditionally show the menu items
-    if (isServerGroup) DropdownMenuItem(text = { Text("Group QrCode") }, onClick = onQRCodeClick)
-    else DropdownMenuItem(text = { Text("Join Group") }, onClick = onJoinClick)
+    if (isServerGroup) DropdownMenuItem(text = { Text(stringResource(id = R.string.groupqr_label)) }, onClick = onQRCodeClick)
+    else DropdownMenuItem(text = { Text(stringResource(id = R.string.joingroup_label2)) }, onClick = onJoinClick)
 
     // Show the common menu items
-    DropdownMenuItem(text = { Text("Reset") }, onClick = onResetClick)
+    DropdownMenuItem(text = { Text(stringResource(id = R.string.reset_label)) }, onClick = onResetClick)
   }
 }
 
@@ -235,7 +236,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     if(controller.isConnectedToServer()) {
       controller.getConnectedServer().name
     } else {
-      "Join to a Group"
+      context.resources.getString(R.string.joingroup_label1)
     }
   }
 
@@ -262,8 +263,8 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     val interfaces = getAllInterfaceAddresses()
     val port = controller.getServerInfo().port
     val obj = JSONObject()
-    obj.put("ips", interfaces)
-    obj.put("port", port)
+    obj.put(context.resources.getString(R.string.ips_label), interfaces)
+    obj.put(context.resources.getString(R.string.port_label), port)
     obj.toString()
   }
 
@@ -274,14 +275,14 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   var status by remember { mutableStateOf(inferStatus()) }
 
   // Server Tab Index
-  val SERVER_TAB = Pair(0, "Create Group")
+  val SERVER_TAB = Pair(0, context.resources.getString(R.string.creategroup_label))
 
   // Client Tab Index
-  val CLIENT_TAB = Pair(1, "Join Group")
+  val CLIENT_TAB = Pair(1,context.resources.getString(R.string.joingroup_label2))
 
   // Handler for Server Status
   val serverStatusChangeHandler = OnServerStatusChangeHandler {
-    hostName = if (it) controller.getConnectedServer().name else "Join to a Group"
+    hostName = if (it) controller.getConnectedServer().name else context.resources.getString(R.string.joingroup_label1)
     status   = if (it) StatusType.CONNECTED else StatusType.DISCONNECTED
   }
 
@@ -354,7 +355,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     Box {
       // More Icon Image Icon
       IconButton(onClick = { expanded = true }) {
-        Image(painter = painterResource(R.drawable.more), contentDescription = "More",)
+        Image(painter = painterResource(R.drawable.more), contentDescription = context.resources.getString(R.string.more_label),)
       }
 
       // Content
@@ -372,7 +373,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // Menu Icon for the Top Bar
   val menuIcon = @Composable {
     IconButton(onClick = onMenuClick) {
-      Image(painter = painterResource(R.drawable.menu), contentDescription = "Menu",)
+      Image(painter = painterResource(R.drawable.menu), contentDescription = context.resources.getString(R.string.menu_label),)
     }
   }
 
@@ -383,7 +384,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
         // Top Bar for Navigation & Actions
         TopAppBar(
           navigationIcon = { menuIcon() },
-          title = { Text("Clipbird Devices", modifier = Modifier.padding(horizontal = 10.dp)) },
+          title = { Text(context.resources.getString(R.string.devices_list), modifier = Modifier.padding(horizontal = 10.dp)) },
           modifier = Modifier.padding(3.dp),
           actions = { actionsDropDownMenu() },
           colors = smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -424,7 +425,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
     if(isGroupDialogOpen) Group(
       onDismissRequest = { isGroupDialogOpen = false },
-      title = "Group",
+      title = context.resources.getString(R.string.group_label),
       code = makeJson(),
       port = controller.getServerInfo().port,
       modifier = Modifier
@@ -435,7 +436,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     if(isConnectDialogOpen) Connect(
       onDismissRequest = { isConnectDialogOpen = false},
       onConnect = onConnect,
-      title = "Join Group",
+      title = context.resources.getString(R.string.joingroup_label2),
       modifier = Modifier
         .padding(top = 20.dp)
         .padding(15.dp)

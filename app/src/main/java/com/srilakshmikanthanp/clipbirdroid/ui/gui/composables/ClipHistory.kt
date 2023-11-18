@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,7 +44,7 @@ typealias ClipData = List<Pair<String, ByteArray>>
  */
 @Composable
 private fun ImageTile(image: ImageBitmap) {
-  Image(image, "Clipboard Content")
+  Image(image, stringResource(id = R.string.content_label))
 }
 
 /**
@@ -67,7 +68,9 @@ private fun ClipTile(
   Card(modifier = modifier) {
     Column (modifier = Modifier.padding(5.dp)) {
       // Modifier for Row that presents content from start and end
-      val rowModifierStart = Modifier.padding(horizontal = 10.dp, vertical = 15.dp).fillMaxWidth()
+      val rowModifierStart = Modifier
+        .padding(horizontal = 10.dp, vertical = 15.dp)
+        .fillMaxWidth()
         .fillMaxHeight(0.65f)
 
       // Row that presents content from start
@@ -89,7 +92,9 @@ private fun ClipTile(
       }
 
       // Modifier for Row that presents content from end
-      val rowModifierEnd = Modifier.padding(vertical = 6.dp).fillMaxWidth()
+      val rowModifierEnd = Modifier
+        .padding(vertical = 6.dp)
+        .fillMaxWidth()
 
       // Row that presents content from end
       Row(
@@ -99,12 +104,12 @@ private fun ClipTile(
       ) {
         // Show the Copy Action Button
         IconButton(onClick = onCopy) {
-          Image(painterResource(R.drawable.copy), "copy")
+          Image(painterResource(R.drawable.copy), stringResource(id = R.string.copy_label))
         }
 
         // Show the Delete Action
         IconButton(onClick = onDelete) {
-          Image(painterResource(R.drawable.delete), "delete")
+          Image(painterResource(R.drawable.delete), stringResource(id = R.string.delete_label))
         }
       }
     }
@@ -145,7 +150,9 @@ fun ClipHistory(
   ) {
     items(clipHistory.size) {
       ClipTile(
-        modifier = Modifier.fillMaxWidth().height(120.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(120.dp),
         content = clipHistory[it],
         onCopy = { onCopy(it) },
         onDelete = { onDelete(it) }
