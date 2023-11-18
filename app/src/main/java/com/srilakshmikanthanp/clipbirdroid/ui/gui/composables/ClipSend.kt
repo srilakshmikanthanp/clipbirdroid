@@ -10,9 +10,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.srilakshmikanthanp.clipbirdroid.R
 
 /**
  * ClipSend Composable
@@ -23,16 +25,18 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
   Card (modifier = modifier) {
     Row(
       horizontalArrangement = Arrangement.SpaceBetween,
-      modifier = Modifier.fillMaxWidth().padding(10.dp),
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(10.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Text(
-        text = "Send Latest Clipboard to other Devices",
+        text = stringResource(id = R.string.send_content),
         fontSize = 14.sp
       )
 
       Button(onClick = onSend) {
-        Text(text = "Send")
+        Text(text = stringResource(id = R.string.send))
       }
     }
   }
@@ -45,6 +49,8 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
 @Composable
 fun ClipSendPreview() {
   ClipSend(
-    modifier = Modifier.fillMaxWidth().padding(10.dp),
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(10.dp),
   )
 }

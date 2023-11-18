@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.R
@@ -54,7 +55,7 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
   // Navigation Icon is the Menu Icon
   val menuIcon = @Composable {
     IconButton(onClick = onMenuClick) {
-      Image(painter = painterResource(R.drawable.menu), contentDescription = "Menu",)
+      Image(painter = painterResource(R.drawable.menu), contentDescription = stringResource(id = R.string.menu))
     }
   }
 
@@ -62,7 +63,7 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
   val historyTopBar = @Composable {
     TopAppBar(
       navigationIcon = { menuIcon() },
-      title = { Text("Clipbird History", modifier = Modifier.padding(horizontal = 3.dp)) },
+      title = { Text(stringResource(id = R.string.clipbird_history), modifier = Modifier.padding(horizontal = 3.dp)) },
       modifier = Modifier.padding(3.dp),
     )
   }
@@ -72,7 +73,9 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
     Box (modifier = Modifier.padding(padding), contentAlignment = Alignment.Center,) {
       Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth().padding(10.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(10.dp),
       ) {
         // White Space
         Spacer(modifier = Modifier.padding(5.dp))

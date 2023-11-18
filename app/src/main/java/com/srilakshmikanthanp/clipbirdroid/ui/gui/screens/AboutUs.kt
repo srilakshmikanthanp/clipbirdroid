@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,9 +39,11 @@ private fun Action(icon: Int, text: String, modifier: Modifier, onClick: () -> U
   Card(modifier = modifier, onClick = onClick) {
     Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.padding(10.dp).fillMaxWidth()
+      modifier = Modifier
+        .padding(10.dp)
+        .fillMaxWidth()
     ) {
-      Image(painter = painterResource(icon), contentDescription = "Icon")
+      Image(painter = painterResource(icon), contentDescription = stringResource(id = R.string.icon))
       Text(text = text, fontSize = 12.sp, modifier = Modifier.padding(5.dp))
     }
   }
@@ -76,7 +79,7 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
   // Menu Icon for the Top Bar
   val menuIcon = @Composable {
     IconButton(onClick = onMenuClick) {
-      Image(painter = painterResource(R.drawable.menu), contentDescription = "Menu",)
+      Image(painter = painterResource(R.drawable.menu), contentDescription = stringResource(id = R.string.menu))
     }
   }
 
@@ -84,7 +87,7 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
   val aboutTopBar = @Composable {
     TopAppBar(
       navigationIcon = { menuIcon() },
-      title = { Text("About Clipbird", modifier = Modifier.padding(horizontal = 3.dp)) },
+      title = { Text(stringResource(id = R.string.about_clipbird), modifier = Modifier.padding(horizontal = 3.dp)) },
       modifier = Modifier.padding(3.dp)
     )
   }
@@ -92,13 +95,15 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
   // Render the Screen
   val content = @Composable { padding : PaddingValues ->
     Column(
-      modifier = Modifier.fillMaxWidth().padding(padding),
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(padding),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       // Shoe the Clip Bird Logo
       Image(
         painter = painterResource(R.mipmap.ic_launcher_foreground),
-        contentDescription = "Logo"
+        contentDescription = stringResource(id = R.string.logo)
       )
 
       // Show the Version
@@ -112,10 +117,13 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.padding(vertical = 10.dp)
       ) {
-        val cardModifier = Modifier.weight(1f).fillMaxWidth().padding(10.dp)
-        Action(R.drawable.browser, "Website", cardModifier , onWebsiteOpen)
-        Action(R.drawable.bug, "Report Issue", cardModifier, onIssueReport)
-        Action(R.drawable.money, "Donate", cardModifier, onDonation)
+        val cardModifier = Modifier
+          .weight(1f)
+          .fillMaxWidth()
+          .padding(10.dp)
+        Action(R.drawable.browser,  stringResource(id = R.string.website), cardModifier , onWebsiteOpen)
+        Action(R.drawable.bug,  stringResource(id = R.string.report_issue), cardModifier, onIssueReport)
+        Action(R.drawable.money,stringResource(id = R.string.donate) , cardModifier, onDonation)
       }
     }
   }
