@@ -1,72 +1,69 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import android.app.Application
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
+import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
-import kotlinx.coroutines.launch
+import java.security.PrivateKey
+import java.security.cert.X509Certificate
+import java.util.Date
 
-/**
- * Clipbird Composable
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Clipbird(controller: AppController) {
-  // Composable States and Scope
-  val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-  val scope = rememberCoroutineScope()
-  var selected by remember { mutableStateOf(DrawerItems.DEVICES) }
-  val context = LocalContext.current
-
-  // Handler For Item Click
-  val onItemClicked: (DrawerItems) -> Unit = {
-    // Close the Drawer on Item Click
-    scope.launch { drawerState.close() }
-
-    // Handle the Item Click
-    selected = it
+class Clipbird : Application() {
+  // Function used to get the Private Key and the Certificate New
+  private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {
+    val sslConfig = generateX509Certificate(this)
+    val store = Storage.getInstance(this)
+    store.setHostKey(sslConfig.first)
+    store.setHostCert(sslConfig.second)
+    return sslConfig
   }
 
-  // Menu click handler
-  val onMenuClick: () -> Unit = {
-    scope.launch {
-      drawerState.open()
+  // Function used to get the Private Key and the Certificate Old
+  private fun getOldSslConfig(): Pair<PrivateKey, X509Certificate> {
+    val store = Storage.getInstance(this)
+    val cert = store.getHostCert()!!
+    val key = store.getHostKey()!!
+
+    val nowMilliSec = System.currentTimeMillis()
+    val nowDate = Date(nowMilliSec)
+
+    // is expired
+    if (cert.notAfter < nowDate) {
+      return getNewSslConfig()
+    }
+
+    return Pair(key, cert)
+  }
+
+  // Function used to get the the Private Key and the Certificate
+  private fun getSslConfig(): Pair<PrivateKey, X509Certificate> {
+    // Get the Storage instance for the application
+    val store = Storage.getInstance(this)
+
+    // Check the Host key and cert is available
+    return if (store.hasHostKey() && store.hasHostCert()) {
+      getOldSslConfig()
+    } else {
+      getNewSslConfig()
     }
   }
 
-  // Render the Content
-  NavDrawer(
-    onItemClicked = onItemClicked,
-    selected = selected,
-    drawerState = drawerState,
-  ) {
-    when (selected) {
-      DrawerItems.DEVICES -> Devices(controller, onMenuClick)
-      DrawerItems.ABOUT   -> AboutUs(onMenuClick)
-      DrawerItems.HISTORY -> History(controller, onMenuClick)
+  // Controller foe the Whole Clipbird Designed by GRASP Pattern
+  private lateinit var controller: AppController
+
+  // Initialize the controller instance
+  override fun onCreate() {
+    // call super onCreate and initialize controller
+    super.onCreate().also { controller = AppController(getSslConfig(), this) }
+
+    // initialize the controller
+    if (controller.isLastlyHostIsServer()) {
+      controller.setCurrentHostAsServer()
+    } else {
+      controller.setCurrentHostAsClient()
     }
   }
-}
 
-/**
- * Preview Clipbird
- */
-@Preview(showBackground = true)
-@Composable
-private fun PreviewClipbird() {
-  Clipbird(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
+  // get the controller instance
+  fun getController(): AppController = controller
 }

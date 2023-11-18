@@ -1,11 +1,13 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
+import androidx.activity.ComponentActivity
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 
-class SendHandler : AbstractHandler() {
-  override fun onConnectionReady(binder: ClipbirdService.ServiceBinder) {
-    binder.getService().getController().also {
-      it.syncClipboard(it.getClipboard()).also { this.finish() }
-    }
+class SendHandler : ComponentActivity() {
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    if (!hasFocus) return
+    val controller = (this.application as Clipbird).getController()
+    controller.syncClipboard(controller.getClipboard())
+    this.finish()
   }
 }

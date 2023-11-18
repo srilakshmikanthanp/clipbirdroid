@@ -263,9 +263,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     val interfaces = getAllInterfaceAddresses()
     val port = controller.getServerInfo().port
     val obj = JSONObject()
-    obj.put("ips", interfaces)
     obj.put("port", port)
-    obj.toString()
+    obj.put("ips", interfaces)
+    obj.toString(0)
   }
 
   // Host Name of the Group
@@ -428,16 +428,14 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
       title = context.resources.getString(R.string.group),
       code = makeJson(),
       port = controller.getServerInfo().port,
-      modifier = Modifier.padding(10.dp)
+      modifier = Modifier.padding(10.dp, 25.dp)
     )
 
     if(isConnectDialogOpen) Connect(
       onDismissRequest = { isConnectDialogOpen = false},
       onConnect = onConnect,
       title = context.resources.getString(R.string.join_group),
-      modifier = Modifier
-        .padding(top = 20.dp)
-        .padding(15.dp)
+      modifier = Modifier.padding(15.dp, 25.dp)
     )
   }
 

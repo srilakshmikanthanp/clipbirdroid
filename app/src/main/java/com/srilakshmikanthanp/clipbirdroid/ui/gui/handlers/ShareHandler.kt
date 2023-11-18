@@ -5,18 +5,22 @@ import android.net.Uri
 import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
+import androidx.activity.ComponentActivity
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.toPNG
 import java.io.FileNotFoundException
 
-class ShareHandler : AbstractHandler() {
+class ShareHandler : ComponentActivity() {
   // Called when the connection is ready to service
-  override fun onConnectionReady(binder: ClipbirdService.ServiceBinder) {
-    // if the Type in image/*
-    if (intent.type?.startsWith("image/") != true) return
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    // is not focused then just return from the function
+    if (!hasFocus) return
 
     // Get the controller
-    val controller = binder.getService().getController()
+    val controller = (this.application as Clipbird).getController()
+
+    // if the Type in image/*
+    if (intent.type?.startsWith("image/") != true) return
 
     // Get the URI
     val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: return

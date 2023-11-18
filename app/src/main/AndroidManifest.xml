@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools">
 
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -11,13 +12,21 @@
     android:dataExtractionRules="@xml/data_extraction_rules"
     android:fullBackupContent="@xml/backup_rules"
     android:icon="@mipmap/ic_launcher"
+    android:name=".ui.gui.Clipbird"
     android:label="@string/app_name"
     android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true"
     android:theme="@style/Theme.Clipbird"
     tools:targetApi="31">
 
-    <service android:name=".ui.gui.service.ClipbirdService" />
+    <service
+      android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
+      android:exported="true"
+      android:name=".ui.gui.service.ClipbirdService">
+      <intent-filter>
+        <action android:name="com.myapp.ClipbirdService" />
+      </intent-filter>
+    </service>
 
     <activity
       android:name="com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity"
@@ -75,5 +84,13 @@
         android:name="android.support.FILE_PROVIDER_PATHS"
         android:resource="@xml/provider_paths" />
     </provider>
+
+    <receiver
+      android:name=".ui.gui.handlers.BootHandler"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+      </intent-filter>
+    </receiver>
   </application>
 </manifest>

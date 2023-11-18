@@ -55,7 +55,7 @@ private fun Action(icon: Int, text: String, modifier: Modifier, onClick: () -> U
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutUs(onMenuClick: () -> Unit = {}) {
-  // Get the Context of Application
+  // Get the Context of Clipbird
   val context = LocalContext.current
 
   // Bug Report Handler

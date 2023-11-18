@@ -6,7 +6,7 @@ import android.provider.Settings.Secure.getString
 import com.srilakshmikanthanp.clipbirdroid.BuildConfig
 
 /**
- * @brief Get the Application Version
+ * @brief Get the Clipbird Version
  * @return string
  */
 fun appMajorVersion(): String {
@@ -14,7 +14,7 @@ fun appMajorVersion(): String {
 }
 
 /**
- * @brief Get the Application Version
+ * @brief Get the Clipbird Version
  * @return string
  */
 fun appMinorVersion(): String {
@@ -22,7 +22,7 @@ fun appMinorVersion(): String {
 }
 
 /**
- * @brief Get the Application Version
+ * @brief Get the Clipbird Version
  * @return string
  */
 fun appPatchVersion(): String {
@@ -37,7 +37,7 @@ fun appVersion(): String {
 }
 
 /**
- * @brief Get the Application Name
+ * @brief Get the Clipbird Name
  * @return string
  */
 fun appName(): String {
