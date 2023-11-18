@@ -55,7 +55,7 @@ private fun DrawerContent(
         .padding(15.dp)
         .fillMaxWidth()
     ) {
-      Image(painter = painterResource(R.drawable.phone), contentDescription = stringResource(id = R.string.phone_label))
+      Image(painter = painterResource(R.drawable.phone), contentDescription = stringResource(id = R.string.phone))
       Text(style = MaterialTheme.typography.headlineMedium, text = appName())
       Text(text = appMdnsServiceName(LocalContext.current), color = Color.Gray)
     }
@@ -66,14 +66,14 @@ private fun DrawerContent(
     // Item For Device
     NavigationDrawerItem(
       onClick =  { onItemClicked(DrawerItems.DEVICES) },
-      label = { Text(text =  stringResource(id = R.string.devices_label)) },
+      label = { Text(text =  stringResource(id = R.string.devices)) },
       selected = selected == DrawerItems.DEVICES,
     )
 
     // Item For History
     NavigationDrawerItem(
       onClick =  { onItemClicked(DrawerItems.HISTORY) },
-      label = { Text(text = stringResource(id = R.string.history_label2)) },
+      label = { Text(text = stringResource(id = R.string.history)) },
       selected = selected == DrawerItems.HISTORY,
     )
 
@@ -83,7 +83,7 @@ private fun DrawerContent(
     // Item For About
     NavigationDrawerItem(
       onClick =  { onItemClicked(DrawerItems.ABOUT) },
-      label = { Text(text = stringResource(id = R.string.about_label)) },
+      label = { Text(text = stringResource(id = R.string.about)) },
       selected = selected == DrawerItems.ABOUT,
     )
   }

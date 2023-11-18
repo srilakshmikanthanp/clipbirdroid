@@ -55,7 +55,7 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
   // Navigation Icon is the Menu Icon
   val menuIcon = @Composable {
     IconButton(onClick = onMenuClick) {
-      Image(painter = painterResource(R.drawable.menu), contentDescription = stringResource(id = R.string.menu_label))
+      Image(painter = painterResource(R.drawable.menu), contentDescription = stringResource(id = R.string.menu))
     }
   }
 
@@ -63,7 +63,7 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
   val historyTopBar = @Composable {
     TopAppBar(
       navigationIcon = { menuIcon() },
-      title = { Text(stringResource(id = R.string.history_label1), modifier = Modifier.padding(horizontal = 3.dp)) },
+      title = { Text(stringResource(id = R.string.clipbird_history), modifier = Modifier.padding(horizontal = 3.dp)) },
       modifier = Modifier.padding(3.dp),
     )
   }

@@ -35,8 +35,8 @@ fun Group(
     Card {
       Column (horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Text(text = title, style = MaterialTheme.typography.headlineSmall)
-        if (qrcode != null) Image(qrcode, stringResource(id = R.string.qr_label))
-        else Image(painterResource(R.drawable.broken), stringResource(id = R.string.error_label))
+        if (qrcode != null) Image(qrcode, stringResource(id = R.string.qrcode))
+        else Image(painterResource(R.drawable.broken), stringResource(id = R.string.error))
         Text(text = "$port", style = MaterialTheme.typography.bodySmall)
       }
     }
@@ -49,5 +49,5 @@ fun Group(
 @Preview(showBackground = true)
 @Composable
 private fun GroupPreview() {
-  Group(onDismissRequest = {}, title =  stringResource(id = R.string.group_label), code =  stringResource(id = R.string.code_label), port = 1234)
+  Group(onDismissRequest = {}, title =  stringResource(id = R.string.group), code =  stringResource(id = R.string.code), port = 1234)
 }

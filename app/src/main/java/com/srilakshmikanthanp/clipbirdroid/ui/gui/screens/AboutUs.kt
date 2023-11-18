@@ -43,7 +43,7 @@ private fun Action(icon: Int, text: String, modifier: Modifier, onClick: () -> U
         .padding(10.dp)
         .fillMaxWidth()
     ) {
-      Image(painter = painterResource(icon), contentDescription = stringResource(id = R.string.icon_label))
+      Image(painter = painterResource(icon), contentDescription = stringResource(id = R.string.icon))
       Text(text = text, fontSize = 12.sp, modifier = Modifier.padding(5.dp))
     }
   }
@@ -79,7 +79,7 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
   // Menu Icon for the Top Bar
   val menuIcon = @Composable {
     IconButton(onClick = onMenuClick) {
-      Image(painter = painterResource(R.drawable.menu), contentDescription = stringResource(id = R.string.menu_label))
+      Image(painter = painterResource(R.drawable.menu), contentDescription = stringResource(id = R.string.menu))
     }
   }
 
@@ -87,7 +87,7 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
   val aboutTopBar = @Composable {
     TopAppBar(
       navigationIcon = { menuIcon() },
-      title = { Text(stringResource(id = R.string.aboutclipbird_label), modifier = Modifier.padding(horizontal = 3.dp)) },
+      title = { Text(stringResource(id = R.string.about_clipbird), modifier = Modifier.padding(horizontal = 3.dp)) },
       modifier = Modifier.padding(3.dp)
     )
   }
@@ -103,7 +103,7 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
       // Shoe the Clip Bird Logo
       Image(
         painter = painterResource(R.mipmap.ic_launcher_foreground),
-        contentDescription = stringResource(id = R.string.logo_label)
+        contentDescription = stringResource(id = R.string.logo)
       )
 
       // Show the Version
@@ -121,9 +121,9 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
           .weight(1f)
           .fillMaxWidth()
           .padding(10.dp)
-        Action(R.drawable.browser,  stringResource(id = R.string.website_label), cardModifier , onWebsiteOpen)
-        Action(R.drawable.bug,  stringResource(id = R.string.report_label), cardModifier, onIssueReport)
-        Action(R.drawable.money,stringResource(id = R.string.donate_label) , cardModifier, onDonation)
+        Action(R.drawable.browser,  stringResource(id = R.string.website), cardModifier , onWebsiteOpen)
+        Action(R.drawable.bug,  stringResource(id = R.string.report_issue), cardModifier, onIssueReport)
+        Action(R.drawable.money,stringResource(id = R.string.donate) , cardModifier, onDonation)
       }
     }
   }
