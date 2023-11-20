@@ -144,6 +144,12 @@ fun Connect(
         modifier = modifier,
         verticalArrangement = Arrangement.Center
       ) {
+        // Loading
+        if (isLoading) {
+          CircularProgressIndicator(modifier = Modifier.padding(vertical = 5.dp))
+          return@Column
+        }
+
         // Title for the dialog
         Text(
           style = MaterialTheme.typography.headlineSmall,
@@ -166,13 +172,6 @@ fun Connect(
           value = port,
           label = { Text(stringResource(id = R.string.port)) }
         )
-
-        // Loading
-        if (isLoading) {
-          CircularProgressIndicator(
-            modifier = Modifier.padding(vertical = 5.dp)
-          ).also { return@Column }
-        }
 
         // Submit Button
         TextButton(
