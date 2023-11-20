@@ -76,6 +76,9 @@ private fun PreviewClipbird() {
   Clipbird(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
 }
 
+/**
+ * Main Activity
+ */
 class MainActivity : ComponentActivity() {
   // companion object
   companion object {
