@@ -147,7 +147,7 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://githu
 <!-- Contributors -->
 ## Contributors
 
-* [Suryanarayanan](https://github.com/suryanarayanandv)
+* [Santhosh Kumar T](https://github.com/santhoshkumartm)
 * [Dharun RK](https://github.com/rkdharun)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

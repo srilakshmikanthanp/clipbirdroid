@@ -1,10 +1,10 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.modals
 
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,15 +19,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanIntentResult
-import com.journeyapps.barcodescanner.ScanOptions
+import androidx.compose.ui.window.DialogProperties
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.isHostAvailable
 import org.json.JSONObject
@@ -39,7 +42,7 @@ import java.util.concurrent.Executors.newSingleThreadExecutor
  * an input option for ipv4 address and port number.
  * Also it has a button to scan the barcode.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun Connect(
   onDismissRequest: () -> Unit,
@@ -74,9 +77,9 @@ fun Connect(
   var isLoading by remember { mutableStateOf(false) }
 
   // Bar Code Results processor function
-  val barCodeResult: (ScanIntentResult) -> Unit = barCodeResult@{ result ->
+  val barCodeResult: (String?) -> Unit = barCodeResult@{ result ->
     // is Result user pressed back button
-    if (result.contents == null) { return@barCodeResult }
+    if (result == null) { return@barCodeResult }
 
     // set loading
     isLoading = true
@@ -86,7 +89,7 @@ fun Connect(
 
     // try to parse the json
     val json = try {
-      JSONObject(result.contents)
+      JSONObject(result)
     } catch (e: Exception) {
       return@barCodeResult
     }
@@ -118,38 +121,63 @@ fun Connect(
   // submit handler
   val onSubmit: (String, String) -> Unit = onSubmit@{ ipv4, port ->
     newSingleThreadExecutor().execute {
-      validator(ipv4, port.toInt())?.let {
-        onConnect(it.first, it.second)
+      // Validate the input
+      val host = validator(ipv4, port.toInt())
+
+      // if the host is null
+      if (host == null) {
+        isLoading = false
+        return@execute
       }
+
+      // connect to the host
+      onConnect(host.first, host.second)
     }.also {
       isLoading = true
     }
   }
 
-  // Scan Launcher
-  val launcher = rememberLauncherForActivityResult(
-    contract = ScanContract(),
-    onResult = { barCodeResult(it) },
-  )
+  // context for the scanner
+  val context = LocalContext.current
+
+  // Bar code scanner Options
+  val options = GmsBarcodeScannerOptions.Builder()
+    .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+    .enableAutoZoom()
+    .build()
+
+  // Bar code scanner
+  val scanner = GmsBarcodeScanning.getClient(context, options)
+
+  // lambda to start scan
+  val startScan: () -> Unit = {
+    scanner.startScan().addOnSuccessListener {
+      barCodeResult(it.rawValue)
+    }
+  }
 
   // ip input & port input
   var ipv4 by remember { mutableStateOf("") }
   var port by remember { mutableStateOf("") }
 
   // dialog
-  Dialog(onDismissRequest = onDismissRequest) {
+  Dialog(
+    properties = DialogProperties(usePlatformDefaultWidth = false),
+    onDismissRequest = onDismissRequest
+  ) {
+    // Loading
+    if (isLoading) {
+      CircularProgressIndicator(modifier = Modifier.padding(vertical = 5.dp).size(50.dp))
+      return@Dialog
+    }
+
+    // content
     Card {
       Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier,
         verticalArrangement = Arrangement.Center
       ) {
-        // Loading
-        if (isLoading) {
-          CircularProgressIndicator(modifier = Modifier.padding(vertical = 5.dp))
-          return@Column
-        }
-
         // Title for the dialog
         Text(
           style = MaterialTheme.typography.headlineSmall,
@@ -187,16 +215,10 @@ fun Connect(
           text = stringResource(id = R.string.or)
         )
 
-        // Scan Options
-        val options: ScanOptions = ScanOptions()
-        options.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-        options.setBeepEnabled(true)
-        options.setOrientationLocked(true)
-
         // Scan Button
         IconButton(
           modifier = Modifier.padding(vertical = 5.dp),
-          onClick = { launcher.launch(options) }
+          onClick = { startScan() }
         ) {
           Image(
             painter = painterResource(id = R.drawable.scan),

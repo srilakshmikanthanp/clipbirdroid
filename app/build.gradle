@@ -58,6 +58,7 @@ android {
 }
 
 dependencies {
+  implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
   implementation 'org.bouncycastle:bcpkix-jdk15to18:1.76'
   androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
   androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -74,7 +75,6 @@ dependencies {
   implementation 'androidx.compose.material3:material3'
   implementation 'io.netty:netty-all:4.1.100.Final'
   implementation 'com.google.zxing:core:3.5.2'
-  implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
   implementation 'com.google.zxing:android-core:3.3.0'
   testImplementation 'junit:junit:4.13.2'
   debugImplementation 'androidx.compose.ui:ui-tooling'
