@@ -673,6 +673,16 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     // close the server
     val fut = sslServer?.closeFuture()
 
+    // close all the clients
+    for (client in unauthenticatedClients) {
+      client.close()
+    }
+
+    // close all the clients
+    for (client in authenticatedClients) {
+      client.close()
+    }
+
     // Assign Null Value
     this.sslServer = null
 

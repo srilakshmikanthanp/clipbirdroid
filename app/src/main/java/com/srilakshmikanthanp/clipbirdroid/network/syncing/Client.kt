@@ -608,6 +608,11 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     // if handshake is not completed
     if (!evt.isSuccess) ctx.close().also { return }
 
+    // if already connected
+    if (this.isConnected()) {
+      this.channel!!.close()
+    }
+
     // set the channel
     this.channel = ctx.channel()
   }

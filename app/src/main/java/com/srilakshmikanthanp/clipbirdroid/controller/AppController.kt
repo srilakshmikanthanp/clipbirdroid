@@ -137,10 +137,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       val server : Server = host.get() as Server
 
       // set null
-      host.set(null)
-
-      // stop the server
-      server.stopServer()
+      server.stopServer().also { host.set(null) }
 
       // disconnect the signals from Server
       server.removeServerStateChangeHandler(::notifyServerStateChanged)
@@ -159,13 +156,10 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       val client : Client = host.get() as Client
 
       // set null
-      host.set(null)
+      client.stopBrowsing().also { host.set(null) }
 
       // if connected to server then disconnect
       if (client.isConnected()) client.disconnectFromServer()
-
-      // stop the client
-      client.stopBrowsing()
 
       // disconnect the signals from Client
       client.removeServerStatusChangeHandler(::handleServerStatusChanged)
