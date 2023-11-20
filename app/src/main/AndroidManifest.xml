@@ -34,6 +34,7 @@
 
     <activity
       android:name="com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity"
+      android:screenOrientation="sensorPortrait"
       android:exported="true"
       android:launchMode="singleTop"
       android:theme="@style/Theme.Clipbird">
@@ -45,6 +46,7 @@
 
     <activity
       android:name=".ui.gui.handlers.ShareHandler"
+      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
       android:noHistory="true"
@@ -59,6 +61,7 @@
 
     <activity
       android:name=".ui.gui.handlers.SendHandler"
+      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
       android:noHistory="true"
@@ -66,18 +69,15 @@
 
     <activity
       android:name=".ui.gui.handlers.AcceptHandler"
+      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
       android:name=".ui.gui.handlers.RejectHandler"
+      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
-
-    <activity
-      android:name="com.journeyapps.barcodescanner.CaptureActivity"
-      android:screenOrientation="fullSensor"
-      tools:replace="screenOrientation" />
 
     <provider
       android:name=".common.provider.ClipbirdFileProvider"
