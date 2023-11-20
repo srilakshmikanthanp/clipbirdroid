@@ -1,5 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.modals
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -76,6 +77,9 @@ fun Connect(
   // is loading
   var isLoading by remember { mutableStateOf(false) }
 
+  // context for the scanner
+  val context = LocalContext.current
+
   // Bar Code Results processor function
   val barCodeResult: (String?) -> Unit = barCodeResult@{ result ->
     // is Result user pressed back button
@@ -88,23 +92,14 @@ fun Connect(
     val executor = newSingleThreadExecutor()
 
     // try to parse the json
-    val json = try {
-      JSONObject(result)
+    val (ips, port) = try {
+      val json = JSONObject(result)
+      val ips = json.getJSONArray("ips")
+      val port = json.getInt("port")
+      Pair(ips, port)
     } catch (e: Exception) {
-      return@barCodeResult
-    }
-
-    // get the ips
-    val ips = try {
-      json.getJSONArray("ips")
-    } catch (e: Exception) {
-      return@barCodeResult
-    }
-
-    // get the port
-    val port = try {
-      json.getInt("port")
-    } catch (e: Exception) {
+      Toast.makeText(context, "Invalid QR Code", Toast.LENGTH_SHORT).show()
+      isLoading = false
       return@barCodeResult
     }
 
@@ -113,6 +108,7 @@ fun Connect(
       for (i in 0 until ips.length()) {
         val pair = validator(ips.getString(i), port) ?: continue
         onConnect(pair.first, pair.second)
+        isLoading = false
         break
       }
     }
@@ -136,9 +132,6 @@ fun Connect(
       isLoading = true
     }
   }
-
-  // context for the scanner
-  val context = LocalContext.current
 
   // Bar code scanner Options
   val options = GmsBarcodeScannerOptions.Builder()
