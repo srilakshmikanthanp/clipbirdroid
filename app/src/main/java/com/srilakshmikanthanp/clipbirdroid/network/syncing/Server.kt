@@ -563,7 +563,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
 
     // get the address, port, name
     val addr = ctx.channel().remoteAddress() as InetSocketAddress
-    val ssl = ctx.channel().pipeline().get("ssl") as SslHandler
+    val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
     val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
     val x500Name = JcaX509CertificateHolder(cert).subject
     val cn = x500Name.getRDNs(BCStyle.CN)[0]
