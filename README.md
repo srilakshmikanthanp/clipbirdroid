@@ -149,7 +149,6 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://githu
 ## Contributors
 
 * [Santhosh Kumar T](https://github.com/santhoshkumartm)
-* [Dharun RK](https://github.com/rkdharun)
 
 ## Screenshots
 
