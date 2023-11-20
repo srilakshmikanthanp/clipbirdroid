@@ -99,10 +99,7 @@ private fun ServerGroup(controller: AppController) {
 @Composable
 private fun ClientGroup(controller: AppController) {
   // list of client devices (state)
-  var servers by remember { mutableStateOf(controller.getServerList().map {
-    val server = try { controller.getConnectedServer() } catch (e: RuntimeException) { null }
-    DeviceActionable(it, if (it == server) HostAction.DISCONNECT else HostAction.CONNECT)
-  })}
+  var servers by remember { mutableStateOf(emptyList<DeviceActionable>()) }
 
   // Change Handler for the list of servers
   val serverListChangeHandler = OnServerListChangeHandler { list ->
@@ -137,6 +134,10 @@ private fun ClientGroup(controller: AppController) {
 
   // set up the Client
   val setupClient = {
+    // manually trigger the server list change handler
+    serverListChangeHandler.onServerListChanged(controller.getServerList())
+
+    // Add Change Handler for the server status & list
     controller.addServerStatusChangedHandler(serverStatusChangeHandler)
     controller.addServerListChangedHandler(serverListChangeHandler)
   }
