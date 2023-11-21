@@ -100,6 +100,9 @@ class Browser(private val context: Context) : DiscoveryListener {
     val ip = serviceMap[serviceName]?.first ?: return
     val port = serviceMap[serviceName]?.second ?: return
 
+    // remove from map
+    serviceMap.remove(serviceName)
+
     // notify the listeners
     notifyServiceRemoved(Device(ip, port, serviceName))
   }
