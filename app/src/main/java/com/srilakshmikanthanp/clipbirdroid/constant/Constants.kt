@@ -103,6 +103,6 @@ fun appMaxHistory(): Int {
 /**
  * Used to get the certificate expiry time should not be less than 2 months
  */
-fun appCertExpiry(): Long {
+fun appCertExpiryInterval(): Long {
   return 60L * 60L * 24L * 60L * 1000L
 }

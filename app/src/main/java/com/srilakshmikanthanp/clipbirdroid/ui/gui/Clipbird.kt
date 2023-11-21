@@ -1,7 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.app.Application
-import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiry
+import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiryInterval
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
@@ -25,7 +25,7 @@ class Clipbird : Application() {
     val key = store.getHostKey()!!
 
     // is certificate is to expiry in two months
-    if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiry()) {
+    if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiryInterval()) {
       val sslConfig = generateX509Certificate(this)
       store.setHostKey(sslConfig.first)
       store.setHostCert(sslConfig.second)
