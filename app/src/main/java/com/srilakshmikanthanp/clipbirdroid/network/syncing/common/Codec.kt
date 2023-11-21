@@ -3,6 +3,7 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing.common
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
+import com.srilakshmikanthanp.clipbirdroid.network.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.types.enums.ErrorCode
 import com.srilakshmikanthanp.clipbirdroid.types.except.MalformedPacket
@@ -28,6 +29,15 @@ class AuthenticationEncoder : MessageToByteEncoder<Authentication>() {
  */
 class InvalidPacketEncoder : MessageToByteEncoder<InvalidPacket>() {
   override fun encode(ctx: ChannelHandlerContext, msg: InvalidPacket, out: ByteBuf) {
+    out.writeBytes(msg.toByteArray())
+  }
+}
+
+/**
+ * Ping Packet encoder
+ */
+class PingPacketEncoder : MessageToByteEncoder<PingPacket>() {
+  override fun encode(ctx: ChannelHandlerContext, msg: PingPacket, out: ByteBuf) {
     out.writeBytes(msg.toByteArray())
   }
 }
@@ -89,6 +99,20 @@ class PacketDecoder : ReplayingDecoder<Void>() {
       return
     } catch (e: NotThisPacket) {
       Log.i(TAG, "Not Authentication Packet")
+    } catch (e: Exception) {
+      Log.e(TAG, e.message, e)
+      return
+    }
+
+    // try to parse the Ping Packet
+    try {
+      out.add(PingPacket.fromByteArray(buffer.array()))
+      return
+    } catch (e: MalformedPacket) {
+      ctx.writeAndFlush(InvalidPacket(e.errorCode, e.message.toByteArray()))
+      return
+    } catch (e: NotThisPacket) {
+      Log.i(TAG, "Not Ping Packet")
     } catch (e: Exception) {
       Log.e(TAG, e.message, e)
       return

@@ -11,6 +11,7 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnSyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.InvalidPacket
+import com.srilakshmikanthanp.clipbirdroid.network.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.Browser
@@ -22,6 +23,7 @@ import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
+import com.srilakshmikanthanp.clipbirdroid.types.enums.PingType
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -34,11 +36,15 @@ import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
 import io.netty.handler.ssl.SslHandshakeCompletionEvent
+import io.netty.handler.timeout.IdleState
+import io.netty.handler.timeout.IdleStateEvent
+import io.netty.handler.timeout.IdleStateHandler
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
+
 
 /**
  * Client Class for Syncing the Clipboard
@@ -221,6 +227,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
       ch.pipeline().addLast(SSLVerifierSecured())
+      ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
       ch.pipeline().addLast(SyncingPacketEncoder())
@@ -242,6 +249,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
       ch.pipeline().addLast(SSLVerifier())
+      ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
       ch.pipeline().addLast(SyncingPacketEncoder())
@@ -319,6 +327,35 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   }
 
   /**
+   * Handle the SSl Hand shake Complete
+   */
+  private fun onSSLHandShakeComplete(ctx: ChannelHandlerContext, evt: SslHandshakeCompletionEvent) {
+    // if handshake is not completed
+    if (!evt.isSuccess) ctx.close().also { return }
+
+    // if already connected
+    if (this.getConnectedServer() != null) {
+      this.channel!!.close()
+    }
+
+    // set the channel
+    this.channel = ctx.channel()
+  }
+
+  /**
+   * Handle IdleState event
+   */
+  private fun onIdleStateEvent(ctx: ChannelHandlerContext, evt: IdleStateEvent) {
+    if (evt.state() == IdleState.WRITER_IDLE) {
+      ctx.writeAndFlush(PingPacket(PingType.Ping))
+    }
+
+    if (evt.state() == IdleState.READER_IDLE) {
+      ctx.close()
+    }
+  }
+
+  /**
    * Process the Authentication Packet
    */
   private fun onAuthentication(ctx: ChannelHandlerContext, m: Authentication) {
@@ -332,6 +369,17 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   private fun onInvalidPacket(ctx: ChannelHandlerContext, m: InvalidPacket) {
     Log.e(TAG, "Invalid Packet ${m.getErrorCode()}: ${m.getErrorMessage().toString()}")
+  }
+
+  /**
+   * On Ping Packet
+   */
+  private fun onPingPacket(ctx: ChannelHandlerContext, m: PingPacket) {
+    // if it is not ping packet
+    if (m.getPingType() != PingType.Ping) return
+
+    // send the packet to the client
+    ctx.writeAndFlush(PingPacket(PingType.Pong))
   }
 
   /**
@@ -590,6 +638,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     when (msg) {
       is Authentication -> onAuthentication(ctx, msg)
       is InvalidPacket -> onInvalidPacket(ctx, msg)
+      is PingPacket -> onPingPacket(ctx, msg)
       is SyncingPacket -> onSyncingPacket(ctx, msg)
     }
   }
@@ -609,18 +658,14 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
     // check if event is SSL Handshake Completed
-    if (evt !is SslHandshakeCompletionEvent) return
-
-    // if handshake is not completed
-    if (!evt.isSuccess) ctx.close().also { return }
-
-    // if already connected
-    if (this.getConnectedServer() != null) {
-      this.channel!!.close()
+    if (evt is SslHandshakeCompletionEvent) {
+      this.onSSLHandShakeComplete(ctx, evt)
     }
 
-    // set the channel
-    this.channel = ctx.channel()
+    // check if event is IdleStateEvent
+    if (evt is IdleStateEvent) {
+      this.onIdleStateEvent(ctx, evt)
+    }
   }
 
   /**
