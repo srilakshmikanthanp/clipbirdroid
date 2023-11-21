@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
 import com.srilakshmikanthanp.clipbirdroid.intface.OnConnectionErrorHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnInvalidPacketHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerFoundHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerGoneHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerListChangeHandler
@@ -100,6 +101,19 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   // Remove handler for server status changed
   fun removeServerStatusChangeHandler(handler: OnServerStatusChangeHandler) {
     onServerStatusChangeHandlers.remove(handler)
+  }
+
+  // list handler for invalid packet
+  private val onInvalidPacketHandlers = mutableListOf<OnInvalidPacketHandler>()
+
+  // Add handler for invalid packet
+  fun addInvalidPacketHandler(handler: OnInvalidPacketHandler) {
+    onInvalidPacketHandlers.add(handler)
+  }
+
+  // Remove handler for invalid packet
+  fun removeInvalidPacketHandler(handler: OnInvalidPacketHandler) {
+    onInvalidPacketHandlers.remove(handler)
   }
 
   // List handlers for connection error
@@ -327,6 +341,15 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   }
 
   /**
+   * Notify all the listeners for invalid packet
+   */
+  private fun notifyInvalidPacket(message: String) {
+    for (handler in onInvalidPacketHandlers) {
+      handler.onInvalidPacket(message)
+    }
+  }
+
+  /**
    * Handle the SSl Hand shake Complete
    */
   private fun onSSLHandShakeComplete(ctx: ChannelHandlerContext, evt: SslHandshakeCompletionEvent) {
@@ -368,7 +391,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Process the InvalidPacket
    */
   private fun onInvalidPacket(ctx: ChannelHandlerContext, m: InvalidPacket) {
-    Log.e(TAG, "Invalid Packet ${m.getErrorCode()}: ${m.getErrorMessage().toString()}")
+    this.notifyInvalidPacket("Error: ${m.getErrorCode()}: ${m.getErrorMessage()}")
   }
 
   /**

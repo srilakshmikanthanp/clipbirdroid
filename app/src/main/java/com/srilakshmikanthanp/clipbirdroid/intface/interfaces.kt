@@ -51,3 +51,8 @@ fun interface OnSyncRequestHandler {
 fun interface OnClientListChangeHandler {
   fun onClientListChanged(clients: List<Device>)
 }
+
+// Invalid Packet Handler
+fun interface OnInvalidPacketHandler {
+  fun onInvalidPacket(message: String)
+}
