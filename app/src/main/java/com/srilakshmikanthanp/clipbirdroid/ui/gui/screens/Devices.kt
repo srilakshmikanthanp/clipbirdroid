@@ -104,11 +104,7 @@ private fun ClientGroup(controller: AppController) {
   // Change Handler for the list of servers
   val serverListChangeHandler = OnServerListChangeHandler { list ->
     // get the current server if connected
-    val server = if (controller.isConnectedToServer()) {
-      controller.getConnectedServer()
-    } else {
-      null
-    }
+    val server = controller.getConnectedServer()
 
     // map the list of servers to DeviceActionable
     servers = list.map {
@@ -207,7 +203,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // infer client status
   val inferClientStatus = {
-    if (controller.isConnectedToServer()) {
+    if (controller.getConnectedServer() != null) {
       StatusType.CONNECTED
     } else {
       StatusType.DISCONNECTED
@@ -234,8 +230,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // infer group name
   val inferGroupName = {
-    if(controller.isConnectedToServer()) {
-      controller.getConnectedServer().name
+    val server = controller.getConnectedServer()
+    if(server != null) {
+      server.name
     } else {
       context.resources.getString(R.string.join_group)
     }
@@ -283,7 +280,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // Handler for Server Status
   val serverStatusChangeHandler = OnServerStatusChangeHandler {
-    hostName = if (it) controller.getConnectedServer().name else context.resources.getString(R.string.join_group)
+    hostName = if (it) controller.getConnectedServer()!!.name else context.resources.getString(R.string.join_group)
     status   = if (it) StatusType.CONNECTED else StatusType.DISCONNECTED
   }
 

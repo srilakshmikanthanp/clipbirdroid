@@ -159,7 +159,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       client.stopBrowsing().also { host.set(null) }
 
       // if connected to server then disconnect
-      if (client.isConnected()) client.disconnectFromServer()
+      if (client.getConnectedServer() != null) {
+        client.disconnectFromServer()
+      }
 
       // disconnect the signals from Client
       client.removeServerStatusChangeHandler(::handleServerStatusChanged)
@@ -317,7 +319,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     val client = host.get() as Client
 
     // if already connected then return
-    if (client.isConnected()) return
+    if (client.getConnectedServer() != null) return
 
     // if the server is not found then return
     if (storage.hasServerCert(server.name)) {
@@ -337,13 +339,16 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // get the client and disconnect the signals
     val client = host.get() as Client
 
+    // get the server
+    val server = client.getConnectedServer() ?: return
+
     // if the client is connected then connect the signals
     if (!status) {
       clipboard.removeClipboardChangeListener(client::syncItems)
     } else {
       clipboard.addClipboardChangeListener(client::syncItems)
       val cert = client.getConnectedServerCertificate()
-      val name = client.getConnectedServer().name
+      val name = server.name
       storage.setServerCert(name, cert)
     }
   }
@@ -643,25 +648,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   }
 
   /**
-   * Is Client Connected
-   */
-  fun isConnectedToServer(): Boolean {
-    // if the host is not client then throw
-    if (!host.holds(Client::class.java)) {
-      throw RuntimeException("Host is not client")
-    }
-
-    // get the client
-    val client = host.get() as Client
-
-    // return the connection status
-    return client.isConnected()
-  }
-
-  /**
    * get the connected server address and port
    */
-  fun getConnectedServer(): Device {
+  fun getConnectedServer(): Device? {
     // if the host is not client then throw
     if (!host.holds(Client::class.java)) {
       throw RuntimeException("Host is not client")
@@ -686,13 +675,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // get the client
     val client = host.get() as Client
 
-    // is not connected then return
-    if (!client.isConnected()) {
-      return
-    }
-
     // connected server
-    val s = client.getConnectedServer()
+    val s = client.getConnectedServer() ?: return
 
     // is not connected to the given server then return
     if ((s.ip != server.ip) || (s.port != server.port)) {
@@ -753,7 +737,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     val client = host.get() as Client
 
     // if not connected then return
-    if (!client.isConnected()) {
+    if (client.getConnectedServer() == null) {
       Log.w(TAG, "Client is not connected")
       return
     }

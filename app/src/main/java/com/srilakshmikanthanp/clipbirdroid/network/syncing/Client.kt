@@ -358,12 +358,19 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   private fun<T> sendPacket(packet: T) {
     // check if channel is initialized
-    if (!this.isConnected()) {
+    if (this.getConnectedServer() == null) {
       throw Exception("Channel is not initialized")
     }
 
     // send packet
-    channel?.writeAndFlush(packet)
+    val fut = channel?.writeAndFlush(packet)
+
+    // Add Listener
+    fut?.addListener {
+      if (!it.isSuccess) {
+        notifyConnectionError(it.cause().message.toString())
+      }
+    }
   }
 
   /**
@@ -371,13 +378,6 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   init {
     this.browser.addListener(this)
-  }
-
-  /**
-   * Is connected to server
-   */
-  fun isConnected(): Boolean {
-    return channel != null && channel!!.isActive
   }
 
   /**
@@ -399,7 +399,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun syncItems(items: List<Pair<String, ByteArray>>) {
     // check if channel is initialized
-    if (!this.isConnected()) throw Exception("Channel is not initialized")
+    if (this.getConnectedServer() == null) {
+      throw Exception("Channel is not initialized")
+    }
 
     // create the syncing Items
     val syncingItems = items.map {
@@ -425,7 +427,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun connectToServerSecured(server: Device) {
     // if already connected to server disconnect
-    if (this.isConnected()) this.disconnectFromServer()
+    if (this.getConnectedServer() != null) {
+      this.disconnectFromServer()
+    }
 
     // create a bootstrap for channel
     Bootstrap().group(NioEventLoopGroup())
@@ -439,7 +443,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun connectToServer(server: Device) {
     // if already connected to server disconnect
-    if (this.isConnected()) this.disconnectFromServer()
+    if (this.getConnectedServer() != null) {
+      this.disconnectFromServer()
+    }
 
     // create a bootstrap for channel
     Bootstrap().group(NioEventLoopGroup())
@@ -451,8 +457,8 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   /**
    * Get the Connected Server
    */
-  fun getConnectedServer(): Device {
-    if (!this.isConnected()) throw RuntimeException("Not Connected to server")
+  fun getConnectedServer(): Device? {
+    if (this.channel == null || !this.channel!!.isActive) return null
 
     val addr = channel!!.remoteAddress() as InetSocketAddress
     val ssl = channel!!.pipeline().get(SslHandler::class.java) as SslHandler
@@ -468,7 +474,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Disconnect from the server
    */
   fun disconnectFromServer() {
-    if (!this.isConnected()) {
+    if (this.getConnectedServer() == null) {
       throw RuntimeException("Not Connected to server")
     } else {
       channel!!.close().also { channel = null }
@@ -479,7 +485,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Get the Connected server Certificate
    */
   fun getConnectedServerCertificate(): X509Certificate {
-    if (!this.isConnected()) throw RuntimeException("Not Connected to server")
+    if (this.getConnectedServer() == null) throw RuntimeException("Not Connected to server")
     val ssl = channel!!.pipeline().get(SslHandler::class.java) as SslHandler
     return ssl.engine().session.peerCertificates[0] as X509Certificate
   }
@@ -609,7 +615,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     if (!evt.isSuccess) ctx.close().also { return }
 
     // if already connected
-    if (this.isConnected()) {
+    if (this.getConnectedServer() != null) {
       this.channel!!.close()
     }
 
