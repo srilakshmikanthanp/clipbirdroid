@@ -1,12 +1,12 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.app.Application
+import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiry
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
-import java.util.Date
 
 class Clipbird : Application() {
   // Function used to get the Private Key and the Certificate New
@@ -24,12 +24,12 @@ class Clipbird : Application() {
     val cert = store.getHostCert()!!
     val key = store.getHostKey()!!
 
-    val nowMilliSec = System.currentTimeMillis()
-    val nowDate = Date(nowMilliSec)
-
-    // is expired
-    if (cert.notAfter < nowDate) {
-      return getNewSslConfig()
+    // is certificate is to expiry in two months
+    if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiry()) {
+      val sslConfig = generateX509Certificate(this)
+      store.setHostKey(sslConfig.first)
+      store.setHostCert(sslConfig.second)
+      return sslConfig
     }
 
     return Pair(key, cert)

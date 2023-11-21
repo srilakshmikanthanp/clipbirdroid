@@ -99,3 +99,10 @@ fun appProvider(): String {
 fun appMaxHistory(): Int {
   return 10
 }
+
+/**
+ * Used to get the certificate expiry time should not be less than 2 months
+ */
+fun appCertExpiry(): Long {
+  return 60L * 60L * 24L * 60L * 1000L
+}

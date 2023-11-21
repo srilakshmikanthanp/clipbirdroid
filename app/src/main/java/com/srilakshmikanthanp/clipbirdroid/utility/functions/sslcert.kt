@@ -29,8 +29,8 @@ private fun generateRSAKeyPair(bits: Int): KeyPair {
  */
 fun generateX509Certificate(context: Context, bits: Int = 1024): Pair<PrivateKey, X509Certificate> {
   // create Expiry dates
-  val expiryBefore = Date(System.currentTimeMillis() - (365 * 24 * 60 * 60))
-  val expiryAfter = Date(System.currentTimeMillis() + (365 * 24 * 60 * 60))
+  val expiryBefore = Date(System.currentTimeMillis() - (365L * 24L * 60L * 60L * 1000L))
+  val expiryAfter = Date(System.currentTimeMillis() + (365L * 24L * 60L * 60L * 1000L))
 
   // create the names
   val cname = appMdnsServiceName(context)
