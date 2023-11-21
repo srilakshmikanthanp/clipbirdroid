@@ -6,6 +6,7 @@ import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.toPNG
 import java.io.FileNotFoundException
@@ -46,7 +47,7 @@ class ShareHandler : ComponentActivity() {
     // Show toast
     val toast = Toast(this)
     toast.duration = Toast.LENGTH_SHORT
-    toast.setText("Image Synced")
+    toast.setText(R.string.synced)
     toast.show()
 
     // Close the activity

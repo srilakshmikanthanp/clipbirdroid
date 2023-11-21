@@ -4,6 +4,7 @@
   <string name="join_request_content">wants to connect to your device</string>
 
   <string name="app_name">Clipbird</string>
+  <string name="synced">Synced</string>
   <string name="copy">Copy</string>
   <string name="delete">Delete</string>
   <string name="clipbird_content">Clipbird Content</string>
