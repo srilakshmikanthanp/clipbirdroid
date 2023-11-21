@@ -106,3 +106,17 @@ fun appMaxHistory(): Int {
 fun appCertExpiryInterval(): Long {
   return 60L * 60L * 24L * 60L * 1000L
 }
+
+/**
+ * Max idle read time seconds
+ */
+fun appMaxIdleReadTime(): Int {
+  return 30
+}
+
+/**
+ * Max idle write time seconds
+ */
+fun appMaxIdleWriteTime(): Int {
+  return 5
+}

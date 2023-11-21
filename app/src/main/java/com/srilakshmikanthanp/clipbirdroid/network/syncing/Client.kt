@@ -3,6 +3,8 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleReadTime
+import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleWriteTime
 import com.srilakshmikanthanp.clipbirdroid.intface.OnConnectionErrorHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnInvalidPacketHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerFoundHandler
@@ -238,11 +240,12 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       val sslContext = SslContextBuilder.forClient()
         .keyManager(sslConfig?.first, sslConfig?.second)
         .trustManager(ClipbirdTrustManager()).build()
+      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
 
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
       ch.pipeline().addLast(SSLVerifierSecured())
-      ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
+      ch.pipeline().addLast(IdleStateHandler(r, w, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
       ch.pipeline().addLast(PingPacketEncoder())
@@ -261,11 +264,12 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       val sslContext = SslContextBuilder.forClient()
         .keyManager(sslConfig?.first, sslConfig?.second)
         .trustManager(ClipbirdTrustManager()).build()
+      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
 
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
       ch.pipeline().addLast(SSLVerifier())
-      ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
+      ch.pipeline().addLast(IdleStateHandler(r, w, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
       ch.pipeline().addLast(PingPacketEncoder())

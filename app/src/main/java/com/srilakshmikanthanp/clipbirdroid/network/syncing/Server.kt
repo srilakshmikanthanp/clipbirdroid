@@ -3,6 +3,8 @@ package com.srilakshmikanthanp.clipbirdroid.network.syncing
 import android.content.Context
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleReadTime
+import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleWriteTime
 import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientStateChangeHandler
@@ -144,10 +146,11 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
         .trustManager(ClipbirdTrustManager())
         .clientAuth(ClientAuth.REQUIRE)
         .build()
+      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
 
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext?.newHandler(ch.alloc()))
-      ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
+      ch.pipeline().addLast(IdleStateHandler(r, w, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
       ch.pipeline().addLast(PingPacketEncoder())
