@@ -27,7 +27,7 @@ class PingPacket (private var pingType: PingType) {
    * Allowed packet Types
    */
   enum class PacketType(val value: Int) {
-    Ping(0x00),
+    Ping(0x03),
   }
 
   /**

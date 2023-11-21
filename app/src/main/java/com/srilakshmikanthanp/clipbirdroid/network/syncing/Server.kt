@@ -16,6 +16,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.service.Register
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
@@ -149,6 +150,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
       ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
+      ch.pipeline().addLast(PingPacketEncoder())
       ch.pipeline().addLast(SyncingPacketEncoder())
       ch.pipeline().addLast(PacketDecoder())
 

@@ -19,6 +19,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.service.Browser
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
@@ -244,6 +245,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
+      ch.pipeline().addLast(PingPacketEncoder())
       ch.pipeline().addLast(SyncingPacketEncoder())
       ch.pipeline().addLast(PacketDecoder())
 
@@ -266,6 +268,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       ch.pipeline().addLast(IdleStateHandler(10, 5, 0))
       ch.pipeline().addLast(AuthenticationEncoder())
       ch.pipeline().addLast(InvalidPacketEncoder())
+      ch.pipeline().addLast(PingPacketEncoder())
       ch.pipeline().addLast(SyncingPacketEncoder())
       ch.pipeline().addLast(PacketDecoder())
 
@@ -343,9 +346,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   /**
    * Notify all the listeners for invalid packet
    */
-  private fun notifyInvalidPacket(message: String) {
+  private fun notifyInvalidPacket(code: Int, message: String) {
     for (handler in onInvalidPacketHandlers) {
-      handler.onInvalidPacket(message)
+      handler.onInvalidPacket(code, message)
     }
   }
 
@@ -391,7 +394,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Process the InvalidPacket
    */
   private fun onInvalidPacket(ctx: ChannelHandlerContext, m: InvalidPacket) {
-    this.notifyInvalidPacket("Error: ${m.getErrorCode()}: ${m.getErrorMessage()}")
+    this.notifyInvalidPacket(m.getErrorCode().value, m.getErrorMessage().toString())
   }
 
   /**
@@ -471,7 +474,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   fun syncItems(items: List<Pair<String, ByteArray>>) {
     // check if channel is initialized
     if (this.getConnectedServer() == null) {
-      throw Exception("Channel is not initialized")
+      return
     }
 
     // create the syncing Items
@@ -483,7 +486,11 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     val array = syncingItems.toTypedArray()
 
     // send the packet
-    this.sendPacket(SyncingPacket(array))
+    try {
+      this.sendPacket(SyncingPacket(array))
+    } catch (e: Exception) {
+      Log.e(TAG, e.message, e)
+    }
   }
 
   /**

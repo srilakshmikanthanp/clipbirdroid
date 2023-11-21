@@ -45,6 +45,8 @@ class Clipboard(private val context: Context) {
     val MIME_TYPE_TEXT: String = "text/plain"
     val MIME_TYPE_PNG: String = "image/png"
     val MIME_TYPE_HTML: String = "text/html"
+
+    val TAG = "Clipboard"
   }
 
   /**

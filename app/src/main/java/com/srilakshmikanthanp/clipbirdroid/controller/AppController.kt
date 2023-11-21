@@ -1,7 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.controller
 
 import android.content.Context
-import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
 import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxHistory
@@ -730,20 +729,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // if the host is not client then return
     if (!host.holds(Client::class.java)) {
-      return
+      (host.get() as Client).syncItems(data)
     }
-
-    // get the client from the host
-    val client = host.get() as Client
-
-    // if not connected then return
-    if (client.getConnectedServer() == null) {
-      Log.w(TAG, "Client is not connected")
-      return
-    }
-
-    // sync the clipboard
-    client.syncItems(data)
   }
 
   //---------------------- Clipboard functions -----------------------//

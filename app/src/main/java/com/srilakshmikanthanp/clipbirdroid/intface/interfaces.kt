@@ -54,5 +54,5 @@ fun interface OnClientListChangeHandler {
 
 // Invalid Packet Handler
 fun interface OnInvalidPacketHandler {
-  fun onInvalidPacket(message: String)
+  fun onInvalidPacket(code: Int, message: String)
 }
