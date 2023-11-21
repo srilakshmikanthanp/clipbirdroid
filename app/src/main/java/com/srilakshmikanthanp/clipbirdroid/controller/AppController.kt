@@ -728,7 +728,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
 
     // if the host is not client then return
-    if (!host.holds(Client::class.java)) {
+    if (host.holds(Client::class.java)) {
       (host.get() as Client).syncItems(data)
     }
   }
