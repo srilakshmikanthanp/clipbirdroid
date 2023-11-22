@@ -355,7 +355,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // get all server
     for (s in client.getServerList()) {
-      if (storage.hasServerCert(s.name)) {
+      if (s != server && storage.hasServerCert(s.name)) {
         return client.connectToServerSecured(s)
       }
     }
