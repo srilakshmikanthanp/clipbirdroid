@@ -339,10 +339,10 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     val client = host.get() as Client
 
     // get the server
-    val server = client.getConnectedServer() ?: return
+    val server = client.getConnectedServer()
 
     // if the client is connected then connect the signals
-    if (status) {
+    if (status && server != null) {
       clipboard.addClipboardChangeListener(client::syncItems)
       val cert = client.getConnectedServerCertificate()
       val name = server.name
