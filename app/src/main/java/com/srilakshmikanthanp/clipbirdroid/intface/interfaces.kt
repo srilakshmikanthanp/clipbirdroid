@@ -19,7 +19,7 @@ fun interface OnServerGoneHandler {
 
 // Interface for On Server state changed
 fun interface OnServerStatusChangeHandler {
-  fun onServerStatusChanged(isConnected: Boolean)
+  fun onServerStatusChanged(isConnected: Boolean, server: Device)
 }
 
 // Interface for On Connection Error

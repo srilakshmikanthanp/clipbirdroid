@@ -118,7 +118,7 @@ private fun ClientGroup(controller: AppController) {
   }
 
   // Change Handler for Server Status
-  val serverStatusChangeHandler = OnServerStatusChangeHandler {
+  val serverStatusChangeHandler = OnServerStatusChangeHandler { _, _ ->
     serverListChangeHandler.onServerListChanged((controller.getServerList()))
   }
 
@@ -279,11 +279,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   val CLIENT_TAB = Pair(1,context.resources.getString(R.string.join_group))
 
   // Handler for Server Status
-  val serverStatusChangeHandler = OnServerStatusChangeHandler {
-    val server = controller.getConnectedServer()
-    val what = it && server != null
-    hostName = if (what) server!!.name else context.resources.getString(R.string.join_group)
-    status   = if (what) StatusType.CONNECTED else StatusType.DISCONNECTED
+  val serverStatusChangeHandler = OnServerStatusChangeHandler { s, d ->
+    hostName = if (s) d.name else context.resources.getString(R.string.join_group)
+    status   = if (s) StatusType.CONNECTED else StatusType.DISCONNECTED
   }
 
   // Handler for Server State

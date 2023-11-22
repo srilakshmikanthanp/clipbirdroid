@@ -230,9 +230,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   /**
    * Notify the server status changed (Client)
    */
-  private fun notifyServerStatusChanged(status: Boolean) {
+  private fun notifyServerStatusChanged(status: Boolean, server: Device) {
     for (handler in serverStatusChangedHandlers) {
-      handler.onServerStatusChanged(status)
+      handler.onServerStatusChanged(status, server)
     }
   }
 
@@ -329,7 +329,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   /**
    * Handle the Server Status Changes (From client)
    */
-  private fun handleServerStatusChanged(status: Boolean) {
+  private fun handleServerStatusChanged(status: Boolean, srv: Device) {
     // if the host is not client then throw error
     if (!host.holds(Client::class.java)) {
       throw RuntimeException("Host is not client")
@@ -338,14 +338,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // get the client and disconnect the signals
     val client = host.get() as Client
 
-    // get the server
-    val server = client.getConnectedServer()
-
     // if the client is connected then connect the signals
-    if (status && server != null) {
+    if (status) {
       clipboard.addClipboardChangeListener(client::syncItems)
       val cert = client.getConnectedServerCertificate()
-      val name = server.name
+      val name = srv.name
       storage.setServerCert(name, cert)
       return
     }
@@ -355,7 +352,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // get all server
     for (s in client.getServerList()) {
-      if (s != server && storage.hasServerCert(s.name)) {
+      if (s != srv && storage.hasServerCert(s.name)) {
         return client.connectToServerSecured(s)
       }
     }

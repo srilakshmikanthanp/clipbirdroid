@@ -43,6 +43,7 @@ import io.netty.handler.ssl.SslHandshakeCompletionEvent
 import io.netty.handler.timeout.IdleState
 import io.netty.handler.timeout.IdleStateEvent
 import io.netty.handler.timeout.IdleStateHandler
+import io.netty.util.AttributeKey
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
@@ -285,6 +286,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     }
   }
 
+  // Device Name Attribute Key
+  private val DEVICE_NAME = AttributeKey.valueOf<String>("DEVICE_NAME")
+
   // Ssl configuration
   private var sslConfig: SSLConfig? = null;
 
@@ -327,9 +331,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   /**
    * Notify all the listeners for server status changed
    */
-  private fun notifyServerStatusChanged(isConnected: Boolean) {
+  private fun notifyServerStatusChanged(isConnected: Boolean, server: Device) {
     for (handler in onServerStatusChangeHandlers) {
-      handler.onServerStatusChanged(isConnected)
+      handler.onServerStatusChanged(isConnected, server)
     }
   }
 
@@ -372,6 +376,30 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       this.channel!!.close()
     }
 
+    // get the Handler for SSL from Pipeline
+    val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
+
+    // check if client has certificate
+    if(ssl.engine().session.peerCertificates.isEmpty()) {
+      ctx.close().also { return }
+    }
+
+    // get the Peer Certificate
+    val peerCert = ssl.engine().session.peerCertificates[0] as X509Certificate
+
+    // get CN name from certificate using bouncy castle
+    val x500Name = JcaX509CertificateHolder(peerCert).subject
+    val rdns = x500Name.getRDNs(BCStyle.CN)
+
+    // is does not have CN name
+    if (rdns.isEmpty()) ctx.close().also { return }
+
+    // get the CN name
+    val name = IETFUtils.valueToString(rdns[0].first.value)
+
+    // put name to ctx extra
+    ctx.channel().attr(DEVICE_NAME).set(name)
+
     // set the channel
     this.channel = ctx.channel()
   }
@@ -394,7 +422,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   private fun onAuthentication(ctx: ChannelHandlerContext, m: Authentication) {
     if (m.getAuthStatus() == AuthStatus.AuthOkay) {
-      notifyServerStatusChanged(true)
+      notifyServerStatusChanged(true, this.getConnectedServer()!!)
     }
   }
 
@@ -547,11 +575,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     if (this.channel == null || !this.channel!!.isActive) return null
 
     val addr = channel!!.remoteAddress() as InetSocketAddress
-    val ssl = channel!!.pipeline().get(SslHandler::class.java) as SslHandler
-    val cert = ssl.engine().session.peerCertificates[0] as X509Certificate
-    val x500Name = JcaX509CertificateHolder(cert).subject
-    val cn = x500Name.getRDNs(BCStyle.CN)[0]
-    val name = IETFUtils.valueToString(cn.first.value)
+    val name = channel!!.attr(DEVICE_NAME).get()
 
     return Device(addr.address, addr.port, name)
   }
@@ -563,7 +587,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     if (this.getConnectedServer() == null) {
       throw RuntimeException("Not Connected to server")
     } else {
-      channel!!.close().also { channel = null }
+      channel!!.close()
     }
   }
 
@@ -666,7 +690,10 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * is now inactive and reached its end of lifetime.
    */
   override fun channelInactive(ctx: ChannelHandlerContext?) {
-    notifyServerStatusChanged(false)
+    val addr = channel!!.remoteAddress() as InetSocketAddress
+    val name = channel!!.attr(DEVICE_NAME).get()
+    val host = Device(addr.address, addr.port, name)
+    notifyServerStatusChanged(false, host).also { channel = null }
   }
 
   /**
