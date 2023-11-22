@@ -280,8 +280,10 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // Handler for Server Status
   val serverStatusChangeHandler = OnServerStatusChangeHandler {
-    hostName = if (it) controller.getConnectedServer()!!.name else context.resources.getString(R.string.join_group)
-    status   = if (it) StatusType.CONNECTED else StatusType.DISCONNECTED
+    val server = controller.getConnectedServer()
+    val what = it && server != null
+    hostName = if (what) server!!.name else context.resources.getString(R.string.join_group)
+    status   = if (what) StatusType.CONNECTED else StatusType.DISCONNECTED
   }
 
   // Handler for Server State

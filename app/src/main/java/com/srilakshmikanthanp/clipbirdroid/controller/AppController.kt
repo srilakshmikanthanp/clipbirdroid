@@ -342,13 +342,22 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     val server = client.getConnectedServer() ?: return
 
     // if the client is connected then connect the signals
-    if (!status) {
-      clipboard.removeClipboardChangeListener(client::syncItems)
-    } else {
+    if (status) {
       clipboard.addClipboardChangeListener(client::syncItems)
       val cert = client.getConnectedServerCertificate()
       val name = server.name
       storage.setServerCert(name, cert)
+      return
+    }
+
+    // Remove the clipboard change listener
+    clipboard.removeClipboardChangeListener(client::syncItems)
+
+    // get all server
+    for (s in client.getServerList()) {
+      if (storage.hasServerCert(s.name)) {
+        return client.connectToServerSecured(s)
+      }
     }
   }
 

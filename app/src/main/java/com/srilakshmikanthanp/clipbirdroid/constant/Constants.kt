@@ -111,7 +111,7 @@ fun appCertExpiryInterval(): Long {
  * Max idle read time seconds
  */
 fun appMaxIdleReadTime(): Int {
-  return 60
+  return 120
 }
 
 /**
