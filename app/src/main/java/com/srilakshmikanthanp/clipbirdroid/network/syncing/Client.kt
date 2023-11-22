@@ -236,11 +236,13 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   // Channel Initializer Secured
   inner class InitializerSecured: ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
+      // get the Idle read and write time from constants
+      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
+
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forClient()
         .keyManager(sslConfig?.first, sslConfig?.second)
         .trustManager(ClipbirdTrustManager()).build()
-      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
 
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
@@ -260,11 +262,13 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   // Channel Initializer
   inner class Initializer: ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
+      // get the Idle read and write time from constants
+      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
+
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forClient()
         .keyManager(sslConfig?.first, sslConfig?.second)
         .trustManager(ClipbirdTrustManager()).build()
-      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
 
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
@@ -405,11 +409,11 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * On Ping Packet
    */
   private fun onPingPacket(ctx: ChannelHandlerContext, m: PingPacket) {
-    // if it is not ping packet
-    if (m.getPingType() != PingType.Ping) return
+    if (m.getPingType() == PingType.Ping) {
+      ctx.writeAndFlush(PingPacket(PingType.Pong))
+    }
 
-    // send the packet to the client
-    ctx.writeAndFlush(PingPacket(PingType.Pong))
+    Log.i(TAG, "Ping: ${m.getPingType()}")
   }
 
   /**

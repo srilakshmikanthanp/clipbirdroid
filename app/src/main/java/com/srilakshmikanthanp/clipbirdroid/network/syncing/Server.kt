@@ -141,12 +141,14 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
   // Channel Initializer
   inner class NewChannelInitializer : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
+      // get the Idle read and write time from constants
+      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
+
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forServer(sslCert?.first, sslCert?.second)
         .trustManager(ClipbirdTrustManager())
         .clientAuth(ClientAuth.REQUIRE)
         .build()
-      val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
 
       // Preprocessing Handlers
       ch.pipeline().addLast(sslContext?.newHandler(ch.alloc()))
