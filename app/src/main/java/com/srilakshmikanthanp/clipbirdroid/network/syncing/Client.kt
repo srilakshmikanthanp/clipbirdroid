@@ -400,6 +400,11 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     // put name to ctx extra
     ctx.channel().attr(DEVICE_NAME).set(name)
 
+    // is already connected
+    if (this.getConnectedServer() != null) {
+      this.channel!!.close()
+    }
+
     // set the channel
     this.channel = ctx.channel()
   }
@@ -693,7 +698,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     val addr = channel!!.remoteAddress() as InetSocketAddress
     val name = channel!!.attr(DEVICE_NAME).get()
     val host = Device(addr.address, addr.port, name)
-    notifyServerStatusChanged(false, host).also { channel = null }
+    notifyServerStatusChanged(false, host).also {
+      channel = null
+    }
   }
 
   /**
