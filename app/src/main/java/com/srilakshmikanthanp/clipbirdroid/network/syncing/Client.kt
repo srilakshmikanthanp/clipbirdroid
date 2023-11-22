@@ -371,11 +371,6 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     // if handshake is not completed
     if (!evt.isSuccess) ctx.close().also { return }
 
-    // if already connected
-    if (this.getConnectedServer() != null) {
-      this.channel!!.close()
-    }
-
     // get the Handler for SSL from Pipeline
     val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
 
@@ -401,7 +396,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     ctx.channel().attr(DEVICE_NAME).set(name)
 
     // is already connected
-    if (this.getConnectedServer() != null) {
+    if (this.channel != null) {
       this.channel!!.close()
     }
 
@@ -546,9 +541,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun connectToServerSecured(server: Device) {
     // if already connected to server disconnect
-    if (this.getConnectedServer() != null) {
-      this.disconnectFromServer()
-    }
+    if (this.channel != null) this.channel!!.close()
 
     // create a bootstrap for channel
     Bootstrap().group(NioEventLoopGroup())
@@ -562,9 +555,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun connectToServer(server: Device) {
     // if already connected to server disconnect
-    if (this.getConnectedServer() != null) {
-      this.disconnectFromServer()
-    }
+    if (this.channel != null) this.channel!!.close()
 
     // create a bootstrap for channel
     Bootstrap().group(NioEventLoopGroup())
@@ -578,10 +569,8 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun getConnectedServer(): Device? {
     if (this.channel == null || !this.channel!!.isActive) return null
-
     val addr = channel!!.remoteAddress() as InetSocketAddress
     val name = channel!!.attr(DEVICE_NAME).get()
-
     return Device(addr.address, addr.port, name)
   }
 
@@ -589,7 +578,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Disconnect from the server
    */
   fun disconnectFromServer() {
-    if (this.getConnectedServer() == null) {
+    if (this.channel == null) {
       throw RuntimeException("Not Connected to server")
     } else {
       channel!!.close()
@@ -600,7 +589,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Get the Connected server Certificate
    */
   fun getConnectedServerCertificate(): X509Certificate {
-    if (this.getConnectedServer() == null) throw RuntimeException("Not Connected to server")
+    if (this.channel == null) throw RuntimeException("Not Connected to server")
     val ssl = channel!!.pipeline().get(SslHandler::class.java) as SslHandler
     return ssl.engine().session.peerCertificates[0] as X509Certificate
   }
