@@ -425,7 +425,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     }
 
     if (evt.state() == IdleState.READER_IDLE) {
-      Log.w(Server.TAG, "Client ${ctx.channel().remoteAddress()} is not responding")
+      ctx.close()
     }
   }
 

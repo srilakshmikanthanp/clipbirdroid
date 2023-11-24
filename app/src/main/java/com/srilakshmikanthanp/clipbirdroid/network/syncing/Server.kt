@@ -310,7 +310,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     }
 
     if (evt.state() == IdleState.READER_IDLE) {
-      Log.w(TAG, "Client ${ctx.channel().remoteAddress()} is not responding")
+      ctx.close()
     }
   }
 

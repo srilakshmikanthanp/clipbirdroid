@@ -1,6 +1,8 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.app.Application
+import android.content.Context
+import android.os.PowerManager
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiryInterval
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
@@ -12,6 +14,9 @@ import java.security.cert.X509Certificate
 
 
 class Clipbird : Application() {
+  // wake lock instance for keeping the application alive without sleep while
+  private lateinit var wakeLock: PowerManager.WakeLock
+
   // Function used to get the Private Key and the Certificate New
   private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {
     val sslConfig = generateX509Certificate(this)
@@ -71,6 +76,24 @@ class Clipbird : Application() {
       controller.setCurrentHostAsServer()
     } else {
       controller.setCurrentHostAsClient()
+    }
+
+    // power manager
+    val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+
+    // keep the application alive without sleep while on client connection or server has clients
+    wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Clipbird::WakeLock")
+
+    // add listener to the controller for server connection
+    controller.addServerStatusChangedHandler{ status, device ->
+      if (status && !wakeLock.isHeld) wakeLock.acquire()
+      if (!status && wakeLock.isHeld) wakeLock.release()
+    }
+
+    // add listener to the controller for client connection
+    controller.addClientListChangedHandler{ list ->
+      if (list.isNotEmpty() && !wakeLock.isHeld) wakeLock.acquire()
+      if (list.isEmpty() && wakeLock.isHeld) wakeLock.release()
     }
   }
 
