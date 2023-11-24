@@ -1,12 +1,15 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.app.Application
+import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiryInterval
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
+import com.srilakshmikanthanp.clipbirdroid.utility.functions.toPem
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
+
 
 class Clipbird : Application() {
   // Function used to get the Private Key and the Certificate New
@@ -41,11 +44,18 @@ class Clipbird : Application() {
     val store = Storage.getInstance(this)
 
     // Check the Host key and cert is available
-    return if (store.hasHostKey() && store.hasHostCert()) {
+    val config = if (store.hasHostKey() && store.hasHostCert()) {
       getOldSslConfig()
     } else {
       getNewSslConfig()
     }
+
+    // log the certificate and key
+    Log.i("SSL", "Certificate: ${config.second.toPem()}")
+    Log.i("SSL", "Key: ${config.first.toPem()}")
+
+    // return the config
+    return config
   }
 
   // Controller foe the Whole Clipbird Designed by GRASP Pattern

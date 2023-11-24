@@ -19,7 +19,6 @@ import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.service.Browser
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.AuthenticationEncoder
-import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.IdleEvt
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PingPacketEncoder
@@ -41,6 +40,8 @@ import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
 import io.netty.handler.ssl.SslHandshakeCompletionEvent
+import io.netty.handler.timeout.IdleState
+import io.netty.handler.timeout.IdleStateEvent
 import io.netty.handler.timeout.IdleStateHandler
 import io.netty.util.AttributeKey
 import org.bouncycastle.asn1.x500.style.BCStyle
@@ -260,9 +261,6 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       // Decoder
       ch.pipeline().addLast(PacketDecoder())
 
-      // Handler
-      ch.pipeline().addLast(IdleEvt())
-
       // Add the Server Handler
       ch.pipeline().addLast(this@Client)
     }
@@ -294,9 +292,6 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
 
       // Decoder
       ch.pipeline().addLast(PacketDecoder())
-
-      // Idle
-      ch.pipeline().addLast(IdleEvt())
 
       // Add the Server Handler
       ch.pipeline().addLast(this@Client)
@@ -419,6 +414,19 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
 
     // set the channel
     this.channel = ctx.channel()
+  }
+
+  /**
+   * on Idle State Event
+   */
+  private fun onIdleStateEvent(ctx: ChannelHandlerContext, evt: IdleStateEvent) {
+    if (evt.state() == IdleState.WRITER_IDLE) {
+      ctx.writeAndFlush(PingPacket(PingType.Ping))
+    }
+
+    if (evt.state() == IdleState.READER_IDLE) {
+      Log.w(Server.TAG, "Client ${ctx.channel().remoteAddress()} is not responding")
+    }
   }
 
   /**
@@ -725,6 +733,11 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     // check if event is SSL Handshake Completed
     if (evt is SslHandshakeCompletionEvent) {
       this.onSSLHandShakeComplete(ctx, evt)
+    }
+
+    // Check if it is an IdleState Event
+    if (evt is IdleStateEvent) {
+      this.onIdleStateEvent(ctx, evt)
     }
   }
 
