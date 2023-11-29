@@ -118,5 +118,5 @@ fun appMaxIdleReadTime(): Int {
  * Max idle write time seconds
  */
 fun appMaxIdleWriteTime(): Int {
-  return 15
+  return 10
 }

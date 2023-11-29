@@ -30,6 +30,7 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandler
 import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
@@ -46,7 +47,6 @@ import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * A SSl Server Using Netty as a Backend
@@ -54,9 +54,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class Server(private val context: Context) : ChannelInboundHandler, Register.RegisterListener {
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
-
-  // is pong Enabled
-  private var isPongEnabled: AtomicBoolean = AtomicBoolean(true)
 
   /**
    * Add Client State Change Handler
@@ -314,7 +311,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     }
 
     if (evt.state() == IdleState.READER_IDLE) {
-      if (isPongEnabled.get()) ctx.close()
+      Log.w(Client.TAG, "Idle State: ${evt.state()}")
     }
   }
 
@@ -419,6 +416,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
      .channel(NioServerSocketChannel::class.java)
      .group(bossGroup, workerGroup)
      .childHandler(NewChannelInitializer())
+     .childOption(ChannelOption.SO_KEEPALIVE, true)
      .bind(0)
 
     // On Bind Completed
@@ -606,20 +604,6 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
 
     // close the channel
     fut.addListener { ctx.close() }
-  }
-
-  /**
-   * set is pong enabled
-   */
-  fun setIsPongEnabled(isPongEnabled: Boolean) {
-    this.isPongEnabled.set(isPongEnabled)
-  }
-
-  /**
-   * get is pong enabled
-   */
-  fun isPongEnabled(): Boolean {
-    return this.isPongEnabled.get()
   }
 
   /**

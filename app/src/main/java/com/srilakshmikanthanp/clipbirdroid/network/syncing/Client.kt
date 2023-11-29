@@ -34,6 +34,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandler
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
@@ -49,7 +50,6 @@ import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 /**
@@ -58,9 +58,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class Client(private val context: Context): Browser.BrowserListener, ChannelInboundHandler {
   // List handlers for server list changed
   private val onServerListChangeHandlers = mutableListOf<OnServerListChangeHandler>()
-
-  // is pong enabled
-  private val isPongEnabled: AtomicBoolean = AtomicBoolean(true);
 
   // Add handler for server list changed
   fun addServerListChangeHandler(handler: OnServerListChangeHandler) {
@@ -429,7 +426,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     }
 
     if (evt.state() == IdleState.READER_IDLE) {
-      if (isPongEnabled.get()) ctx.close()
+      Log.w(TAG, "Idle State: ${evt.state()}")
     }
   }
 
@@ -563,6 +560,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     Bootstrap().group(NioEventLoopGroup())
       .channel(NioSocketChannel::class.java)
       .handler(InitializerSecured())
+      .option(ChannelOption.SO_KEEPALIVE, true)
       .connect(server.ip, server.port)
   }
 
@@ -625,20 +623,6 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   }
 
   /**
-   * set is pong enabled
-   */
-  fun setIsPongEnabled(isPongEnabled: Boolean) {
-    this.isPongEnabled.set(isPongEnabled)
-  }
-
-  /**
-   * get is pong enabled
-   */
-  fun isPongEnabled(): Boolean {
-    return this.isPongEnabled.get()
-  }
-
-  /**
    * Called when a service is lost.
    */
   override fun onServiceRemoved(device: Device) {
@@ -649,6 +633,11 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     notifyServerGone(device)
     this.servers.remove(device)
     notifyServerListChanged()
+
+    // if this is the device connected
+    if (getConnectedServer() == device) {
+      this.channel!!.close()
+    }
   }
 
   /**
