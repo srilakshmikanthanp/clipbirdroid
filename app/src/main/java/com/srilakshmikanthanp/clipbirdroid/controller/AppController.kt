@@ -739,6 +739,36 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
   }
 
+  /**
+   * set is pong enabled
+   */
+  fun setIsPongEnabled(isPongEnabled: Boolean) {
+    if (host.holds(Server::class.java)) {
+      return (host.get() as Server).setIsPongEnabled(isPongEnabled)
+    }
+
+    if (host.holds(Client::class.java)) {
+      return (host.get() as Client).setIsPongEnabled(isPongEnabled)
+    }
+
+    throw RuntimeException("Host is not server or client")
+  }
+
+  /**
+   * get is pong enabled
+   */
+  fun isPongEnabled(): Boolean {
+    if (host.holds(Server::class.java)) {
+      return (host.get() as Server).isPongEnabled()
+    }
+
+    if (host.holds(Client::class.java)) {
+      return (host.get() as Client).isPongEnabled()
+    }
+
+    throw RuntimeException("Host is not server or client")
+  }
+
   //---------------------- Clipboard functions -----------------------//
 
   /**
