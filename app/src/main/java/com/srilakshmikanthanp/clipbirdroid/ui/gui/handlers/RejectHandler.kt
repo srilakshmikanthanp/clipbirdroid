@@ -20,6 +20,6 @@ class RejectHandler : ComponentActivity() {
 
   // Companion Object
   companion object {
-    const val REJECT_EXTRA = "REJECT_EXTRA"
+    const val REJECT_EXTRA = "com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.REJECT_EXTRA"
   }
 }
