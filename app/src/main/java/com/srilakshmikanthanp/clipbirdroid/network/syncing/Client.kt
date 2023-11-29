@@ -49,6 +49,7 @@ import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 /**
@@ -57,6 +58,9 @@ import java.security.cert.X509Certificate
 open class Client(private val context: Context): Browser.BrowserListener, ChannelInboundHandler {
   // List handlers for server list changed
   private val onServerListChangeHandlers = mutableListOf<OnServerListChangeHandler>()
+
+  // is pong enabled
+  private val isPongEnabled: AtomicBoolean = AtomicBoolean(true);
 
   // Add handler for server list changed
   fun addServerListChangeHandler(handler: OnServerListChangeHandler) {
@@ -425,7 +429,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     }
 
     if (evt.state() == IdleState.READER_IDLE) {
-      ctx.close()
+      if (isPongEnabled.get()) ctx.close()
     }
   }
 
@@ -618,6 +622,20 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    */
   fun stopBrowsing() {
     this.browser.stop()
+  }
+
+  /**
+   * set is pong enabled
+   */
+  fun setIsPongEnabled(isPongEnabled: Boolean) {
+    this.isPongEnabled.set(isPongEnabled)
+  }
+
+  /**
+   * get is pong enabled
+   */
+  fun isPongEnabled(): Boolean {
+    return this.isPongEnabled.get()
   }
 
   /**

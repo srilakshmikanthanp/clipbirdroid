@@ -46,6 +46,7 @@ import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * A SSl Server Using Netty as a Backend
@@ -53,6 +54,9 @@ import java.security.cert.X509Certificate
 open class Server(private val context: Context) : ChannelInboundHandler, Register.RegisterListener {
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
+
+  // is pong Enabled
+  private var isPongEnabled: AtomicBoolean = AtomicBoolean(true)
 
   /**
    * Add Client State Change Handler
@@ -310,7 +314,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     }
 
     if (evt.state() == IdleState.READER_IDLE) {
-      ctx.close()
+      if (isPongEnabled.get()) ctx.close()
     }
   }
 
@@ -602,6 +606,20 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
 
     // close the channel
     fut.addListener { ctx.close() }
+  }
+
+  /**
+   * set is pong enabled
+   */
+  fun setIsPongEnabled(isPongEnabled: Boolean) {
+    this.isPongEnabled.set(isPongEnabled)
+  }
+
+  /**
+   * get is pong enabled
+   */
+  fun isPongEnabled(): Boolean {
+    return this.isPongEnabled.get()
   }
 
   /**
