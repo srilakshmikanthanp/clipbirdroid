@@ -1,5 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.modals
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -144,9 +145,15 @@ fun Connect(
 
   // lambda to start scan
   val startScan: () -> Unit = {
-    scanner.startScan().addOnSuccessListener {
-      barCodeResult(it.rawValue)
-    }
+    scanner.startScan()
+      .addOnFailureListener {
+        Toast.makeText(context, "Failed to scan", Toast.LENGTH_SHORT).show()
+        isLoading = false
+        Log.e("Connect", "Failed to scan", it)
+      }
+      .addOnSuccessListener {
+        barCodeResult(it.rawValue)
+      }
   }
 
   // ip input & port input

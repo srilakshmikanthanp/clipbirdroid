@@ -2,6 +2,9 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.app.Application
 import android.util.Log
+import com.google.android.gms.common.moduleinstall.ModuleInstall
+import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiryInterval
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
@@ -72,6 +75,17 @@ class Clipbird : Application() {
     } else {
       controller.setCurrentHostAsClient()
     }
+
+    // get the module install instance
+    val moduleInstall = ModuleInstall.getClient(this)
+
+    // create install request
+    val request = ModuleInstallRequest.newBuilder()
+      .addApi(GmsBarcodeScanning.getClient(this))
+      .build()
+
+    // install the module
+    moduleInstall.installModules(request)
   }
 
   // get the controller instance
