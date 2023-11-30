@@ -91,12 +91,14 @@ class ClipbirdService : Service() {
 
   // infer the title
   private fun inferTitle(): String {
-    return if (controller.isCurrentHostIsServer()) {
+    return if (!controller.isCurrentHostIsServer()) {
+      val server = controller.getConnectedServer()
+      val none = resources.getString(R.string.none)
+      val group = server?.name ?: none
+      resources.getString(R.string.notification_title_client, group)
+    } else {
       val clients = controller.getConnectedClientsList().size
       resources.getString(R.string.notification_title_server, clients)
-    } else {
-      val group = controller.getConnectedServer()?.name ?: "None"
-      resources.getString(R.string.notification_title_client, group)
     }
   }
 
@@ -119,7 +121,8 @@ class ClipbirdService : Service() {
 
     // on client connected to the group change notification
     controller.addServerStatusChangedHandler { s, d ->
-      if(s) this.showNotification(resources.getString(R.string.notification_title_client, d.name))
+      val group = if(s) d.name else resources.getString(R.string.none)
+      this.showNotification(resources.getString(R.string.notification_title_client, group))
     }
 
     // on client connected to the group change notification
