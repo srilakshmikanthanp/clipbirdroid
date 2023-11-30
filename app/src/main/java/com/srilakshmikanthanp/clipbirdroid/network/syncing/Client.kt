@@ -633,11 +633,6 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     notifyServerGone(device)
     this.servers.remove(device)
     notifyServerListChanged()
-
-    // if this is the device connected
-    if (getConnectedServer() == device) {
-      this.channel!!.close()
-    }
   }
 
   /**
