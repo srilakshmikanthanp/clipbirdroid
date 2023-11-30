@@ -539,7 +539,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     val clients = getConnectedClientsList()
 
     // find the client
-    val ctx = clients.find(match).also {
+    clients.find(match).also {
       if (it == null) throw RuntimeException("Client not found")
     }
 
@@ -794,13 +794,6 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun isLastlyHostIsServer(): Boolean {
     return storage.getHostIsLastlyServer()
-  }
-
-  /**
-   * IS the Host is Currently Server
-   */
-  fun isCurrentHostIsServer(): Boolean {
-    return host.holds(Server::class.java)
   }
 
   /**

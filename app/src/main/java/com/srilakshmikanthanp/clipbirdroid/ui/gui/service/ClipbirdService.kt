@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
@@ -90,15 +91,17 @@ class ClipbirdService : Service() {
   }
 
   // infer the title
-  private fun inferTitle(): String {
-    return if (!controller.isCurrentHostIsServer()) {
+  private fun notificationTitle(): String {
+    return if (controller.getHostType() == HostType.CLIENT) {
       val server = controller.getConnectedServer()
       val none = resources.getString(R.string.none)
       val group = server?.name ?: none
       resources.getString(R.string.notification_title_client, group)
-    } else {
+    } else if (controller.getHostType() == HostType.SERVER) {
       val clients = controller.getConnectedClientsList().size
       resources.getString(R.string.notification_title_server, clients)
+    } else {
+      throw Exception("Invalid Host Type")
     }
   }
 
@@ -132,11 +135,11 @@ class ClipbirdService : Service() {
 
     // on host type change
     controller.addHostTypeChangeHandler {
-      this.showNotification(inferTitle())
+      this.showNotification(notificationTitle())
     }
 
     // show the notification
-    this.showNotification(this.inferTitle())
+    this.showNotification(this.notificationTitle())
   }
 
   // On start command of the service

@@ -43,6 +43,7 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnServerListChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStateChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceActionable
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostList
@@ -187,7 +188,7 @@ private fun ActionsDropDownMenu(
 @Composable
 fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // is the Host is lastly server or client
-  var isServer by remember { mutableStateOf(controller.isCurrentHostIsServer()) }
+  var isServer by remember { mutableStateOf(controller.getHostType() == HostType.SERVER) }
 
   // Expanded state for the Drop Down Menu
   var expanded by remember { mutableStateOf(false) }
