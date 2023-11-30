@@ -95,7 +95,7 @@ class ClipbirdService : Service() {
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
       .setContentTitle(resources.getString(R.string.app_name))
       .setContentText(resources.getString(R.string.send_content))
-      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setContentIntent(onTapIntent())
       .setOngoing(true)
       .addAction(0, resources.getString(R.string.send), onSendIntent())

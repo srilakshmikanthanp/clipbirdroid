@@ -292,12 +292,14 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // Handler for Tab Click Event
   val tabClickHandler = { index: Int ->
-    isServer = if (index == SERVER_TAB.first) {
+    isServer = if (index == SERVER_TAB.first && !isServer) {
       controller.setCurrentHostAsServer()
       true
-    } else {
+    } else if (index == CLIENT_TAB.first && isServer) {
       controller.setCurrentHostAsClient()
       false
+    } else {
+      isServer
     }
   }
 

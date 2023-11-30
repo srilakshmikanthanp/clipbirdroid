@@ -27,7 +27,7 @@ class StatusNotification(private val context: Context) {
   private val CHANNEL_DESC = context.resources.getString(R.string.notification_content)
   private val CHANNEL_ID   = context.resources.getString(R.string.status_notification)
   private val CHANNEL_NAME = context.resources.getString(R.string.app_name)
-  private val IMPORTANCE   = NotificationManager.IMPORTANCE_DEFAULT
+  private val IMPORTANCE   = NotificationManager.IMPORTANCE_HIGH
 
   // Companion object
   companion object {
