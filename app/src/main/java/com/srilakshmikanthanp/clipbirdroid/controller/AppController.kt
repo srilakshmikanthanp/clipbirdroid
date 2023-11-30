@@ -8,6 +8,7 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnClientStateChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnConnectionErrorHandler
+import com.srilakshmikanthanp.clipbirdroid.intface.OnHostTypeChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerFoundHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerGoneHandler
 import com.srilakshmikanthanp.clipbirdroid.intface.OnServerListChangeHandler
@@ -19,6 +20,7 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.Server
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -126,6 +128,16 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
   fun removeSyncRequestHandler(handler: OnSyncRequestHandler) {
     syncRequestHandlers.remove(handler)
+  }
+
+  private val hostTypeChangeHandlers = mutableListOf<OnHostTypeChangeHandler>()
+
+  fun addHostTypeChangeHandler(handler: OnHostTypeChangeHandler) {
+    hostTypeChangeHandlers.add(handler)
+  }
+
+  fun removeHostTypeChangeHandler(handler: OnHostTypeChangeHandler) {
+    hostTypeChangeHandlers.remove(handler)
   }
 
   //----------------------- Helper Functions ---------------------------//
@@ -281,6 +293,15 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
   }
 
+  /**
+   * Notify the host type changed (Common)
+   */
+  private fun notifyHostTypeChanged(host: HostType) {
+    for (handler in hostTypeChangeHandlers) {
+      handler.onHostTypeChanged(host)
+    }
+  }
+
   //------------------------- private slots -------------------------//
 
   /**
@@ -414,6 +435,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // Start the server to listen and accept the client
     server.startServer()
+
+    // notify the host type changed
+    notifyHostTypeChanged(HostType.SERVER)
   }
 
   /**
@@ -459,6 +483,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // Start the discovery
     client.startBrowsing()
+
+    // notify the host type changed
+    notifyHostTypeChanged(HostType.CLIENT)
   }
 
   //------------------- Store functions ------------------------//
@@ -615,6 +642,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // Dispose the host
     this.destroyHost()
+
+    // notify the host type changed
+    notifyHostTypeChanged(HostType.NONE)
   }
 
   //---------------------- Client functions -----------------------//
@@ -703,9 +733,10 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // Dispose the host
     this.destroyHost()
-  }
 
-  //----------------------- Common functions -------------------------//
+    // notify the host type changed
+    notifyHostTypeChanged(HostType.NONE)
+  }
 
   /**
    * @brief Get the UnAuthenticated Clients
@@ -723,6 +754,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     return server.getUnauthenticatedClients()
   }
 
+  //----------------------- Common functions -------------------------//
 
   /**
    * @brief Sync the clipboard data with the Group
@@ -778,5 +810,16 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     val newHist = _history.value.toMutableList()
     newHist.removeAt(index)
     _history.value = newHist
+  }
+
+  /**
+   * get the Host Type
+   */
+  fun getHostType(): HostType {
+    return when {
+      host.holds(Server::class.java) -> HostType.SERVER
+      host.holds(Client::class.java) -> HostType.CLIENT
+      else -> HostType.NONE
+    }
   }
 }

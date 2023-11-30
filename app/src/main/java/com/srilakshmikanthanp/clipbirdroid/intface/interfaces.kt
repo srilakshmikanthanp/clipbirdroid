@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.intface
 
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 
 // Interface for On Server List Changed
 fun interface OnServerListChangeHandler {
@@ -55,4 +56,9 @@ fun interface OnClientListChangeHandler {
 // Invalid Packet Handler
 fun interface OnInvalidPacketHandler {
   fun onInvalidPacket(code: Int, message: String)
+}
+
+// On Host Type Change Handler
+fun interface OnHostTypeChangeHandler {
+  fun onHostTypeChanged(host: HostType)
 }

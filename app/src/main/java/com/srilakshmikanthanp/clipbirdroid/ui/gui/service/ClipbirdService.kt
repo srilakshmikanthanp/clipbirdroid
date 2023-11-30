@@ -73,6 +73,33 @@ class ClipbirdService : Service() {
     notification.showJoinRequest(device.name, onAcceptIntent(device), onRejectIntent(device))
   }
 
+  // show the notification
+  private fun showNotification(title: String) {
+    NotificationCompat.Builder(this, notification.getChannelID())
+      .setSmallIcon(R.mipmap.ic_launcher_foreground)
+      .setContentTitle(title)
+      .setContentText(resources.getString(R.string.send_content))
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
+      .setContentIntent(onTapIntent())
+      .setOngoing(true)
+      .addAction(0, resources.getString(R.string.send), onSendIntent())
+      .addAction(0, resources.getString(R.string.quit), onQuitIntent())
+      .build().also {
+        startForeground(NOTIFICATION_ID, it)
+      }
+  }
+
+  // infer the title
+  private fun inferTitle(): String {
+    return if (controller.isCurrentHostIsServer()) {
+      val clients = controller.getConnectedClientsList().size
+      resources.getString(R.string.notification_title_server, clients)
+    } else {
+      val group = controller.getConnectedServer()?.name ?: "None"
+      resources.getString(R.string.notification_title_client, group)
+    }
+  }
+
   // Return the binder instance
   override fun onBind(p0: Intent?): IBinder? = null
 
@@ -90,23 +117,27 @@ class ClipbirdService : Service() {
     // Add the AuthRequest Handler
     controller.addAuthRequestHandler(this::onJoinRequest)
 
-    // Create the notification
-    NotificationCompat.Builder(this, notification.getChannelID())
-      .setSmallIcon(R.mipmap.ic_launcher_foreground)
-      .setContentTitle(resources.getString(R.string.app_name))
-      .setContentText(resources.getString(R.string.send_content))
-      .setPriority(NotificationCompat.PRIORITY_HIGH)
-      .setContentIntent(onTapIntent())
-      .setOngoing(true)
-      .addAction(0, resources.getString(R.string.send), onSendIntent())
-      .addAction(0, resources.getString(R.string.quit), onQuitIntent())
-      .build().also {
-        startForeground(NOTIFICATION_ID, it)
-      }
+    // on client connected to the group change notification
+    controller.addServerStatusChangedHandler { s, d ->
+      if(s) this.showNotification(resources.getString(R.string.notification_title_client, d.name))
+    }
+
+    // on client connected to the group change notification
+    controller.addClientListChangedHandler {
+      this.showNotification(resources.getString(R.string.notification_title_server, it.size))
+    }
+
+    // on host type change
+    controller.addHostTypeChangeHandler {
+      this.showNotification(inferTitle())
+    }
+
+    // show the notification
+    this.showNotification(this.inferTitle())
   }
 
   // On start command of the service
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    return START_REDELIVER_INTENT
+    return START_STICKY
   }
 }
