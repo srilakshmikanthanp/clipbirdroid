@@ -311,7 +311,7 @@ open class Server(private val context: Context) : ChannelInboundHandler, Registe
     }
 
     if (evt.state() == IdleState.READER_IDLE) {
-      Log.w(Client.TAG, "Idle State: ${evt.state()}")
+      ctx.close()
     }
   }
 
