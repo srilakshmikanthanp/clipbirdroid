@@ -100,7 +100,7 @@ fun HostList(
 ) {
   LazyColumn(contentPadding = PaddingValues(5.dp), modifier = modifier) {
     items(devicesActionable.size) { i ->
-      Host(devicesActionable[i], Modifier.fillMaxWidth(), onAction)
+      Host(devicesActionable[i], Modifier.fillMaxWidth().padding(horizontal = 5.dp), onAction)
     }
   }
 }
