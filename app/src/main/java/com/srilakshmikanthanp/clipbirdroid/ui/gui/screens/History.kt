@@ -27,11 +27,14 @@ import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipHistory
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipSend
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * History Screen Used To See the History of the Clipboard
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
   // State List that has last max copied items
@@ -44,7 +47,10 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // OnCopy Handler
   val onCopy = { idx: Int ->
-    controller.setClipboard(history[idx])
+    GlobalScope.launch {
+      controller.setClipboard(history[idx])
+    }
+    Unit
   }
 
   // OnDelete Handler

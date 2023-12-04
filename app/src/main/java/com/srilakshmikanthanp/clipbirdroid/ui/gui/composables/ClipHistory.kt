@@ -48,6 +48,14 @@ private fun ImageTile(image: ImageBitmap) {
 }
 
 /**
+ * Image Tile
+ */
+@Composable
+private fun ImageTile(image: Int) {
+  Image(painterResource(image), stringResource(id = R.string.clipbird_content))
+}
+
+/**
  * Text Tile
  */
 @Composable
@@ -73,19 +81,26 @@ private fun ClipTile(
         .fillMaxWidth()
         .fillMaxHeight(0.65f)
 
+      // max image size
+      val maxImgSize = 1024 * 1024;
+      val maxTxtSize = 200;
+
       // Row that presents content from start
       Row(
         horizontalArrangement = Arrangement.Start,
         modifier = rowModifierStart,
       ) {
         for (clip in content) {
-          if (clip.first == Clipboard.MIME_TYPE_TEXT) {
-            TextTile(text = String(clip.second))
+          if (clip.first == Clipboard.MIME_TYPE_PNG && clip.second.size < maxImgSize) {
+            ImageTile(clip.second.toBitmap())
+            break
+          } else if (clip.first == Clipboard.MIME_TYPE_PNG) {
+            ImageTile(R.drawable.photo)
             break
           }
 
-          if (clip.first == Clipboard.MIME_TYPE_PNG) {
-            ImageTile(clip.second.toBitmap())
+          if (clip.first == Clipboard.MIME_TYPE_TEXT) {
+            TextTile(text = String(clip.second).take(maxTxtSize))
             break
           }
         }
