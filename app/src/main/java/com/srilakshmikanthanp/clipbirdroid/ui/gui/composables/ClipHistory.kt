@@ -88,7 +88,7 @@ private fun ClipTile(
         .fillMaxHeight(0.65f)
 
       // max image size
-      val maxImgSize = 1024 * 1024;
+      val maxImgSize = 3145728; // 3 MB
       val maxTxtSize = 200;
 
       // Row that presents content from start
@@ -113,9 +113,7 @@ private fun ClipTile(
       }
 
       // Modifier for Row that presents content from end
-      val rowModifierEnd = Modifier
-        .padding(vertical = 6.dp)
-        .fillMaxWidth()
+      val rowModifierEnd = Modifier.padding(vertical = 6.dp).fillMaxWidth()
 
       // Row that presents content from end
       Row(
@@ -125,12 +123,18 @@ private fun ClipTile(
       ) {
         // Show the Copy Action Button
         IconButton(onClick = onCopy) {
-          Image(painterResource(R.drawable.copy), stringResource(id = R.string.copy))
+          Image(
+            painterResource(R.drawable.copy),
+            stringResource(id = R.string.copy)
+          )
         }
 
         // Show the Delete Action
         IconButton(onClick = onDelete) {
-          Image(painterResource(R.drawable.delete), stringResource(id = R.string.delete))
+          Image(
+            painterResource(R.drawable.delete),
+            stringResource(id = R.string.delete)
+          )
         }
       }
     }
@@ -171,9 +175,7 @@ fun ClipHistory(
   ) {
     items(clipHistory.size) {
       ClipTile(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(120.dp),
+        modifier = Modifier.fillMaxWidth().height(120.dp),
         content = clipHistory[it],
         onCopy = { onCopy(it) },
         onDelete = { onDelete(it) }
