@@ -25,20 +25,19 @@ class SendHandler : ComponentActivity() {
 
     // launch the coroutine
     GlobalScope.launch {
-      process(); done()
+      process()
+    }
+
+    // show toast
+    runOnUiThread {
+      Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
+      this.finish()
     }
   }
 
   private fun process() {
     val controller = (this.application as Clipbird).getController()
     controller.syncClipboard(controller.getClipboard())
-  }
-
-  private fun done() {
-    runOnUiThread {
-      Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
-      this.finish()
-    }
   }
 
   @OptIn(ExperimentalMaterial3Api::class)

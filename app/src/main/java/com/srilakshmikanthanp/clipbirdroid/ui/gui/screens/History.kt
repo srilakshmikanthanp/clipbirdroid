@@ -41,16 +41,15 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
   val history by controller.history.collectAsState()
 
   // On Send Handler
-  val sendHandler = {
-    controller.syncClipboard(controller.getClipboard())
+  val sendHandler: () -> Unit = {
+    GlobalScope.launch {
+      controller.syncClipboard(controller.getClipboard())
+    }
   }
 
   // OnCopy Handler
   val onCopy = { idx: Int ->
-    GlobalScope.launch {
-      controller.setClipboard(history[idx])
-    }
-    Unit
+    controller.setClipboard(history[idx])
   }
 
   // OnDelete Handler

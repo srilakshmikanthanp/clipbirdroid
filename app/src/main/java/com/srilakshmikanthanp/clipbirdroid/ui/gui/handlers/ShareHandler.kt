@@ -32,7 +32,13 @@ class ShareHandler : ComponentActivity() {
 
     // launch the coroutine
     GlobalScope.launch {
-      process(); done()
+      process()
+    }
+
+    // show toast
+    runOnUiThread {
+      Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
+      this.finish()
     }
   }
 
@@ -63,13 +69,6 @@ class ShareHandler : ComponentActivity() {
 
     // Sync the Clipboard
     controller.syncClipboard(listOf(Pair(result.first, result.second)))
-  }
-
-  private fun done() {
-    runOnUiThread {
-      Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
-      this.finish()
-    }
   }
 
   @OptIn(ExperimentalMaterial3Api::class)

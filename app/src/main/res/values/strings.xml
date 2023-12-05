@@ -2,6 +2,7 @@
   <string name="send_content">Send latest clipboard to other devices</string>
   <string name="notification_content">This is the notification for Clipbird Service</string>
   <string name="join_request_content">wants to connect to your device</string>
+  <string name="no_preview">No Preview</string>
   <string name="notification_title_client">Connected to %1$s</string>
   <string name="notification_title_server">%1$d Devices Connected</string>
 

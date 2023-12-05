@@ -40,19 +40,25 @@ private fun ByteArray.toBitmap(): ImageBitmap {
 typealias ClipData = List<Pair<String, ByteArray>>
 
 /**
- * Image Tile
+ * Image Tile No preview
  */
 @Composable
-private fun ImageTile(image: ImageBitmap) {
-  Image(image, stringResource(id = R.string.clipbird_content))
+private fun ImageTile(image: Int) {
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.Center
+  ) {
+    Image(painterResource(image), stringResource(id = R.string.clipbird_content))
+    Text(text = stringResource(id = R.string.no_preview))
+  }
 }
 
 /**
  * Image Tile
  */
 @Composable
-private fun ImageTile(image: Int) {
-  Image(painterResource(image), stringResource(id = R.string.clipbird_content))
+private fun ImageTile(image: ImageBitmap) {
+  Image(image, stringResource(id = R.string.clipbird_content))
 }
 
 /**
