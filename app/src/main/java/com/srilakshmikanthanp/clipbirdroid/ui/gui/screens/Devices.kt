@@ -145,6 +145,9 @@ private fun ClientGroup(controller: AppController) {
     controller.removeServerStatusChangedHandler(serverStatusChangeHandler)
   }
 
+  // always make connected server on top
+  servers = servers.sortedBy { it.second == HostAction.DISCONNECT }
+
   // Setup & Dispose the Client
   DisposableEffect(servers) {
     setupClient(); onDispose(disposeClient)
@@ -393,9 +396,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
         // Server Status % of parent
         Status(
-          modifier = Modifier
-            .fillMaxHeight(0.15f)
-            .fillMaxWidth(),
+          modifier = Modifier.fillMaxHeight(0.11f).fillMaxWidth(),
           fontSize = 24.sp,
           status = status,
           hostName = hostName,
