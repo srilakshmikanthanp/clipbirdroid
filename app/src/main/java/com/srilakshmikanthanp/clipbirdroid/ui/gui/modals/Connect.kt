@@ -119,7 +119,12 @@ fun Connect(
   val onSubmit: (String, String) -> Unit = onSubmit@{ ipv4, port ->
     newSingleThreadExecutor().execute {
       // Validate the input
-      val host = validator(ipv4, port.toInt())
+      val host = try {
+        validator(ipv4, port.toInt())
+      } catch (e: Exception) {
+        isLoading = false
+        return@execute
+      }
 
       // if the host is null
       if (host == null) {
