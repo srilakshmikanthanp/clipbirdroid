@@ -146,7 +146,7 @@ private fun ClientGroup(controller: AppController) {
   }
 
   // always make connected server on top
-  servers = servers.sortedBy { it.second == HostAction.DISCONNECT }
+  servers = servers.sortedBy { it.second != HostAction.DISCONNECT }
 
   // Setup & Dispose the Client
   DisposableEffect(servers) {
