@@ -8,6 +8,7 @@ android {
     buildConfigField "String", "APP_ISSUE", "\"https://github.com/srilakshmikanthanp/clipbirdroid/issues\""
     buildConfigField "String", "APP_ORG", "\"srilakshmikanthanp\""
     buildConfigField "String", "APP_NAME", "\"Clipbird\""
+    buildConfigField "String", "APP_DONATE", "\"https://srilakshmikanthanp.github.io/donate\""
     buildConfigField "String", "APP_HOME", "\"https://github.com/srilakshmikanthanp/clipbirdroid\""
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

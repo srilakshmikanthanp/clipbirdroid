@@ -61,6 +61,14 @@ fun appIssuesPage(): String {
 }
 
 /**
+ * @brief Get the App Donate Page
+ * @return string
+ */
+fun appDonatePage(): String {
+  return BuildConfig.APP_DONATE
+}
+
+/**
  * @brief Get the MDns Service Name
  * @return string Device name
  */

@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.srilakshmikanthanp.clipbirdroid.R
+import com.srilakshmikanthanp.clipbirdroid.constant.appDonatePage
 import com.srilakshmikanthanp.clipbirdroid.constant.appHomePage
 import com.srilakshmikanthanp.clipbirdroid.constant.appIssuesPage
 import com.srilakshmikanthanp.clipbirdroid.constant.appVersion
@@ -72,7 +73,7 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
 
   // On Donation Handler
   val onDonation = {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(appHomePage()))
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(appDonatePage()))
     context.startActivity(intent)
   }
 
