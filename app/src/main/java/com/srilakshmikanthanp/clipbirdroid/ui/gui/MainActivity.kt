@@ -1,7 +1,9 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.DrawerValue
@@ -25,6 +27,7 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import kotlinx.coroutines.launch
+
 
 /**
  * Clipbird Composable
@@ -85,6 +88,7 @@ class MainActivity : ComponentActivity() {
     val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity.QUIT_ACTION"
   }
 
+
   // handle Intent
   private fun handleIntent(intent: Intent?) {
     if (intent?.action == QUIT_ACTION) stopService().also { this.finishAndRemoveTask() }
@@ -123,5 +127,13 @@ class MainActivity : ComponentActivity() {
   // on Start
   override fun onStart() {
     super.onStart().also { handleIntent(intent) }
+
+    // Request Ignore Battery Optimization
+    startActivity(
+      Intent(
+        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+        Uri.parse("package:$packageName")
+      )
+    )
   }
 }
