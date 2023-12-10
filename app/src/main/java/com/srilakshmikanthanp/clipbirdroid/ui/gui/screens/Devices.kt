@@ -396,7 +396,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
         // Server Status % of parent
         Status(
-          modifier = Modifier.fillMaxHeight(0.11f).fillMaxWidth(),
+          modifier = Modifier.fillMaxHeight(0.15f).fillMaxWidth(),
           fontSize = 24.sp,
           status = status,
           hostName = hostName,
