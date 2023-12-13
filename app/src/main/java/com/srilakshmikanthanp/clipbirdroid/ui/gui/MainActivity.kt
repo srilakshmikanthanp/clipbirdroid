@@ -17,7 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.compose.ClipbirdTheme
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer

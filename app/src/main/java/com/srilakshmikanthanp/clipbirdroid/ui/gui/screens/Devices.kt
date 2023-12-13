@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -383,7 +382,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // A Inner Composable just to make code more readable
   val devicesTopBar = @Composable {
-    Card (shape = RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)) {
+    Card {
       Column (horizontalAlignment = Alignment.CenterHorizontally) {
         // Top Bar for Navigation & Actions
         TopAppBar(
