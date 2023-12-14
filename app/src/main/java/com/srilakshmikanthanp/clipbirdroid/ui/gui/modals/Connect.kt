@@ -43,6 +43,13 @@ import java.net.InetAddress
 import java.util.concurrent.Executors.newSingleThreadExecutor
 
 /**
+ * String extension to check the string number with dot
+ */
+private fun String.isNumeric(): Boolean {
+  return this.all { it.isDigit() || it == '.' }
+}
+
+/**
  * A composable function to connect to a device. it has
  * an input option for ipv4 address and port number.
  * Also it has a button to scan the barcode.
@@ -56,26 +63,24 @@ fun Connect(
   modifier: Modifier = Modifier,
 ) {
   // Validator function for ipv4 address and port number
-  val validator: (String, Int) -> Pair<InetAddress, Int>? = validator@{ ip, port ->
+  val validator: (String, Int) -> Boolean = validator@{ ip, port ->
     // check the ip is valid or not
-    val ipv4 = try {
-      InetAddress.getByName(ip)
-    } catch (e: Exception) {
-      return@validator null
+    if (ip.split(".").size != 4) {
+      return@validator false
+    }
+
+    // check each part of the ip is valid
+    ip.split(".").forEach {
+      if (it.toInt() !in 0..255) return@validator false
     }
 
     // check the port is valid
     if (port !in 1..65535) {
-      return@validator null
+      return@validator false
     }
 
-    // check the ip is reachable
-    if (!isHostAvailable(ipv4, port, 1000)) {
-      return@validator null
-    }
-
-    // return the pair
-    return@validator Pair(ipv4, port)
+    // finally the ipv4 and port is valid
+    return@validator true
   }
 
   // is loading
@@ -110,8 +115,25 @@ fun Connect(
     // get the first reachable ip
     executor.execute {
       for (i in 0 until ips.length()) {
-        val pair = validator(ips.getString(i), port) ?: continue
-        onConnect(pair.first, pair.second)
+        // check the ip and port is valid
+        if (!validator(ips.getString(i), port)) {
+          continue
+        }
+
+        // Validate the input
+        val ip = try {
+          InetAddress.getByName(ips.getString(i))
+        } catch (e: Exception) {
+          continue
+        }
+
+        // if not reachable continue
+        if (!isHostAvailable(ip, port)) {
+          continue
+        }
+
+        // connect
+        onConnect(ip, port)
         isLoading = false
         break
       }
@@ -120,25 +142,36 @@ fun Connect(
 
   // submit handler
   val onSubmit: (String, String) -> Unit = onSubmit@{ ipv4, port ->
+    // check port is number
+    if (port.toIntOrNull() == null) {
+      return@onSubmit
+    }
+
+    // check ipv4 and port
+    if (!validator(ipv4, port.toInt())) {
+      return@onSubmit
+    }
+
+    // set loading
+    isLoading = true
+
+    // Executor to connect to the host
     newSingleThreadExecutor().execute {
       // Validate the input
-      val host = try {
-        validator(ipv4, port.toInt())
+      val ip = try {
+        InetAddress.getByName(ipv4)
       } catch (e: Exception) {
         isLoading = false
         return@execute
       }
 
-      // if the host is null
-      if (host == null) {
+      // connect
+      if (isHostAvailable(ip, port.toInt())) {
+        onConnect(ip, port.toInt())
+      } else {
         isLoading = false
         return@execute
       }
-
-      // connect to the host
-      onConnect(host.first, host.second)
-    }.also {
-      isLoading = true
     }
   }
 
@@ -197,7 +230,7 @@ fun Connect(
         TextField(
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           modifier = Modifier.padding(vertical = 5.dp),
-          onValueChange = { if (it.isDigitsOnly()) ipv4 = it },
+          onValueChange = { if (it.isNumeric()) ipv4 = it },
           value = ipv4,
           label = { Text(stringResource(id = R.string.ipv4)) }
         )

@@ -32,7 +32,7 @@ fun getAllInterfaceAddresses(): List<String> {
 /**
  * Check if host is reachable. it will return true if the host is reachable
  */
-fun isHostAvailable(host: InetAddress?, port: Int, timeout: Int): Boolean {
+fun isHostAvailable(host: InetAddress?, port: Int, timeout: Int = 1000): Boolean {
   Socket().use {
     try {
       it.connect(InetSocketAddress(host, port), timeout)
