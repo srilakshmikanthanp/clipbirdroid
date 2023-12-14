@@ -46,4 +46,5 @@
   <string name="quit">Quit</string>
   <string name="status_notification">Status Notification</string>
   <string name="connection_request">Connection Request</string>
+    <string name="nothing_found">Nothing Found</string>
 </resources>

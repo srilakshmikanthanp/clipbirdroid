@@ -1,11 +1,9 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.composables
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,7 +40,7 @@ enum class HostAction {
  * Device Composable to Represent the Device
  */
 @Composable
-private fun Host(
+fun Host(
   deviceActionable: DeviceActionable,
   modifier: Modifier,
   onAction: (DeviceActionable) -> Unit
@@ -86,47 +84,5 @@ private fun HostPreview() {
     deviceActionable = DeviceActionable(device, HostAction.DISCONNECT),
     modifier = Modifier.fillMaxWidth(),
     onAction = {}
-  )
-}
-
-/**
- * HostList Composable to Represent the List of Hosts
- */
-@Composable
-fun HostList(
-  devicesActionable: List<DeviceActionable>,
-  onAction: (DeviceActionable) -> Unit,
-  modifier: Modifier = Modifier
-) {
-  LazyColumn(contentPadding = PaddingValues(5.dp), modifier = modifier) {
-    items(devicesActionable.size) { i ->
-      Host(devicesActionable[i], Modifier.fillMaxWidth().padding(horizontal = 5.dp), onAction)
-    }
-  }
-}
-
-/**
- * Preview for the HostList Composable
- */
-@Preview(showBackground = true)
-@Composable
-fun HostListPreview() {
-  // A Constant Device Value to Preview
-  val device = Device(InetAddress.getByAddress(
-    byteArrayOf(127, 0, 0, 1)
-  ), 8080, "Apple MacBook Air")
-
-  // List of Devices Actionable
-  val devicesActionable = listOf<DeviceActionable>(
-    Pair(device, HostAction.DISCONNECT),
-    Pair(device, HostAction.CONNECT),
-    Pair(device, HostAction.DISCONNECT)
-  )
-
-  // Preview the HostList Composable
-  HostList(
-    devicesActionable = devicesActionable,
-    onAction = {},
-    modifier = Modifier.fillMaxWidth().padding(10.dp)
   )
 }

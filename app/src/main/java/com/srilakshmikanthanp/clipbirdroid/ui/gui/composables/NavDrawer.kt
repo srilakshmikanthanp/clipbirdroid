@@ -51,9 +51,7 @@ private fun DrawerContent(
     // Header for the Drawer
     Column (
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier
-        .padding(15.dp)
-        .fillMaxWidth()
+      modifier = Modifier.padding(10.dp).fillMaxWidth()
     ) {
       Image(painter = painterResource(R.drawable.phone), contentDescription = stringResource(id = R.string.phone))
       Text(style = MaterialTheme.typography.headlineMedium, text = appName())
@@ -61,7 +59,7 @@ private fun DrawerContent(
     }
 
     // Divider for Drawer
-    Divider(modifier = Modifier.padding(vertical = 15.dp))
+    Divider(modifier = Modifier.padding(vertical = 5.dp))
 
     // Item For Device
     NavigationDrawerItem(
@@ -78,7 +76,7 @@ private fun DrawerContent(
     )
 
     // Divider for Drawer
-    Divider(modifier = Modifier.padding(vertical = 15.dp))
+    Divider(modifier = Modifier.padding(vertical = 5.dp))
 
     // Item For About
     NavigationDrawerItem(

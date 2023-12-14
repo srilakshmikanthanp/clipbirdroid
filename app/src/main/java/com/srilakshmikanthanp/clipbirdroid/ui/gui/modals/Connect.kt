@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,10 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.text.isDigitsOnly
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -192,16 +195,18 @@ fun Connect(
 
         // Input IPv4
         TextField(
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           modifier = Modifier.padding(vertical = 5.dp),
-          onValueChange = { ipv4 = it },
+          onValueChange = { if (it.isDigitsOnly()) ipv4 = it },
           value = ipv4,
           label = { Text(stringResource(id = R.string.ipv4)) }
         )
 
         // Input Port
         TextField(
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           modifier = Modifier.padding(vertical = 5.dp),
-          onValueChange = { port = it },
+          onValueChange = { if (it.isDigitsOnly()) port = it },
           value = port,
           label = { Text(stringResource(id = R.string.port)) }
         )

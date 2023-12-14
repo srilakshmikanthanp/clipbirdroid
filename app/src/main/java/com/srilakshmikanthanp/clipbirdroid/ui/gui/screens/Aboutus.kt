@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -37,12 +38,10 @@ import com.srilakshmikanthanp.clipbirdroid.constant.appVersion
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Action(icon: Int, text: String, modifier: Modifier, onClick: () -> Unit) {
-  Card(modifier = modifier, onClick = onClick) {
+  ElevatedCard(modifier = modifier, onClick = onClick) {
     Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier
-        .padding(10.dp)
-        .fillMaxWidth()
+      modifier = Modifier.padding(10.dp).fillMaxWidth()
     ) {
       Image(painter = painterResource(icon), contentDescription = stringResource(id = R.string.icon))
       Text(text = text, fontSize = 12.sp, modifier = Modifier.padding(5.dp))
@@ -96,15 +95,14 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
   // Render the Screen
   val content = @Composable { padding : PaddingValues ->
     Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(padding),
+      modifier = Modifier.fillMaxWidth().padding(padding),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      // Shoe the Clip Bird Logo
+      // Show the Clip Bird Logo
       Image(
         painter = painterResource(R.mipmap.ic_launcher_foreground),
-        contentDescription = stringResource(id = R.string.logo)
+        modifier = Modifier.size(140.dp),
+        contentDescription = stringResource(id = R.string.logo),
       )
 
       // Show the Version
@@ -118,10 +116,7 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.padding(vertical = 10.dp)
       ) {
-        val cardModifier = Modifier
-          .weight(1f)
-          .fillMaxWidth()
-          .padding(10.dp)
+        val cardModifier = Modifier.weight(1f).fillMaxWidth().padding(10.dp)
         Action(R.drawable.browser,  stringResource(id = R.string.website), cardModifier , onWebsiteOpen)
         Action(R.drawable.bug,  stringResource(id = R.string.report_issue), cardModifier, onIssueReport)
         Action(R.drawable.money,stringResource(id = R.string.donate) , cardModifier, onDonation)

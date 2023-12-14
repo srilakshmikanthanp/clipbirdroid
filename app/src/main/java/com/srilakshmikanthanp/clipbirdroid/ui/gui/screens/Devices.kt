@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,8 +47,8 @@ import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceActionable
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Host
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostList
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Status
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.StatusType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
@@ -61,9 +64,9 @@ import java.net.InetAddress
 @Composable
 private fun ServerGroup(controller: AppController) {
   // list of client devices
-  var clients by remember { mutableStateOf(controller.getConnectedClientsList().map {
-    DeviceActionable(it, HostAction.DISCONNECT) }
-  ) }
+  var clients by remember { mutableStateOf(
+    controller.getConnectedClientsList().map { DeviceActionable(it, HostAction.DISCONNECT) }
+  )}
 
   // Change Handler for the list of clients
   val clientListChangeHandler = OnClientListChangeHandler { list ->
@@ -86,11 +89,22 @@ private fun ServerGroup(controller: AppController) {
   }
 
   // HostList
-  HostList(
-    onAction = { controller.disconnectClient(it.first) },
-    devicesActionable = clients,
-    modifier = Modifier.fillMaxWidth()
-  )
+  Box {
+    LazyColumn(contentPadding = PaddingValues(15.dp), modifier = Modifier.fillMaxWidth()) {
+      items(clients.size) { i ->
+        val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
+        val onAction = { d: DeviceActionable -> controller.disconnectClient(d.first) }
+        Host(clients[i], modifier, onAction)
+      }
+    }
+
+    // if no servers
+    if (clients.isEmpty()) {
+      Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
+        Text(text = stringResource(id = R.string.nothing_found), fontSize = 16.sp, color = Color.Gray)
+      }
+    }
+  }
 }
 
 /**
@@ -101,29 +115,31 @@ private fun ClientGroup(controller: AppController) {
   // list of client devices (state)
   var servers by remember { mutableStateOf(emptyList<DeviceActionable>()) }
 
+  // connected
+  var group by remember { mutableStateOf(controller.getConnectedServer()) }
+
   // Change Handler for the list of servers
   val serverListChangeHandler = OnServerListChangeHandler { list ->
-    // get the current server if connected
-    val server = controller.getConnectedServer()
+    // get connected server
+    val connected = controller.getConnectedServer()
 
-    // map the list of servers to DeviceActionable
-    servers = list.map {
-      DeviceActionable(it, if (it == server) HostAction.DISCONNECT else HostAction.CONNECT)
-    }
-
-    // if the server is not in the list
-    if (server != null && !list.contains(server)) {
-      servers = servers + DeviceActionable(server, HostAction.DISCONNECT)
+    // update servers
+    servers = list.filter {
+      it != connected
+    }.map {
+      DeviceActionable(it, HostAction.CONNECT)
     }
   }
 
   // Change Handler for Server Status
-  val serverStatusChangeHandler = OnServerStatusChangeHandler { _, _ ->
-    serverListChangeHandler.onServerListChanged((controller.getServerList()))
+  val serverStatusChangeHandler = OnServerStatusChangeHandler { connected, device ->
+    val groupsList = controller.getServerList()
+    group = if(connected) device else null
+    serverListChangeHandler.onServerListChanged(groupsList)
   }
 
   // Action Handler
-  val actionHandler = { device: Device, action: HostAction ->
+  val onAction = { device: Device, action: HostAction ->
     if (action == HostAction.CONNECT) controller.connectToServer(device)
     else controller.disconnectFromServer(device)
   }
@@ -152,12 +168,35 @@ private fun ClientGroup(controller: AppController) {
     setupClient(); onDispose(disposeClient)
   }
 
-  // HostList
-  HostList(
-    onAction = { actionHandler(it.first, it.second) },
-    devicesActionable = servers,
-    modifier = Modifier.fillMaxWidth()
-  )
+  // Modifier for the Host
+  val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
+
+  // Render the view
+  Column {
+    // if has connected server
+    group?.let { DeviceActionable(it, HostAction.DISCONNECT) } ?.let {
+      ElevatedCard (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 0.dp)) {
+        Host(it, modifier, onAction =  { onAction(it.first, it.second) })
+      }
+    }
+
+    // List of Hosts
+    Box {
+      // Render the Remaining Groups
+      LazyColumn(contentPadding = PaddingValues(15.dp), modifier = Modifier.fillMaxWidth()) {
+        items(servers.size) { i ->
+          Host(servers[i], modifier, onAction =  { onAction(it.first, it.second) })
+        }
+      }
+
+      // if no servers
+      if (servers.isEmpty() && group == null) {
+        Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
+          Text(text = stringResource(id = R.string.nothing_found), fontSize = 16.sp, color = Color.Gray)
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -174,12 +213,13 @@ private fun ActionsDropDownMenu(
   onDismissRequest: () -> Unit,
 ) {
   DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {
-    // Conditionally show the menu items
-    if (isServerGroup) DropdownMenuItem(text = { Text(stringResource(id = R.string.group_qrcode)) }, onClick = onQRCodeClick)
-    else DropdownMenuItem(text = { Text(stringResource(id = R.string.join_group)) }, onClick = onJoinClick)
-
-    // Show the common menu items
-    DropdownMenuItem(text = { Text(stringResource(id = R.string.reset)) }, onClick = onResetClick)
+    if (isServerGroup) {
+      DropdownMenuItem(text = { Text(stringResource(id = R.string.group_qrcode)) }, onClick = onQRCodeClick)
+    } else {
+      DropdownMenuItem(text = { Text(stringResource(id = R.string.join_group)) }, onClick = onJoinClick)
+    }.also {
+      DropdownMenuItem(text = { Text(stringResource(id = R.string.reset)) }, onClick = onResetClick)
+    }
   }
 }
 
@@ -233,12 +273,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // infer group name
   val inferGroupName = {
-    val server = controller.getConnectedServer()
-    if(server != null) {
-      server.name
-    } else {
-      context.resources.getString(R.string.join_group)
-    }
+    controller.getConnectedServer()?.name ?: context.resources.getString(R.string.join_group)
   }
 
   // infer server name
@@ -382,7 +417,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // A Inner Composable just to make code more readable
   val devicesTopBar = @Composable {
-    Card {
+    Card (shape = RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)) {
       Column (horizontalAlignment = Alignment.CenterHorizontally) {
         // Top Bar for Navigation & Actions
         TopAppBar(

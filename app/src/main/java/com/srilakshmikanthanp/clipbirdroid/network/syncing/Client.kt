@@ -50,6 +50,7 @@ import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
+import java.util.concurrent.locks.ReentrantLock
 
 
 /**
@@ -311,6 +312,9 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
   // Channel for communication
   private var channel: Channel? = null;
 
+  // lock
+  private val lock = ReentrantLock()
+
   // Browser
   private val browser = Browser(context)
 
@@ -408,13 +412,16 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
     // put name to ctx extra
     ctx.channel().attr(DEVICE_NAME).set(name)
 
-    // is already connected
-    if (this.channel != null) {
-      this.channel!!.close()
-    }
+    // lock
+    this.lock.lock()
 
-    // set the channel
-    this.channel = ctx.channel()
+    // assign
+    try {
+      channel?.close()?.sync()
+      channel = ctx.channel()
+    } finally {
+      this.lock.unlock()
+    }
   }
 
   /**

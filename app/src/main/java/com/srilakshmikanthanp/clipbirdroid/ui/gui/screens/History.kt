@@ -78,9 +78,7 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
     Box (modifier = Modifier.padding(padding), contentAlignment = Alignment.Center,) {
       Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(10.dp),
+        modifier = Modifier.fillMaxWidth().padding(10.dp),
       ) {
         // White Space
         Spacer(modifier = Modifier.padding(5.dp))

@@ -43,30 +43,11 @@ typealias ClipData = List<Pair<String, ByteArray>>
  * Image Tile No preview
  */
 @Composable
-private fun ImageTile(image: Int) {
-  Row(
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.Center
-  ) {
+private fun NoPreview(image: Int) {
+  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
     Image(painterResource(image), stringResource(id = R.string.clipbird_content))
     Text(text = stringResource(id = R.string.no_preview))
   }
-}
-
-/**
- * Image Tile
- */
-@Composable
-private fun ImageTile(image: ImageBitmap) {
-  Image(image, stringResource(id = R.string.clipbird_content))
-}
-
-/**
- * Text Tile
- */
-@Composable
-private fun TextTile(text: String) {
-  Text(text = text, overflow = TextOverflow.Ellipsis, maxLines = 4)
 }
 
 /**
@@ -98,15 +79,16 @@ private fun ClipTile(
       ) {
         for (clip in content) {
           if (clip.first == Clipboard.MIME_TYPE_PNG && clip.second.size < maxImgSize) {
-            ImageTile(clip.second.toBitmap())
+            Image(clip.second.toBitmap(), stringResource(id = R.string.clipbird_content))
             break
           } else if (clip.first == Clipboard.MIME_TYPE_PNG) {
-            ImageTile(R.drawable.photo)
+            NoPreview(R.drawable.photo)
             break
           }
 
           if (clip.first == Clipboard.MIME_TYPE_TEXT) {
-            TextTile(text = String(clip.second).take(maxTxtSize))
+            val text = String(clip.second).take(maxTxtSize)
+            Text(text = text, overflow = TextOverflow.Ellipsis, maxLines = 4)
             break
           }
         }

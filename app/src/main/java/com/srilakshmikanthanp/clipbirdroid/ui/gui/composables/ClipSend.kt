@@ -25,9 +25,7 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
   Card (modifier = modifier) {
     Row(
       horizontalArrangement = Arrangement.SpaceBetween,
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(10.dp),
+      modifier = Modifier.fillMaxWidth().padding(10.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Text(
@@ -53,8 +51,6 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
 @Composable
 fun ClipSendPreview() {
   ClipSend(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(10.dp),
+    modifier = Modifier.fillMaxWidth().padding(10.dp),
   )
 }
