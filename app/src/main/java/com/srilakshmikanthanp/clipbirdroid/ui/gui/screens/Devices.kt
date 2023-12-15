@@ -199,7 +199,7 @@ private fun ClientGroup(controller: AppController) {
     }
 
     // List of Hosts
-    Card (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 15.dp)) {
+    Card (modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 15.dp)) {
       // Render the Remaining Groups
       LazyColumn(modifier = Modifier.fillMaxWidth()) {
         items(servers.size) { i ->
