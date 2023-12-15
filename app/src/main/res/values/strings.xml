@@ -3,17 +3,21 @@
   <string name="notification_content">This is the notification for Clipbird Service</string>
   <string name="join_request_content">wants to connect to your device</string>
   <string name="no_preview">No Preview</string>
+  <string name="join_to_a_group">Join to a Group</string>
   <string name="notification_title_client">Connected to %1$s</string>
   <string name="notification_title_server">%1$d Devices Connected</string>
 
   <string name="app_name">Clipbird</string>
   <string name="synced">Synced</string>
+  <string name="current_group">Current Group</string>
+  <string name="other_groups">Other Groups</string>
   <string name="none">None</string>
   <string name="copy">Copy</string>
   <string name="delete">Delete</string>
   <string name="clipbird_content">Clipbird Content</string>
   <string name="send">Send</string>
   <string name="phone">Phone</string>
+  <string name="nothing_there">Nothing There</string>
   <string name="devices">Devices</string>
   <string name="history">History</string>
   <string name="about">About</string>
@@ -37,7 +41,8 @@
   <string name="donate">Donate</string>
   <string name="group_qrcode">Group QrCode</string>
   <string name="join_group">Join Group</string>
-  <string name="reset">Reset</string>
+  <string name="not_connected">Not Connected</string>
+  <string name="reset_devices">Reset Devices</string>
   <string name="create_group">Create Group</string>
   <string name="more">More</string>
   <string name="clipbird_devices">Clipbird Devices</string>
@@ -46,5 +51,4 @@
   <string name="quit">Quit</string>
   <string name="status_notification">Status Notification</string>
   <string name="connection_request">Connection Request</string>
-    <string name="nothing_found">Nothing Found</string>
 </resources>

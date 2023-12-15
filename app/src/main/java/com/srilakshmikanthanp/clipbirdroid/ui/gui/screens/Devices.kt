@@ -4,24 +4,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.smallTopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -89,20 +85,22 @@ private fun ServerGroup(controller: AppController) {
   }
 
   // HostList
-  Box {
-    LazyColumn(contentPadding = PaddingValues(15.dp), modifier = Modifier.fillMaxWidth()) {
+  Card (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 15.dp)) {
+    LazyColumn(modifier = Modifier.fillMaxWidth()) {
       items(clients.size) { i ->
-        val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
+        val modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 5.dp)
         val onAction = { d: DeviceActionable -> controller.disconnectClient(d.first) }
         Host(clients[i], modifier, onAction)
       }
     }
+  }
 
-    // if no servers
-    if (clients.isEmpty()) {
-      Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
-        Text(text = stringResource(id = R.string.nothing_found), fontSize = 16.sp, color = Color.Gray)
-      }
+  // if no servers
+  if (clients.isEmpty()) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Text(text = stringResource(id = R.string.nothing_there), fontSize = 16.sp, color = Color.Gray)
     }
   }
 }
@@ -169,31 +167,51 @@ private fun ClientGroup(controller: AppController) {
   }
 
   // Modifier for the Host
-  val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
+  val modifier = Modifier
+    .fillMaxWidth()
+    .padding(horizontal = 5.dp)
 
   // Render the view
   Column {
+    // Current Group is not null
+    if (group != null) {
+      Text(
+        text = stringResource(id = R.string.current_group),
+        fontSize = 16.sp, color = Color.Gray,
+        modifier = Modifier.padding(15.dp)
+      )
+    }
+
     // if has connected server
     group?.let { DeviceActionable(it, HostAction.DISCONNECT) } ?.let {
-      ElevatedCard (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 0.dp)) {
+      Card (modifier = Modifier.padding(horizontal = 15.dp)) {
         Host(it, modifier, onAction =  { onAction(it.first, it.second) })
       }
     }
 
+    // Other Groups
+    if (!servers.isEmpty()) {
+      Text(
+        text = stringResource(id = R.string.other_groups),
+        fontSize = 16.sp, color = Color.Gray,
+        modifier = Modifier.padding(15.dp)
+      )
+    }
+
     // List of Hosts
-    Box {
+    Card (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 15.dp)) {
       // Render the Remaining Groups
-      LazyColumn(contentPadding = PaddingValues(15.dp), modifier = Modifier.fillMaxWidth()) {
+      LazyColumn(modifier = Modifier.fillMaxWidth()) {
         items(servers.size) { i ->
           Host(servers[i], modifier, onAction =  { onAction(it.first, it.second) })
         }
       }
+    }
 
-      // if no servers
-      if (servers.isEmpty() && group == null) {
-        Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
-          Text(text = stringResource(id = R.string.nothing_found), fontSize = 16.sp, color = Color.Gray)
-        }
+    // if no servers
+    if (servers.isEmpty() && group == null) {
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = stringResource(id = R.string.nothing_there), fontSize = 16.sp, color = Color.Gray)
       }
     }
   }
@@ -216,9 +234,9 @@ private fun ActionsDropDownMenu(
     if (isServerGroup) {
       DropdownMenuItem(text = { Text(stringResource(id = R.string.group_qrcode)) }, onClick = onQRCodeClick)
     } else {
-      DropdownMenuItem(text = { Text(stringResource(id = R.string.join_group)) }, onClick = onJoinClick)
+      DropdownMenuItem(text = { Text(stringResource(id = R.string.join_to_a_group)) }, onClick = onJoinClick)
     }.also {
-      DropdownMenuItem(text = { Text(stringResource(id = R.string.reset)) }, onClick = onResetClick)
+      DropdownMenuItem(text = { Text(stringResource(id = R.string.reset_devices)) }, onClick = onResetClick)
     }
   }
 }
@@ -273,7 +291,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // infer group name
   val inferGroupName = {
-    controller.getConnectedServer()?.name ?: context.resources.getString(R.string.join_group)
+    controller.getConnectedServer()?.name ?: context.resources.getString(R.string.not_connected)
   }
 
   // infer server name
@@ -318,7 +336,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // Handler for Server Status
   val serverStatusChangeHandler = OnServerStatusChangeHandler { s, d ->
-    hostName = if (s) d.name else context.resources.getString(R.string.join_group)
+    hostName = if (s) d.name else context.resources.getString(R.string.not_connected)
     status   = if (s) StatusType.CONNECTED else StatusType.DISCONNECTED
   }
 
@@ -417,54 +435,58 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // A Inner Composable just to make code more readable
   val devicesTopBar = @Composable {
-    Card (shape = RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)) {
-      Column (horizontalAlignment = Alignment.CenterHorizontally) {
-        // Top Bar for Navigation & Actions
-        TopAppBar(
-          navigationIcon = { menuIcon() },
-          title = { Text(context.resources.getString(R.string.clipbird_devices), modifier = Modifier.padding(horizontal = 10.dp)) },
-          modifier = Modifier.padding(3.dp),
-          actions = { actionsDropDownMenu() },
-          colors = smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        )
-
-        // Server Status % of parent
-        Status(
-          modifier = Modifier.fillMaxHeight(0.15f).fillMaxWidth(),
-          fontSize = 24.sp,
-          status = status,
-          hostName = hostName,
-        )
-
-        // Tab of Server & Client
-        val selectedTab = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
-        val tabs = listOf(SERVER_TAB.second, CLIENT_TAB.second)
-        val tabIndex = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
-
-        // Compose the Tab Row
-        TabRow(selectedTabIndex = tabIndex, containerColor = Color.Transparent, divider = { }) {
-          tabs.forEachIndexed { index, title ->
-            Tab(onClick = { tabClickHandler(index) }, selected = (selectedTab == index)) {
-              Text(text = title, fontSize = 16.sp, modifier = Modifier.padding(16.dp))
-            }
-          }
-        }
-      }
-    }
+    // Top Bar for Navigation & Actions
+    TopAppBar(
+      navigationIcon = { menuIcon() },
+      title = { Text(context.resources.getString(R.string.clipbird_devices), modifier = Modifier.padding(horizontal = 10.dp)) },
+      modifier = Modifier.padding(3.dp),
+      actions = { actionsDropDownMenu() },
+    )
   }
 
   // Content Composable
   val content = @Composable { padding : PaddingValues ->
-    Box (Modifier.padding(padding)) {
-      if (isServer) ServerGroup(controller) else ClientGroup(controller)
+    Column (modifier = Modifier.padding(padding)) {
+      Card (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 15.dp)) {
+        Column (horizontalAlignment = Alignment.CenterHorizontally) {
+          // Server Status % of parent
+          Status(
+            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, bottom = 20.dp),
+            fontSize = 24.sp,
+            status = status,
+            hostName = hostName,
+          )
+
+          // Tab of Server & Client
+          val selectedTab = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
+          val tabs = listOf(SERVER_TAB.second, CLIENT_TAB.second)
+          val tabIndex = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
+
+          // Compose the Tab Row
+          TabRow(selectedTabIndex = tabIndex, containerColor = Color.Transparent, divider = { }) {
+            tabs.forEachIndexed { index, title ->
+              Tab(onClick = { tabClickHandler(index) }, selected = (selectedTab == index)) {
+                Text(text = title, fontSize = 16.sp, modifier = Modifier.padding(16.dp))
+              }
+            }
+          }
+        }
+      }
+
+      // Show the selected group
+      if (isServer) {
+        ServerGroup(controller)
+      } else {
+        ClientGroup(controller)
+      }
     }
 
     if(isGroupDialogOpen) Group(
       onDismissRequest = { isGroupDialogOpen = false },
-      title = context.resources.getString(R.string.group),
+      title = appMdnsServiceName(context),
       code = makeJson(),
       port = controller.getServerInfo().port,
-      modifier = Modifier.padding(10.dp, 25.dp)
+      modifier = Modifier.padding(5.dp, 25.dp, 5.dp, 15.dp)
     )
 
     if(isConnectDialogOpen) Connect(

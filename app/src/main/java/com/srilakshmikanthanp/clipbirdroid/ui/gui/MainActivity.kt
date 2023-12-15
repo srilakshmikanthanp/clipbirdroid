@@ -17,14 +17,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.ClipHistory
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import kotlinx.coroutines.launch
 
@@ -63,9 +63,9 @@ private fun Clipbird(controller: AppController) {
     drawerState = drawerState,
   ) {
     when (selected) {
-      DrawerItems.DEVICES -> Devices(controller, onMenuClick)
+      DrawerItems.HISTORY -> ClipHistory(controller, onMenuClick)
       DrawerItems.ABOUT   -> AboutUs(onMenuClick)
-      DrawerItems.HISTORY -> History(controller, onMenuClick)
+      DrawerItems.DEVICES -> Devices(controller, onMenuClick)
     }
   }
 }
@@ -87,7 +87,6 @@ class MainActivity : ComponentActivity() {
   companion object {
     val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity.QUIT_ACTION"
   }
-
 
   // handle Intent
   private fun handleIntent(intent: Intent?) {

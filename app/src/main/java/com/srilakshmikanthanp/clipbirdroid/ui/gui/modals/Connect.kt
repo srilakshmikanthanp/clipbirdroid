@@ -59,7 +59,7 @@ private fun String.isNumeric(): Boolean {
 fun Connect(
   onDismissRequest: () -> Unit,
   onConnect: (InetAddress, Int) -> Unit,
-  title: String = "Connect",
+  title: String,
   modifier: Modifier = Modifier,
 ) {
   // Validator function for ipv4 address and port number
@@ -120,9 +120,12 @@ fun Connect(
           continue
         }
 
+        // ipv4
+        val ipv4 = ips.getString(i)
+
         // Validate the input
         val ip = try {
-          InetAddress.getByName(ips.getString(i))
+          InetAddress.getByName(ipv4)
         } catch (e: Exception) {
           continue
         }
@@ -280,5 +283,5 @@ fun Connect(
 @Preview(showBackground = true)
 @Composable
 private fun ConnectPreview() {
-  Connect(onDismissRequest = {}, onConnect = { _, _ -> })
+  Connect(onDismissRequest = {}, title = "Join Group", onConnect = { _, _ -> })
 }
