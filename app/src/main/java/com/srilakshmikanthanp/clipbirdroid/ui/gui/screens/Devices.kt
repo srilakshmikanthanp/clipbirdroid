@@ -27,7 +27,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -88,9 +90,7 @@ private fun ServerGroup(controller: AppController) {
   Card (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 15.dp)) {
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
       items(clients.size) { i ->
-        val modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 5.dp)
+        val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
         val onAction = { d: DeviceActionable -> controller.disconnectClient(d.first) }
         Host(clients[i], modifier, onAction)
       }
@@ -176,9 +176,9 @@ private fun ClientGroup(controller: AppController) {
     // Current Group is not null
     if (group != null) {
       Text(
+        modifier = Modifier.padding(15.dp),
         text = stringResource(id = R.string.current_group),
-        fontSize = 16.sp, color = Color.Gray,
-        modifier = Modifier.padding(15.dp)
+        fontSize = 16.sp,
       )
     }
 
@@ -192,9 +192,9 @@ private fun ClientGroup(controller: AppController) {
     // Other Groups
     if (!servers.isEmpty()) {
       Text(
+        modifier = Modifier.padding(15.dp),
         text = stringResource(id = R.string.other_groups),
-        fontSize = 16.sp, color = Color.Gray,
-        modifier = Modifier.padding(15.dp)
+        fontSize = 16.sp,
       )
     }
 
@@ -250,6 +250,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // is the Host is lastly server or client
   var isServer by remember { mutableStateOf(controller.getHostType() == HostType.SERVER) }
 
+  // height of tab compose
+  var tabHeight by remember { mutableStateOf(0.dp) }
+
   // Expanded state for the Drop Down Menu
   var expanded by remember { mutableStateOf(false) }
 
@@ -261,6 +264,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
 
   // get the Context instance from compositionLocal
   val context = LocalContext.current
+
+  // Get local density from composable
+  val localDensity = LocalDensity.current
 
   // infer client status
   val inferClientStatus = {
@@ -451,7 +457,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
         Column (horizontalAlignment = Alignment.CenterHorizontally) {
           // Server Status % of parent
           Status(
-            modifier = Modifier.fillMaxWidth().padding(top = 40.dp, bottom = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = tabHeight),
             fontSize = 24.sp,
             status = status,
             hostName = hostName,
@@ -462,8 +468,18 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
           val tabs = listOf(SERVER_TAB.second, CLIENT_TAB.second)
           val tabIndex = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
 
+          // Tab modifier
+          val tabModifier = Modifier.padding(top = 10.dp).onGloballyPositioned {
+            tabHeight = with(localDensity) { it.size.height.toDp() }
+          }
+
           // Compose the Tab Row
-          TabRow(selectedTabIndex = tabIndex, containerColor = Color.Transparent, divider = { }) {
+          TabRow(
+            containerColor = Color.Transparent,
+            modifier = tabModifier,
+            divider = { },
+            selectedTabIndex = tabIndex,
+          ) {
             tabs.forEachIndexed { index, title ->
               Tab(onClick = { tabClickHandler(index) }, selected = (selectedTab == index)) {
                 Text(text = title, fontSize = 16.sp, modifier = Modifier.padding(16.dp))

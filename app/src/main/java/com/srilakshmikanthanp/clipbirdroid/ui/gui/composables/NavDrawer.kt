@@ -59,7 +59,7 @@ private fun DrawerContent(
     }
 
     // Divider for Drawer
-    Divider(modifier = Modifier.padding(vertical = 5.dp))
+    Divider(modifier = Modifier.padding(vertical = 8.dp))
 
     // Item For Device
     NavigationDrawerItem(
@@ -76,7 +76,7 @@ private fun DrawerContent(
     )
 
     // Divider for Drawer
-    Divider(modifier = Modifier.padding(vertical = 5.dp))
+    Divider(modifier = Modifier.padding(vertical = 8.dp))
 
     // Item For About
     NavigationDrawerItem(
