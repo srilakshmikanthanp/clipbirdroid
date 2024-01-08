@@ -11,28 +11,6 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : ComponentActivity() {
-  // companion object
-  companion object {
-    val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.SplashActivity.QUIT_ACTION"
-  }
-
-  // handle Intent
-  private fun handleIntent(intent: Intent?) {
-    if (intent?.action == QUIT_ACTION) stopService().also { this.finishAndRemoveTask() }
-  }
-
-  // Set up the Service Connection
-  private fun setUpService() {
-    Intent(this, ClipbirdService::class.java).also {
-      startForegroundService(it)
-    }
-  }
-
-  // dispose the service
-  private fun stopService() {
-    stopService(Intent(this, ClipbirdService::class.java))
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
@@ -42,18 +20,12 @@ class SplashActivity : ComponentActivity() {
     }
   }
 
-  override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent).also { handleIntent(intent) }
-  }
-
   // on Start
   override fun onStart() {
-    super.onStart().also { handleIntent(intent) }
-
-    ClipbirdService.start(this)
+    super.onStart().also { ClipbirdService.start(this) }
 
     Intent(
-      this@SplashActivity,
+      this,
       MainActivity::class.java
     ).also {
       startActivity(it)

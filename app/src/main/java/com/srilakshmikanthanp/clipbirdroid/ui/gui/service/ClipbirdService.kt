@@ -40,7 +40,7 @@ class ClipbirdService : Service() {
 
   // Function used to get the Pending intent for onTap
   private fun onTapIntent(): PendingIntent {
-    Intent(this, MainActivity::class.java).also {
+    Intent(this, SplashActivity::class.java).also {
       return PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
     }
   }
@@ -48,7 +48,7 @@ class ClipbirdService : Service() {
   // Function used to get the Pending intent for onQuit
   private fun onQuitIntent(): PendingIntent {
     val intent = Intent(this, MainActivity::class.java)
-    intent.action = SplashActivity.QUIT_ACTION
+    intent.action = MainActivity.QUIT_ACTION
     intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
     intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
