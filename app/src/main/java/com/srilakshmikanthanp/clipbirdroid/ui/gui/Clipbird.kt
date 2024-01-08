@@ -67,14 +67,7 @@ class Clipbird : Application() {
   // Initialize the controller instance
   override fun onCreate() {
     // call super onCreate and initialize controller
-    super.onCreate().also { controller = AppController(getSslConfig(), this) }
-
-    // initialize the controller
-    if (controller.isLastlyHostIsServer()) {
-      controller.setCurrentHostAsServer()
-    } else {
-      controller.setCurrentHostAsClient()
-    }
+    super.onCreate()
 
     // get the module install instance
     val moduleInstall = ModuleInstall.getClient(this)
@@ -86,6 +79,21 @@ class Clipbird : Application() {
 
     // install the module
     moduleInstall.installModules(request)
+  }
+
+  // Initialize the controller instance
+  fun initialize() {
+    if (!this::controller.isInitialized) {
+      // create the controller instance
+      controller = AppController(getSslConfig(), this)
+
+      // initialize the controller
+      if (controller.isLastlyHostIsServer()) {
+        controller.setCurrentHostAsServer()
+      } else {
+        controller.setCurrentHostAsClient()
+      }
+    }
   }
 
   // get the controller instance

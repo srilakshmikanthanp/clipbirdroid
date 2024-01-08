@@ -8,9 +8,7 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 class BootHandler : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     if (Intent.ACTION_BOOT_COMPLETED == intent.action) {
-      Intent(context, ClipbirdService::class.java).also {
-        context.startForegroundService(it)
-      }
+      ClipbirdService.start(context)
     }
   }
 }

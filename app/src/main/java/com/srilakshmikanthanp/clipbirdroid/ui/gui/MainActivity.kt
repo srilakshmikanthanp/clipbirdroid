@@ -23,7 +23,6 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.ClipHistory
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import kotlinx.coroutines.launch
@@ -83,28 +82,6 @@ private fun PreviewClipbird() {
  * Main Activity
  */
 class MainActivity : ComponentActivity() {
-  // companion object
-  companion object {
-    val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity.QUIT_ACTION"
-  }
-
-  // handle Intent
-  private fun handleIntent(intent: Intent?) {
-    if (intent?.action == QUIT_ACTION) stopService().also { this.finishAndRemoveTask() }
-  }
-
-  // Set up the Service Connection
-  private fun setUpService() {
-    Intent(this, ClipbirdService::class.java).also {
-      startForegroundService(it)
-    }
-  }
-
-  // dispose the service
-  private fun stopService() {
-    stopService(Intent(this, ClipbirdService::class.java))
-  }
-
   // set up the UI
   @Composable
   private fun SetUpUI() {
@@ -114,18 +91,12 @@ class MainActivity : ComponentActivity() {
   // On Create
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setUpService()
     setContent { ClipbirdTheme { SetUpUI() } }
-  }
-
-  // on New Intent
-  override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent).also { handleIntent(intent) }
   }
 
   // on Start
   override fun onStart() {
-    super.onStart().also { handleIntent(intent) }
+    super.onStart()
 
     // Request Ignore Battery Optimization
     startActivity(

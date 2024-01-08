@@ -2,6 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.service
 
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -11,6 +12,7 @@ import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.SplashActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
@@ -46,7 +48,7 @@ class ClipbirdService : Service() {
   // Function used to get the Pending intent for onQuit
   private fun onQuitIntent(): PendingIntent {
     val intent = Intent(this, MainActivity::class.java)
-    intent.action = MainActivity.QUIT_ACTION
+    intent.action = SplashActivity.QUIT_ACTION
     intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
     intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
@@ -145,5 +147,16 @@ class ClipbirdService : Service() {
   // On start command of the service
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     return START_STICKY
+  }
+
+  // static function to start the service
+  companion object {
+    fun start(context: Context) {
+      val application = context.applicationContext as Clipbird
+      application.initialize()
+      Intent(context, ClipbirdService::class.java).also {
+        context.startForegroundService(it)
+      }
+    }
   }
 }
