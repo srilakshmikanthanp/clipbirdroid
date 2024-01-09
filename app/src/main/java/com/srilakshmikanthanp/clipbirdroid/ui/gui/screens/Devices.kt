@@ -87,7 +87,7 @@ private fun ServerGroup(controller: AppController) {
   }
 
   // HostList
-  Card (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 15.dp)) {
+  Card (modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 15.dp)) {
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
       items(clients.size) { i ->
         val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)

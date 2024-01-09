@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
-fun ClipHistory(controller: AppController, onMenuClick: () -> Unit = {}) {
+fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
   // State List that has last max copied items
   val history by controller.history.collectAsState()
 
@@ -115,5 +115,5 @@ fun ClipHistory(controller: AppController, onMenuClick: () -> Unit = {}) {
 @Preview(showBackground = true)
 @Composable
 private fun PreviewHistory() {
-  ClipHistory(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
+  History(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
 }

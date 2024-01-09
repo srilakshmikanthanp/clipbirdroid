@@ -24,7 +24,7 @@ import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.ClipHistory
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
@@ -66,7 +66,7 @@ private fun Clipbird(controller: AppController) {
     drawerState = drawerState,
   ) {
     when (selected) {
-      DrawerItems.HISTORY -> ClipHistory(controller, onMenuClick)
+      DrawerItems.HISTORY -> History(controller, onMenuClick)
       DrawerItems.ABOUT -> AboutUs(onMenuClick)
       DrawerItems.DEVICES -> Devices(controller, onMenuClick)
     }
