@@ -24,8 +24,8 @@ import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
@@ -129,6 +129,11 @@ class MainActivity : ComponentActivity() {
     // check self permissions
     permissions.removeIf {
       checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    // is supposed to show dialog
+    permissions.removeIf {
+      !shouldShowRequestPermissionRationale(it)
     }
 
     // if not empty
