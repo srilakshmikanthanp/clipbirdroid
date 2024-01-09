@@ -100,7 +100,7 @@ private fun ServerGroup(controller: AppController) {
   // if no servers
   if (clients.isEmpty()) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-      Text(text = stringResource(id = R.string.nothing_there), fontSize = 16.sp, color = Color.Gray)
+      Text(text = stringResource(id = R.string.no_devices), fontSize = 16.sp, color = Color.Gray)
     }
   }
 }
@@ -211,7 +211,7 @@ private fun ClientGroup(controller: AppController) {
     // if no servers
     if (servers.isEmpty() && group == null) {
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = stringResource(id = R.string.nothing_there), fontSize = 16.sp, color = Color.Gray)
+        Text(text = stringResource(id = R.string.no_devices), fontSize = 16.sp, color = Color.Gray)
       }
     }
   }

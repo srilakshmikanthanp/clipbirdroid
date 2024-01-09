@@ -1,7 +1,10 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -64,7 +67,7 @@ private fun Clipbird(controller: AppController) {
   ) {
     when (selected) {
       DrawerItems.HISTORY -> ClipHistory(controller, onMenuClick)
-      DrawerItems.ABOUT   -> AboutUs(onMenuClick)
+      DrawerItems.ABOUT -> AboutUs(onMenuClick)
       DrawerItems.DEVICES -> Devices(controller, onMenuClick)
     }
   }
@@ -109,6 +112,39 @@ class MainActivity : ComponentActivity() {
   // on Start
   override fun onStart() {
     super.onStart().also { handleIntent(intent) }
+
+    // Permissions Declared on Manifest
+    val permissions = mutableListOf(
+      Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+      Manifest.permission.RECEIVE_BOOT_COMPLETED,
+      Manifest.permission.INTERNET,
+      Manifest.permission.FOREGROUND_SERVICE,
+    )
+
+    // request code
+    val requestCode = 1
+
+    // if api >= 34
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      permissions.plus(Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC)
+    }
+
+    // if api >= 33
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      permissions.plus(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    // check self permissions
+    for (permission in permissions) {
+      if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+        permissions.remove(permission)
+      }
+    }
+
+    // if not empty
+    if (permissions.isNotEmpty()) {
+      requestPermissions(permissions.toTypedArray(), requestCode)
+    }
 
     // Request Ignore Battery Optimization
     startActivity(

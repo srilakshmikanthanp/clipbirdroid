@@ -17,7 +17,7 @@
   <string name="clipbird_content">Clipbird Content</string>
   <string name="send">Send</string>
   <string name="phone">Phone</string>
-  <string name="nothing_there">Nothing There</string>
+  <string name="no_devices"> No Devices</string>
   <string name="devices">Devices</string>
   <string name="history">History</string>
   <string name="about">About</string>
