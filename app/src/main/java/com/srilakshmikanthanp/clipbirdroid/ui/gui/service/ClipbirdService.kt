@@ -58,7 +58,7 @@ class ClipbirdService : Service() {
   // Function used to get the Pending intent for onAccept
   private fun onAcceptIntent(device: Device): PendingIntent {
     val intent = Intent(this, AcceptHandler::class.java)
-    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
+    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
     intent.putExtra(AcceptHandler.ACCEPT_EXTRA, device)
     return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
   }
@@ -66,7 +66,7 @@ class ClipbirdService : Service() {
   // Function used to get the Pending intent for onReject
   private fun onRejectIntent(device: Device): PendingIntent {
     val intent = Intent(this, RejectHandler::class.java)
-    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP;
+    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
     intent.putExtra(RejectHandler.REJECT_EXTRA, device)
     return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
   }
@@ -156,6 +156,12 @@ class ClipbirdService : Service() {
       application.initialize()
       Intent(context, ClipbirdService::class.java).also {
         context.startForegroundService(it)
+      }
+    }
+
+    fun stop(context: Context) {
+      Intent(context, ClipbirdService::class.java).also {
+        context.stopService(it)
       }
     }
   }

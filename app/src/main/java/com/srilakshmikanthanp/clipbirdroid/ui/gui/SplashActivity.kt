@@ -25,8 +25,7 @@ class SplashActivity : ComponentActivity() {
     super.onStart().also { ClipbirdService.start(this) }
 
     Intent(
-      this,
-      MainActivity::class.java
+      this, MainActivity::class.java
     ).also {
       startActivity(it)
     }.also {

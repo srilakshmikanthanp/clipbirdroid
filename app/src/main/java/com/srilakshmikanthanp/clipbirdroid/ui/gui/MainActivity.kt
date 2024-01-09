@@ -91,25 +91,15 @@ class MainActivity : ComponentActivity() {
   // handle Intent
   private fun handleIntent(intent: Intent?) {
     if (intent?.action == QUIT_ACTION) {
-      stopService().also { this.finishAndRemoveTask() }
+      ClipbirdService.stop(this).also { this.finishAndRemoveTask() }
     }
-  }
-
-  // dispose the service
-  private fun stopService() {
-    stopService(Intent(this, ClipbirdService::class.java))
-  }
-
-  // set up the UI
-  @Composable
-  private fun SetUpUI() {
-    Clipbird((this.application as Clipbird).getController())
   }
 
   // On Create
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { ClipbirdTheme { SetUpUI() } }
+    val controller = (this.application as Clipbird).getController()
+    setContent { ClipbirdTheme { Clipbird(controller) } }
   }
 
   override fun onNewIntent(intent: Intent?) {
