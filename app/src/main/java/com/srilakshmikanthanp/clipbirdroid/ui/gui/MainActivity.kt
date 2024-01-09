@@ -100,18 +100,10 @@ class MainActivity : ComponentActivity() {
 
   // On Create
   override fun onCreate(savedInstanceState: Bundle?) {
+    // Initialize the Controller & Set Content
     super.onCreate(savedInstanceState)
     val controller = (this.application as Clipbird).getController()
     setContent { ClipbirdTheme { Clipbird(controller) } }
-  }
-
-  override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent).also { handleIntent(intent) }
-  }
-
-  // on Start
-  override fun onStart() {
-    super.onStart().also { handleIntent(intent) }
 
     // Permissions Declared on Manifest
     val permissions = mutableListOf(
@@ -136,7 +128,7 @@ class MainActivity : ComponentActivity() {
 
     // check self permissions
     for (permission in permissions) {
-      if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+      if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
         permissions.remove(permission)
       }
     }
@@ -145,6 +137,15 @@ class MainActivity : ComponentActivity() {
     if (permissions.isNotEmpty()) {
       requestPermissions(permissions.toTypedArray(), requestCode)
     }
+  }
+
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent).also { handleIntent(intent) }
+  }
+
+  // on Start
+  override fun onStart() {
+    super.onStart().also { handleIntent(intent) }
 
     // Request Ignore Battery Optimization
     startActivity(
