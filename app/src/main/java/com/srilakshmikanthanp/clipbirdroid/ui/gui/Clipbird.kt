@@ -6,10 +6,14 @@ import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiryInterval
+import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.toPem
+import org.bouncycastle.asn1.x500.style.BCStyle
+import org.bouncycastle.asn1.x500.style.IETFUtils
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
@@ -26,9 +30,23 @@ class Clipbird : Application() {
 
   // Function used to get the Private Key and the Certificate Old
   private fun getOldSslConfig(): Pair<PrivateKey, X509Certificate> {
+    // Get the Certificate Details
     val store = Storage.getInstance(this)
-    val cert = store.getHostCert()!!
     val key = store.getHostKey()!!
+    val cert = store.getHostCert()!!
+
+    // Get the Required parameters
+    val x500Name = JcaX509CertificateHolder(cert).subject
+    val cn = x500Name.getRDNs(BCStyle.CN)[0]
+    val name = IETFUtils.valueToString(cn.first.value)
+
+    // device name
+    val deviceName = appMdnsServiceName(this)
+
+    // check the name is same
+    if (name != deviceName) {
+      return getNewSslConfig()
+    }
 
     // is certificate is to expiry in two months
     if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiryInterval()) {
@@ -38,6 +56,7 @@ class Clipbird : Application() {
       return sslConfig
     }
 
+    // done return
     return Pair(key, cert)
   }
 

@@ -2,7 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.constant
 
 import android.content.Context
 import android.os.Build
-import android.provider.Settings.Secure.getString
+import android.provider.Settings
 import com.srilakshmikanthanp.clipbirdroid.BuildConfig
 
 /**
@@ -73,7 +73,7 @@ fun appDonatePage(): String {
  * @return string Device name
  */
 fun appMdnsServiceName(context: Context): String {
-  return getString(context.contentResolver, "bluetooth_name") ?: Build.MODEL
+  return Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: Build.MODEL
 }
 
 /**
