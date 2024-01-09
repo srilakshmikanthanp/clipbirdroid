@@ -127,10 +127,8 @@ class MainActivity : ComponentActivity() {
     }
 
     // check self permissions
-    for (permission in permissions) {
-      if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
-        permissions.remove(permission)
-      }
+    permissions.removeIf {
+      checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
     }
 
     // if not empty
