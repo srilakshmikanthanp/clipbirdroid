@@ -104,42 +104,6 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     val controller = (this.application as Clipbird).getController()
     setContent { ClipbirdTheme { Clipbird(controller) } }
-
-    // Permissions Declared on Manifest
-    val permissions = mutableListOf(
-      Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-      Manifest.permission.RECEIVE_BOOT_COMPLETED,
-      Manifest.permission.INTERNET,
-      Manifest.permission.FOREGROUND_SERVICE,
-    )
-
-    // request code
-    val requestCode = 1
-
-    // if api >= 34
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-      permissions.plus(Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC)
-    }
-
-    // if api >= 33
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      permissions.plus(Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    // check self permissions
-    permissions.removeIf {
-      checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
-    }
-
-    // is supposed to show dialog
-    permissions.removeIf {
-      !shouldShowRequestPermissionRationale(it)
-    }
-
-    // if not empty
-    if (permissions.isNotEmpty()) {
-      requestPermissions(permissions.toTypedArray(), requestCode)
-    }
   }
 
   override fun onNewIntent(intent: Intent?) {
@@ -149,13 +113,5 @@ class MainActivity : ComponentActivity() {
   // on Start
   override fun onStart() {
     super.onStart().also { handleIntent(intent) }
-
-    // Request Ignore Battery Optimization
-    startActivity(
-      Intent(
-        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-        Uri.parse("package:$packageName")
-      )
-    )
   }
 }
