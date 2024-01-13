@@ -8,11 +8,7 @@
   <string name="notification_title_server">%1$d Devices Connected</string>
   <string name="permissions">Permissions</string>
 
-  <string name="required_permissions">
-    Clipbird requires the following permissions to work properly:
-    Notification,\n
-    Foreground Service for Data Syncing\n
-  </string>
+  <string name="required_permissions">Clipbird Requires those permissions to work properly</string>
 
   <string name="allow">Allow</string>
   <string name="deny">Deny</string>
