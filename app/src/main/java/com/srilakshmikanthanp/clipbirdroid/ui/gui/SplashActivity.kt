@@ -23,7 +23,7 @@ class SplashActivity : ComponentActivity() {
       splashScreen.setKeepOnScreenCondition { true }
     }
 
-    // Permissions on Manifest
+    // Permissions defined on Manifest
     val permissions = mutableListOf(
       Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
       Manifest.permission.RECEIVE_BOOT_COMPLETED,
