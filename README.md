@@ -94,7 +94,7 @@ Follow thw instructions on the [clipbirdesk](https://github.com/srilakshmikantha
 
 ### Installing Clipbird on an Android Platform
 
-It's in under development. we will update the instructions once it is ready.
+Just go to Github Release choose the suitable version for your system and download it. Then install it in your system. Note is there are any frequent disconnections try to disable battery optimization for the app manually.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
