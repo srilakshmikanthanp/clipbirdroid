@@ -10,10 +10,12 @@
 
   <string name="required_permissions">
     Clipbird requires the following permissions to work properly:
-    Notification
-    Foreground Service for Data Syncing
+    Notification,\n
+    Foreground Service for Data Syncing\n
   </string>
 
+  <string name="allow">Allow</string>
+  <string name="deny">Deny</string>
   <string name="app_name">Clipbird</string>
   <string name="synced">Synced</string>
   <string name="current_group">Current Group</string>

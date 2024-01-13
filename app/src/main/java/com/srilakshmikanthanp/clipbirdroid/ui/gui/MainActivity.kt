@@ -15,6 +15,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -129,25 +130,43 @@ class MainActivity : ComponentActivity() {
       isShowingAlert = false; permissions.launchMultiplePermissionRequest()
     }
 
+    // on Dismiss
+    val onDismiss : () -> Unit = {
+      isShowingAlert = false; finalize()
+    }
+
     // request permissions
     LaunchedEffect(permissions) {
       permissions.launchMultiplePermissionRequest()
     }
 
     // if all permissions granted or not show rationale
-    if (permissions.allPermissionsGranted || !permissions.shouldShowRationale) {
+    if (permissions.allPermissionsGranted) {
       finalize().also { return }
-    } else {
+    }
+
+    // is need to show rationale
+    if (permissions.shouldShowRationale) {
       isShowingAlert = true
     }
 
     // show dialog for permissions
     if(isShowingAlert) AlertDialog(
-      onDismissRequest = { finalize() },
-      confirmButton = { onConfirm() },
-      dismissButton = { finalize() },
+      onDismissRequest = { onDismiss() },
       title = { Text(getString(R.string.permissions)) },
-      text = { Text(getString(R.string.required_permissions)) }
+      text = { Text(getString(R.string.required_permissions)) },
+      confirmButton = {
+        TextButton(
+          onClick = { onConfirm() }
+        ) {
+          Text(getString(R.string.allow))
+        }},
+      dismissButton = {
+        TextButton(
+          onClick = { onDismiss() }
+        ) {
+          Text(getString(R.string.deny))
+        }},
     )
   }
 
