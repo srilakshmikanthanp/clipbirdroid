@@ -143,7 +143,15 @@ class PingPacket (private var pingType: PingType) {
       }
 
       // return the packet
-      return PingPacket(PingType.fromInt(pingType))
+      val packet =  PingPacket(PingType.fromInt(pingType))
+
+      // check size
+      if (packetLength != packet.size()) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
+      }
+
+      // return the packet
+      return packet
     }
   }
 }

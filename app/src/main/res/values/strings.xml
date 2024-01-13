@@ -6,6 +6,13 @@
   <string name="join_to_a_group">Join to a Group</string>
   <string name="notification_title_client">Connected to %1$s</string>
   <string name="notification_title_server">%1$d Devices Connected</string>
+  <string name="permissions">Permissions</string>
+
+  <string name="required_permissions">
+    Clipbird requires the following permissions to work properly:
+    Notification
+    Foreground Service for Data Syncing
+  </string>
 
   <string name="app_name">Clipbird</string>
   <string name="synced">Synced</string>

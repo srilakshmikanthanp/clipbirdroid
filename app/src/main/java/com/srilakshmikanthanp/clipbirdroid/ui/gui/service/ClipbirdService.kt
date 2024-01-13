@@ -12,7 +12,6 @@ import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.SplashActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
@@ -40,7 +39,7 @@ class ClipbirdService : Service() {
 
   // Function used to get the Pending intent for onTap
   private fun onTapIntent(): PendingIntent {
-    Intent(this, SplashActivity::class.java).also {
+    Intent(this, MainActivity::class.java).also {
       return PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
     }
   }
@@ -152,8 +151,6 @@ class ClipbirdService : Service() {
   // static function to start the service
   companion object {
     fun start(context: Context) {
-      val application = context.applicationContext as Clipbird
-      application.initialize()
       Intent(context, ClipbirdService::class.java).also {
         context.startForegroundService(it)
       }

@@ -144,8 +144,16 @@ class Authentication(private var authStatus: AuthStatus) {
         throw MalformedPacket(ErrorCode.CodingError, "Invalid AuthStatus value")
       }
 
-      // done return
-      return Authentication(AuthStatus.fromInt(authStatus))
+      // done
+      val packet =  Authentication(AuthStatus.fromInt(authStatus))
+
+      // check packet length
+      if (packetLength != packet.size()) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
+      }
+
+      // return the packet
+      return packet
     }
   }
 }

@@ -324,7 +324,15 @@ class SyncingPacket(private var items: Array<SyncingItem>) {
       }
 
       // done return
-      return SyncingPacket(items)
+      val packet =  SyncingPacket(items)
+
+      // check the packet length
+      if (packetLength != packet.size()) {
+        throw MalformedPacket(ErrorCode.CodingError, "Invalid Packet Length")
+      }
+
+      // return the packet
+      return packet
     }
   }
 }
