@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -110,7 +111,6 @@ class MainActivity : ComponentActivity() {
 
     // finalize
     val finalize : () -> Unit = {
-      // get power manager
       val powerManager: PowerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
       val action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
       val uri = Uri.parse("package:${this.packageName}")
@@ -127,6 +127,11 @@ class MainActivity : ComponentActivity() {
     // onConfirm
     val onConfirm : () -> Unit = {
       isShowingAlert = false; permissions.launchMultiplePermissionRequest()
+    }
+
+    // request permissions
+    LaunchedEffect(permissions) {
+      permissions.launchMultiplePermissionRequest()
     }
 
     // if all permissions granted or not show rationale
