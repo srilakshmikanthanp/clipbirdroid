@@ -101,11 +101,13 @@
     </provider>
 
     <receiver
+      android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
       android:name=".ui.gui.handlers.BootHandler"
       android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
         <action android:name="android.intent.action.BOOT_COMPLETED" />
+        <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
       </intent-filter>
     </receiver>
   </application>
