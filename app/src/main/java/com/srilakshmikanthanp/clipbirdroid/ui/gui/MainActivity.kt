@@ -187,9 +187,7 @@ class MainActivity : ComponentActivity() {
 
     // set exit animation
     splashScreen.setOnExitAnimationListener {
-      it.iconView.animate().setDuration(1000L).alpha(0f).withEndAction {
-        it.remove()
-      }
+      it.iconView.animate().setDuration(1000L).withEndAction { it.remove() }.start()
     }
 
     // Initialize App Controller

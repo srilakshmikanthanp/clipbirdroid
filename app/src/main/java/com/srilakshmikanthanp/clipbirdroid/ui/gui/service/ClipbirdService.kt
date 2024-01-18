@@ -57,9 +57,10 @@ class ClipbirdService : Service() {
   // Function used to get the Pending intent for onAccept
   private fun onAcceptIntent(device: Device): PendingIntent {
     val intent = Intent(this, AcceptHandler::class.java)
+    val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
     intent.putExtra(AcceptHandler.ACCEPT_EXTRA, device)
-    return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    return PendingIntent.getActivity(this, 0, intent, flags)
   }
 
   // Function used to get the Pending intent for onReject
