@@ -47,11 +47,12 @@ class ClipbirdService : Service() {
   // Function used to get the Pending intent for onQuit
   private fun onQuitIntent(): PendingIntent {
     val intent = Intent(this, MainActivity::class.java)
+    val flags = PendingIntent.FLAG_IMMUTABLE
     intent.action = MainActivity.QUIT_ACTION
     intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
     intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-    return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    return PendingIntent.getActivity(this, 0, intent, flags)
   }
 
   // Function used to get the Pending intent for onAccept
