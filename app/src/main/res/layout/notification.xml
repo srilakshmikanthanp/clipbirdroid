@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical"
+  android:gravity="center">
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+
+    <RelativeLayout
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="2"
+      android:gravity="start">
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <TextView
+          tools:text="Connected to Apple MackBook"
+          style="@style/Theme.Clipbird.NotifyTitle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:id="@+id/notify_title"
+          android:paddingBottom="3dp" />
+
+        <TextView
+          android:text="@string/send_content"
+          style="@style/Theme.Clipbird.NotifyText"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:id="@+id/notify_text" />
+
+      </LinearLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+      android:layout_width="0dp"
+      android:layout_height="match_parent"
+      android:layout_weight="1"
+      android:gravity="end">
+
+      <Button
+        android:text="@string/send"
+        style="@style/Theme.Clipbird.SendButton"
+        android:layout_width="75dp"
+        android:layout_height="30dp"
+        android:id="@+id/notify_send" />
+    </RelativeLayout>
+  </LinearLayout>
+</LinearLayout>

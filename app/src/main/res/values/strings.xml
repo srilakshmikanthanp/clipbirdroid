@@ -16,7 +16,7 @@
   <string name="synced">Synced</string>
   <string name="current_group">Current Group</string>
   <string name="other_groups">Other Groups</string>
-  <string name="none">None</string>
+  <string name="no_connection">Not Connected to any Device</string>
   <string name="copy">Copy</string>
   <string name="delete">Delete</string>
   <string name="clipbird_content">Clipbird Content</string>

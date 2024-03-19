@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
@@ -80,14 +81,16 @@ class ClipbirdService : Service() {
 
   // show the notification
   private fun showNotification(title: String) {
+    val notificationLayout = RemoteViews(packageName, R.layout.notification)
+
+    notificationLayout.setTextViewText(R.id.notify_title, title)
+    notificationLayout.setOnClickPendingIntent(R.id.notify_send, onSendIntent())
+
     NotificationCompat.Builder(this, notification.getChannelID())
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
-      .setContentTitle(title)
-      .setContentText(resources.getString(R.string.send_content))
-      .setPriority(NotificationCompat.PRIORITY_HIGH)
+      .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+      .setCustomContentView(notificationLayout)
       .setContentIntent(onTapIntent())
-      .setOngoing(true)
-      .addAction(0, resources.getString(R.string.send), onSendIntent())
       .addAction(0, resources.getString(R.string.quit), onQuitIntent())
       .build().also {
         startForeground(NOTIFICATION_ID, it)
@@ -98,9 +101,11 @@ class ClipbirdService : Service() {
   private fun notificationTitle(): String {
     return if (controller.getHostType() == HostType.CLIENT) {
       val server = controller.getConnectedServer()
-      val none = resources.getString(R.string.none)
-      val group = server?.name ?: none
-      resources.getString(R.string.notification_title_client, group)
+      if (server != null) {
+        resources.getString(R.string.notification_title_client, server.name)
+      } else {
+        resources.getString(R.string.no_connection)
+      }
     } else if (controller.getHostType() == HostType.SERVER) {
       val clients = controller.getConnectedClientsList().size
       resources.getString(R.string.notification_title_server, clients)
@@ -128,7 +133,7 @@ class ClipbirdService : Service() {
 
     // on client connected to the group change notification
     controller.addServerStatusChangedHandler { s, d ->
-      val group = if(s) d.name else resources.getString(R.string.none)
+      val group = if(s) d.name else resources.getString(R.string.no_connection)
       this.showNotification(resources.getString(R.string.notification_title_client, group))
     }
 
