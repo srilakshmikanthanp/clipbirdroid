@@ -91,7 +91,6 @@ class ClipbirdService : Service() {
       .setStyle(NotificationCompat.DecoratedCustomViewStyle())
       .setCustomContentView(notificationLayout)
       .setContentIntent(onTapIntent())
-      .addAction(0, resources.getString(R.string.quit), onQuitIntent())
       .build().also {
         startForeground(NOTIFICATION_ID, it)
       }
@@ -133,8 +132,11 @@ class ClipbirdService : Service() {
 
     // on client connected to the group change notification
     controller.addServerStatusChangedHandler { s, d ->
-      val group = if(s) d.name else resources.getString(R.string.no_connection)
-      this.showNotification(resources.getString(R.string.notification_title_client, group))
+      this.showNotification(if(s) {
+        resources.getString(R.string.notification_title_client, d.name)
+      } else {
+        resources.getString(R.string.no_connection)
+      })
     }
 
     // on client connected to the group change notification

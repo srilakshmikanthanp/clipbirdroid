@@ -206,6 +206,9 @@ class MainActivity : ComponentActivity() {
       permissions.add(Manifest.permission.POST_NOTIFICATIONS)
     }
 
+    // Add Receive boot completed
+    permissions.add(Manifest.permission.RECEIVE_BOOT_COMPLETED)
+
     // check self permissions
     permissions.removeIf {
       checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED

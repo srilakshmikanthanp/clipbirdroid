@@ -14,8 +14,7 @@
   <string name="deny">Deny</string>
   <string name="app_name">Clipbird</string>
   <string name="synced">Synced</string>
-  <string name="current_group">Current Group</string>
-  <string name="other_groups">Other Groups</string>
+  <string name="other_groups">GROUPS</string>
   <string name="no_connection">Not Connected to any Device</string>
   <string name="copy">Copy</string>
   <string name="delete">Delete</string>

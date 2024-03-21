@@ -7,11 +7,11 @@
     <item name="postSplashScreenTheme">@style/Theme.Clipbird</item>
   </style>
   <style name="Theme.Clipbird.NotifyTitle" parent="@android:style/Widget.Material.TextView">
-    <item name="android:textColor">@color/black_color</item>
+    <item name="android:textColor">@color/white_color</item>
     <item name="android:textSize">14sp</item>
   </style>
   <style name="Theme.Clipbird.NotifyText" parent="@android:style/Widget.Material.TextView">
-    <item name="android:textColor">@color/black_color</item>
+    <item name="android:textColor">@color/white_color</item>
     <item name="android:textSize">14sp</item>
   </style>
   <style name="Theme.Clipbird.SendButton" parent="@android:style/Widget.Material.Button">

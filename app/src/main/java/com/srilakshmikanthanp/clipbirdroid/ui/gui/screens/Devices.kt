@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -90,7 +92,9 @@ private fun ServerGroup(controller: AppController) {
   Card (modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 15.dp)) {
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
       items(clients.size) { i ->
-        val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
+        val modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 5.dp)
         val onAction = { d: DeviceActionable -> controller.disconnectClient(d.first) }
         Host(clients[i], modifier, onAction)
       }
@@ -173,15 +177,6 @@ private fun ClientGroup(controller: AppController) {
 
   // Render the view
   Column {
-    // Current Group is not null
-    if (group != null) {
-      Text(
-        modifier = Modifier.padding(15.dp),
-        text = stringResource(id = R.string.current_group),
-        fontSize = 16.sp,
-      )
-    }
-
     // if has connected server
     group?.let { DeviceActionable(it, HostAction.DISCONNECT) } ?.let {
       Card (modifier = Modifier.padding(horizontal = 15.dp)) {
@@ -190,12 +185,17 @@ private fun ClientGroup(controller: AppController) {
     }
 
     // Other Groups
-    if (!servers.isEmpty()) {
-      Text(
-        modifier = Modifier.padding(15.dp),
-        text = stringResource(id = R.string.other_groups),
-        fontSize = 16.sp,
-      )
+    if (servers.isNotEmpty()) {
+      Row (
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(15.dp)
+      ) {
+        Text(
+          text = stringResource(id = R.string.other_groups),
+          fontSize = 12.sp,
+          color = MaterialTheme.colorScheme.surfaceVariant
+        )
+      }
     }
 
     // List of Hosts
@@ -457,7 +457,9 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
         Column (horizontalAlignment = Alignment.CenterHorizontally) {
           // Server Status % of parent
           Status(
-            modifier = Modifier.fillMaxWidth().padding(top = tabHeight),
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(top = tabHeight),
             fontSize = 24.sp,
             status = status,
             hostName = hostName,
@@ -469,9 +471,11 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
           val tabIndex = if (isServer) SERVER_TAB.first else CLIENT_TAB.first
 
           // Tab modifier
-          val tabModifier = Modifier.padding(top = 10.dp).onGloballyPositioned {
-            tabHeight = with(localDensity) { it.size.height.toDp() }
-          }
+          val tabModifier = Modifier
+            .padding(top = 10.dp)
+            .onGloballyPositioned {
+              tabHeight = with(localDensity) { it.size.height.toDp() }
+            }
 
           // Compose the Tab Row
           TabRow(

@@ -19,7 +19,7 @@
     android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true"
     android:theme="@style/Theme.Clipbird"
-    tools:targetApi="31">
+    tools:targetApi="34">
 
     <meta-data
       android:name="com.google.mlkit.vision.DEPENDENCIES"
@@ -31,7 +31,7 @@
       android:name=".ui.gui.service.ClipbirdService"
       android:foregroundServiceType="dataSync">
       <intent-filter>
-        <action android:name="com.myapp.ClipbirdService" />
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
       </intent-filter>
     </service>
 
@@ -97,10 +97,7 @@
       android:name=".ui.gui.handlers.BootHandler"
       android:exported="true">
       <intent-filter>
-        <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
-        <action android:name="android.intent.action.BOOT_COMPLETED" />
         <action android:name="android.intent.action.ACTION_BOOT_COMPLETED" />
-        <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
       </intent-filter>
     </receiver>
   </application>
