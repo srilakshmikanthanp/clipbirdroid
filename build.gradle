@@ -1,3 +1,12 @@
+buildscript {
+  repositories {
+    google()  // or maven { url "https://maven.google.com" } for Gradle <= 3
+  }
+  dependencies {
+    classpath("com.google.android.gms:oss-licenses-plugin:0.10.6")
+  }
+}
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
   id 'com.android.application' version '8.2.0' apply false

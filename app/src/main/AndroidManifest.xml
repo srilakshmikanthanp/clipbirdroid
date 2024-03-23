@@ -82,6 +82,14 @@
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
 
+    <activity
+      android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
+      android:theme="@style/Theme.Clipbird.OSS" />
+
+    <activity
+      android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
+      android:theme="@style/Theme.Clipbird.OSS" />
+
     <provider
       android:name=".common.provider.ClipbirdFileProvider"
       android:authorities="${applicationId}.provider"

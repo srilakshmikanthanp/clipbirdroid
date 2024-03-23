@@ -1,20 +1,21 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -34,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,23 +90,34 @@ private fun ServerGroup(controller: AppController) {
     setupServer(); onDispose(disposeServer)
   }
 
-  // HostList
-  Card (modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 15.dp)) {
-    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-      items(clients.size) { i ->
-        val modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 5.dp)
-        val onAction = { d: DeviceActionable -> controller.disconnectClient(d.first) }
-        Host(clients[i], modifier, onAction)
-      }
-    }
-  }
-
   // if no servers
   if (clients.isEmpty()) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-      Text(text = stringResource(id = R.string.no_devices), fontSize = 16.sp, color = Color.Gray)
+    Column (
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.Center,
+      modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+    ) {
+      Image(
+        contentDescription = stringResource(id = R.string.devices_server_prompt),
+        painter = painterResource(id = R.drawable.devices),
+        modifier = Modifier.fillMaxSize(0.3f)
+      )
+
+      Text(
+        text = stringResource(id = R.string.devices_server_prompt),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.width(200.dp),
+      )
+    }
+  } else {
+    Card (modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 15.dp)) {
+      LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        items(clients.size) { i ->
+          val modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)
+          val onAction = { d: DeviceActionable -> controller.disconnectClient(d.first) }
+          Host(clients[i], modifier, onAction)
+        }
+      }
     }
   }
 }
@@ -184,34 +197,31 @@ private fun ClientGroup(controller: AppController) {
       }
     }
 
-    // Other Groups
-    if (servers.isNotEmpty()) {
-      Row (
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(15.dp)
+    if (servers.isEmpty()) {
+      Column (
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
       ) {
+        Image(
+          contentDescription = stringResource(id = R.string.devices_client_prompt),
+          painter = painterResource(id = R.drawable.devices),
+          modifier = Modifier.fillMaxSize(0.3f)
+        )
+
         Text(
-          text = stringResource(id = R.string.other_groups),
-          fontSize = 12.sp,
-          color = MaterialTheme.colorScheme.surfaceVariant
+          text = stringResource(id = R.string.devices_client_prompt),
+          textAlign = TextAlign.Center,
+          modifier = Modifier.width(200.dp),
         )
       }
-    }
-
-    // List of Hosts
-    Card (modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 15.dp)) {
-      // Render the Remaining Groups
-      LazyColumn(modifier = Modifier.fillMaxWidth()) {
-        items(servers.size) { i ->
-          Host(servers[i], modifier, onAction =  { onAction(it.first, it.second) })
+    } else {
+      Card (modifier = Modifier.padding(15.dp)) {
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+          items(servers.size) { i ->
+            Host(servers[i], modifier, onAction =  { onAction(it.first, it.second) })
+          }
         }
-      }
-    }
-
-    // if no servers
-    if (servers.isEmpty() && group == null) {
-      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = stringResource(id = R.string.no_devices), fontSize = 16.sp, color = Color.Gray)
       }
     }
   }
