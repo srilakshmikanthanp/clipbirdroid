@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
   <style name="Theme.Clipbird" parent="android:Theme.Material.Light.NoActionBar" />
+
   <style name="Theme.Splash" parent="Theme.SplashScreen">
     <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
     <item name="android:windowDisablePreview">true</item>
+    <item name="android:colorBackground">@color/secondary</item>
     <item name="postSplashScreenTheme">@style/Theme.Clipbird</item>
   </style>
+
+  <style name="Theme.Clipbird.OSS" parent="Theme.AppCompat.Light.DarkActionBar" />
+
   <style name="Theme.Clipbird.NotifyTitle" parent="@android:style/Widget.Material.TextView">
     <item name="android:textColor">@color/white_color</item>
     <item name="android:textSize">14sp</item>
   </style>
+
   <style name="Theme.Clipbird.NotifyText" parent="@android:style/Widget.Material.TextView">
     <item name="android:textColor">@color/white_color</item>
     <item name="android:textSize">14sp</item>
   </style>
+
   <style name="Theme.Clipbird.SendButton" parent="@android:style/Widget.Material.Button">
     <item name="android:textColor">@color/white_color</item>
     <item name="android:background">@drawable/button</item>

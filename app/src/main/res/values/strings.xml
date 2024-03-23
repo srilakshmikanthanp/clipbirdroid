@@ -2,13 +2,18 @@
   <string name="send_content">Send latest clipboard to other devices</string>
   <string name="notification_content">This is the notification for Clipbird Service</string>
   <string name="join_request_content">wants to connect to your device</string>
+  <string name="devices_client_prompt">Clipbird Groups in your network would appear here</string>
+  <string name="devices_server_prompt">Devices connected to your group would appear here</string>
+  <string name="history_prompt">Latest Clipbird History would appear here</string>
   <string name="no_preview">No Preview</string>
+  <string name="open_source_licenses">Open Source Licenses</string>
   <string name="join_to_a_group">Join to a Group</string>
   <string name="notification_title_client">Connected to %1$s</string>
   <string name="notification_title_server">%1$d Devices Connected</string>
   <string name="permissions">Permissions</string>
-
+s
   <string name="required_permissions">Clipbird Requires those permissions to work properly</string>
+  <string name="about_us">A Bird that helps you to sync clipboard between devices</string>
 
   <string name="allow">Allow</string>
   <string name="deny">Deny</string>
