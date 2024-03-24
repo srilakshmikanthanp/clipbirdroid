@@ -182,13 +182,13 @@ class MainActivity : ComponentActivity() {
     // create splash screen instance
     val splashScreen = installSplashScreen()
 
-    // call super class method
-    super.onCreate(savedInstanceState)
-
     // set exit animation
     splashScreen.setOnExitAnimationListener {
-      it.iconView.animate().setDuration(1000L).withEndAction { it.remove() }.start()
+      it.view.animate().setDuration(1000L).withEndAction { it.remove() }.start()
     }
+
+    // call super class method
+    super.onCreate(savedInstanceState)
 
     // Initialize App Controller
     (application as Clipbird).initialize()

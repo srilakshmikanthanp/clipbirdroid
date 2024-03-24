@@ -36,7 +36,7 @@
     </service>
 
     <activity
-      android:name="com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity"
+      android:name=".ui.gui.MainActivity"
       android:screenOrientation="sensorPortrait"
       android:theme="@style/Theme.Splash"
       android:exported="true"
