@@ -184,7 +184,7 @@ class MainActivity : ComponentActivity() {
 
     // set exit animation
     splashScreen.setOnExitAnimationListener {
-      it.view.animate().setDuration(1000L).withEndAction { it.remove() }.start()
+      it.view.animate().withEndAction { it.remove() }.start()
     }
 
     // call super class method

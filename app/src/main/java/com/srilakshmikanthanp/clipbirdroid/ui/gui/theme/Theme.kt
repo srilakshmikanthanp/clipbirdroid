@@ -2,6 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.theme
 
 import android.app.Activity
 import android.os.Build
+import android.view.WindowManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -107,9 +108,11 @@ fun ClipbirdTheme(
   }
 
   val view = LocalView.current
+
   if (!view.isInEditMode) {
     SideEffect {
       val window = (view.context as Activity).window
+      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
       window.statusBarColor = colorScheme.background.toArgb()
       WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
     }
