@@ -25,7 +25,7 @@
   </style>
 
   <style name="Theme.Clipbird.SendButton" parent="@android:style/Widget.Material.Button">
-    <item name="android:textColor">@color/text_color</item>
+    <item name="android:textColor">@color/white_color</item>
     <item name="android:background">@drawable/button</item>
   </style>
 </resources>
