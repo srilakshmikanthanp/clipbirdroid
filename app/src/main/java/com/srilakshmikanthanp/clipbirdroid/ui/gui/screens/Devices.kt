@@ -106,7 +106,7 @@ private fun ServerGroup(controller: AppController) {
       Text(
         text = stringResource(id = R.string.devices_server_prompt),
         textAlign = TextAlign.Center,
-        modifier = Modifier.width(200.dp),
+        modifier = Modifier.width(300.dp),
       )
     }
   } else {
@@ -212,7 +212,7 @@ private fun ClientGroup(controller: AppController) {
         Text(
           text = stringResource(id = R.string.devices_client_prompt),
           textAlign = TextAlign.Center,
-          modifier = Modifier.width(200.dp),
+          modifier = Modifier.width(300.dp),
         )
       }
     } else {
