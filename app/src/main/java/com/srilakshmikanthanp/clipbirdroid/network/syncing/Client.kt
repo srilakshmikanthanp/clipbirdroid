@@ -45,6 +45,8 @@ import io.netty.handler.timeout.IdleState
 import io.netty.handler.timeout.IdleStateEvent
 import io.netty.handler.timeout.IdleStateHandler
 import io.netty.util.AttributeKey
+import io.netty.util.concurrent.Future
+import io.netty.util.concurrent.GenericFutureListener
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
@@ -560,6 +562,13 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
    * Connect to server Secured
    */
   fun connectToServerSecured(server: Device) {
+    // Listener for the socket connection
+    val listener = GenericFutureListener<Future<in Void>> { fut ->
+      if (!fut.isSuccess) {
+        notifyConnectionError(fut.cause().message.toString())
+      }
+    }
+
     // if already connected to server disconnect
     if (this.channel != null) this.channel!!.close()
 
@@ -569,12 +578,20 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       .handler(InitializerSecured())
       .option(ChannelOption.SO_KEEPALIVE, true)
       .connect(server.ip, server.port)
+      .addListener(listener)
   }
 
   /**
    * Connect to server
    */
   fun connectToServer(server: Device) {
+    // Listener for the socket connection
+    val listener = GenericFutureListener<Future<in Void>> { fut ->
+      if (!fut.isSuccess) {
+        notifyConnectionError(fut.cause().message.toString())
+      }
+    }
+
     // if already connected to server disconnect
     if (this.channel != null) this.channel!!.close()
 
@@ -583,6 +600,7 @@ open class Client(private val context: Context): Browser.BrowserListener, Channe
       .channel(NioSocketChannel::class.java)
       .handler(Initializer())
       .connect(server.ip, server.port)
+      .addListener(listener)
   }
 
   /**
