@@ -65,7 +65,7 @@ class Clipboard(private val context: Context) {
       return null
     }.use {
       val mimeType = context.contentResolver.getType(uri) ?: return@use null
-      val content = it?.let { it.readBytes() } ?: return@use null
+      val content = it?.readBytes() ?: return@use null
       return@use Pair(mimeType, content)
     } ?: return null
 
