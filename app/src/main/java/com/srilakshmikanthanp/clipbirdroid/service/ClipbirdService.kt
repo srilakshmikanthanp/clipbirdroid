@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.ui.gui.service
+package com.srilakshmikanthanp.clipbirdroid.service
 
 import android.app.PendingIntent
 import android.app.Service
@@ -13,10 +13,10 @@ import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotification
+import com.srilakshmikanthanp.clipbirdroid.handlers.AcceptHandler
+import com.srilakshmikanthanp.clipbirdroid.handlers.RejectHandler
+import com.srilakshmikanthanp.clipbirdroid.handlers.SendHandler
+import com.srilakshmikanthanp.clipbirdroid.notify.StatusNotification
 
 /**
  * Service for the application
@@ -91,6 +91,7 @@ class ClipbirdService : Service() {
       .setStyle(NotificationCompat.DecoratedCustomViewStyle())
       .setCustomContentView(notificationLayout)
       .setContentIntent(onTapIntent())
+      .addAction(R.mipmap.ic_launcher_foreground, resources.getString(R.string.quit), onQuitIntent())
       .build().also {
         startForeground(NOTIFICATION_ID, it)
       }

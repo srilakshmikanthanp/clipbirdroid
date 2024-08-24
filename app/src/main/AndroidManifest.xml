@@ -14,7 +14,7 @@
     android:dataExtractionRules="@xml/data_extraction_rules"
     android:fullBackupContent="@xml/backup_rules"
     android:icon="@mipmap/ic_launcher"
-    android:name=".ui.gui.Clipbird"
+    android:name="com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird"
     android:label="@string/app_name"
     android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true"
@@ -26,13 +26,9 @@
       android:value="barcode_ui"/>
 
     <service
-      android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
-      android:exported="true"
-      android:name=".ui.gui.service.ClipbirdService"
-      android:foregroundServiceType="dataSync">
-      <intent-filter>
-        <action android:name="android.intent.action.BOOT_COMPLETED" />
-      </intent-filter>
+      android:foregroundServiceType="dataSync"
+      android:exported="false"
+      android:name=".service.ClipbirdService">
     </service>
 
     <activity
@@ -48,7 +44,7 @@
     </activity>
 
     <activity
-      android:name=".ui.gui.handlers.ShareHandler"
+      android:name=".handlers.ShareHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
@@ -63,7 +59,7 @@
     </activity>
 
     <activity
-      android:name=".ui.gui.handlers.SendHandler"
+      android:name=".handlers.SendHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
@@ -71,13 +67,13 @@
       android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
-      android:name=".ui.gui.handlers.AcceptHandler"
+      android:name=".handlers.AcceptHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
-      android:name=".ui.gui.handlers.RejectHandler"
+      android:name=".handlers.RejectHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
@@ -101,10 +97,10 @@
     </provider>
 
     <receiver
-      android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
-      android:name=".ui.gui.handlers.BootHandler"
+      android:name=".handlers.BootHandler"
       android:exported="true">
       <intent-filter>
+        <action android:name="android.intent.action.ACTION_BOOT_COMPLETED" />
         <action android:name="android.intent.action.BOOT_COMPLETED" />
       </intent-filter>
     </receiver>

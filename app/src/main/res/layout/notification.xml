@@ -3,6 +3,7 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
+  android:baselineAligned="false"
   android:orientation="horizontal"
   android:gravity="center_vertical">
 
@@ -19,7 +20,8 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:id="@+id/notify_title"
-      android:paddingBottom="3dp" />
+      android:paddingBottom="3dp"
+      android:hyphenationFrequency="normal" />
 
     <TextView
       android:text="@string/send_content"
@@ -32,14 +34,14 @@
 
   <RelativeLayout
     android:layout_width="100dp"
-    android:layout_height="30dp"
+    android:layout_height="35dp"
     android:layout_weight="1"
     android:gravity="center_vertical">
 
     <Button
       android:text="@string/send"
       style="@style/Theme.Clipbird.SendButton"
-      android:layout_width="75dp"
+      android:layout_width="85dp"
       android:layout_height="match_parent"
       android:id="@+id/notify_send"
       android:layout_alignParentEnd="true" />

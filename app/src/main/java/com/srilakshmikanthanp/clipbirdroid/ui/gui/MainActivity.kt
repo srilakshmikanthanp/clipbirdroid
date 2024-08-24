@@ -36,7 +36,7 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
+import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
 import kotlinx.coroutines.launch

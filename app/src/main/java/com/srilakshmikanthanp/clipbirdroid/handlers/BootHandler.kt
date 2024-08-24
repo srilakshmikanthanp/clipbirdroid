@@ -1,11 +1,11 @@
-package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
+package com.srilakshmikanthanp.clipbirdroid.handlers
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.service.ClipbirdService
+import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 
 class BootHandler : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {

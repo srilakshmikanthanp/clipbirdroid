@@ -1,11 +1,11 @@
-package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
+package com.srilakshmikanthanp.clipbirdroid.handlers
 
 import android.app.NotificationManager
 import android.content.Context
 import androidx.activity.ComponentActivity
 import com.srilakshmikanthanp.clipbirdroid.types.device.Device
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications.StatusNotification
+import com.srilakshmikanthanp.clipbirdroid.notify.StatusNotification
 
 class AcceptHandler : ComponentActivity() {
   override fun onStart() {

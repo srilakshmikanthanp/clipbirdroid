@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.ui.gui.notifications
+package com.srilakshmikanthanp.clipbirdroid.notify
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

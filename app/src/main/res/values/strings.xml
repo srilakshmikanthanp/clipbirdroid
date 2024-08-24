@@ -1,5 +1,5 @@
 <resources>
-  <string name="send_content">Send latest clipboard to other devices</string>
+  <string name="send_content">Send clipboard to Your devices</string>
   <string name="notification_content">This is the notification for Clipbird Service</string>
   <string name="join_request_content">wants to connect to your device</string>
   <string name="devices_client_prompt">Clipbird Groups in your network would appear here</string>
