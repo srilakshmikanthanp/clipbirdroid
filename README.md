@@ -35,7 +35,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/srilakshmikanthanp/clipbirdroid">
-    <img src=".images/logo.png" alt="Logo" width="80" height="80">
+    <img src="assets/images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Clipbird</h3>
@@ -154,9 +154,9 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://githu
 
 ## Screenshots
 
-| ![clipbird](.images/clipbird_light.jpg)  | ![history](.images/history_light.jpg)  | ![about](.images/about_light.jpg) |
+| ![clipbird](assets/images/clipbird_light.jpg)  | ![history](assets/images/history_light.jpg)  | ![about](assets/images/about_light.jpg) |
 |------------------------------------------|----------------------------------------|-----------------------------------|
-| ![clipbird](.images/clipbird_dark.jpg)   | ![history](.images/history_dark.jpg)   | ![about](.images/about_dark.jpg)  |
+| ![clipbird](assets/images/clipbird_dark.jpg)   | ![history](assets/images/history_dark.jpg)   | ![about](assets/images/about_dark.jpg)  |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
