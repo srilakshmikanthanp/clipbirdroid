@@ -6,10 +6,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -38,7 +37,6 @@ enum class DrawerItems {
 /**
  * Drawer Content Composable
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DrawerContent(
   onItemClicked: (DrawerItems) -> Unit,
@@ -59,7 +57,7 @@ private fun DrawerContent(
     }
 
     // Divider for Drawer
-    Divider(modifier = Modifier.padding(vertical = 8.dp))
+    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
     // Item For Device
     NavigationDrawerItem(
@@ -76,7 +74,7 @@ private fun DrawerContent(
     )
 
     // Divider for Drawer
-    Divider(modifier = Modifier.padding(vertical = 8.dp))
+    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
     // Item For About
     NavigationDrawerItem(
@@ -90,7 +88,6 @@ private fun DrawerContent(
 /**
  * Navigation Drawer
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavDrawer(
   onItemClicked: (DrawerItems) -> Unit,
@@ -109,7 +106,6 @@ fun NavDrawer(
 /**
  * Preview
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
 private fun NavDrawerPreview() {

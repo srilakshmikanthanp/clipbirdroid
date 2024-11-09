@@ -9,14 +9,14 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
-import com.srilakshmikanthanp.clipbirdroid.handlers.AcceptHandler
-import com.srilakshmikanthanp.clipbirdroid.handlers.RejectHandler
-import com.srilakshmikanthanp.clipbirdroid.handlers.SendHandler
-import com.srilakshmikanthanp.clipbirdroid.notify.StatusNotification
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.notify.StatusNotification
 
 /**
  * Service for the application

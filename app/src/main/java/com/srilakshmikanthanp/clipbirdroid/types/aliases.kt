@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.types.aliases
+package com.srilakshmikanthanp.clipbirdroid.types
 
 import java.security.PrivateKey
 import java.security.cert.X509Certificate

@@ -1,6 +1,6 @@
-package com.srilakshmikanthanp.clipbirdroid.intface
+package com.srilakshmikanthanp.clipbirdroid.interfaces
 
-import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 
 // Interface for On Server List Changed

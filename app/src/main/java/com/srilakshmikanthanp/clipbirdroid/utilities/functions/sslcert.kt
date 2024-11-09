@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.utility.functions
+package com.srilakshmikanthanp.clipbirdroid.utilities.functions
 
 import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName

@@ -10,7 +10,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
-import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.Device
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.concurrent.Executor

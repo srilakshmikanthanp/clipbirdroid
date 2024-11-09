@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.types.device
+package com.srilakshmikanthanp.clipbirdroid.types
 
 import java.io.Serializable
 import java.net.InetAddress

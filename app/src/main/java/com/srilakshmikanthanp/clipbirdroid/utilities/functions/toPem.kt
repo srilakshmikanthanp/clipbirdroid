@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.utility.functions
+package com.srilakshmikanthanp.clipbirdroid.utilities.functions
 
 import org.bouncycastle.util.io.pem.PemObject
 import org.bouncycastle.util.io.pem.PemWriter

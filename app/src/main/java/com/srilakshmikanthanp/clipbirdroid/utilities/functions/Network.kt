@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.utility.functions
+package com.srilakshmikanthanp.clipbirdroid.utilities.functions
 
 import java.io.IOException
 import java.net.InetAddress

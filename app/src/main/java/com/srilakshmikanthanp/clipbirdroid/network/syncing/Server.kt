@@ -5,11 +5,11 @@ import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleReadTime
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleWriteTime
-import com.srilakshmikanthanp.clipbirdroid.intface.OnAuthRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.intface.OnClientStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.intface.OnSyncRequestHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnAuthRequestHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnClientListChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnClientStateChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerStateChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnSyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.network.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.network.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
@@ -21,8 +21,8 @@ import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PacketDecoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.PingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.network.syncing.common.SyncingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.types.aliases.SSLConfig
-import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.types.SSLConfig
+import com.srilakshmikanthanp.clipbirdroid.types.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.AuthStatus
 import com.srilakshmikanthanp.clipbirdroid.types.enums.PingType
 import io.netty.bootstrap.ServerBootstrap

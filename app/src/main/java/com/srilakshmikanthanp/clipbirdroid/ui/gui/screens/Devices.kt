@@ -42,11 +42,11 @@ import androidx.compose.ui.unit.sp
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.intface.OnClientListChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.intface.OnServerListChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.intface.OnServerStatusChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.types.device.Device
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnClientListChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerListChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerStateChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerStatusChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.types.Device
 import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceActionable
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Host
@@ -55,8 +55,8 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Status
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.StatusType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
-import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
-import com.srilakshmikanthanp.clipbirdroid.utility.functions.getAllInterfaceAddresses
+import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
+import com.srilakshmikanthanp.clipbirdroid.utilities.functions.getAllInterfaceAddresses
 import org.json.JSONObject
 import java.net.InetAddress
 

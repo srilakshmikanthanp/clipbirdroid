@@ -44,7 +44,7 @@
     </activity>
 
     <activity
-      android:name=".handlers.ShareHandler"
+      android:name=".ui.gui.handlers.ShareHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
@@ -59,7 +59,7 @@
     </activity>
 
     <activity
-      android:name=".handlers.SendHandler"
+      android:name=".ui.gui.handlers.SendHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
@@ -67,13 +67,13 @@
       android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
-      android:name=".handlers.AcceptHandler"
+      android:name=".ui.gui.handlers.AcceptHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
-      android:name=".handlers.RejectHandler"
+      android:name=".ui.gui.handlers.RejectHandler"
       android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
@@ -97,7 +97,7 @@
     </provider>
 
     <receiver
-      android:name=".handlers.BootHandler"
+      android:name=".ui.gui.handlers.BootHandler"
       android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.ACTION_BOOT_COMPLETED" />

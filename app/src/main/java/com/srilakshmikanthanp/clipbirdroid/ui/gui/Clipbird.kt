@@ -9,8 +9,8 @@ import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiryInterval
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.utility.functions.generateX509Certificate
-import com.srilakshmikanthanp.clipbirdroid.utility.functions.toPem
+import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
+import com.srilakshmikanthanp.clipbirdroid.utilities.functions.toPem
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder

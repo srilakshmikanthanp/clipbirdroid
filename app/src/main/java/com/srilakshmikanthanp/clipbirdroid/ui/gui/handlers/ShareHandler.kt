@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.handlers
+package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
 import android.content.Intent
 import android.net.Uri
@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
-import com.srilakshmikanthanp.clipbirdroid.utility.functions.toPNG
+import com.srilakshmikanthanp.clipbirdroid.utilities.functions.toPNG
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
