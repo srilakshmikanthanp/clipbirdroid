@@ -2,51 +2,44 @@ package com.srilakshmikanthanp.clipbirdroid.controller
 
 import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
+import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.common.types.Device
+import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxHistory
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnAuthRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnClientListChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnClientStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnConnectionErrorHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnHostTypeChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerFoundHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerGoneHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerListChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerStatusChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnSyncRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.network.syncing.Client
-import com.srilakshmikanthanp.clipbirdroid.network.syncing.Server
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.types.SSLConfig
-import com.srilakshmikanthanp.clipbirdroid.types.Device
-import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client
+import com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class AppController(private val sslConfig: SSLConfig, private val context: Context) {
   //----------------------- client Signals -------------------------//
-  private val serverListChangedHandlers = mutableListOf<OnServerListChangeHandler>()
+  private val serverListChangedHandlers = mutableListOf<Client.OnServerListChangeHandler>()
 
-  fun addServerListChangedHandler(handler: OnServerListChangeHandler) {
+  fun addServerListChangedHandler(handler: Client.OnServerListChangeHandler) {
     serverListChangedHandlers.add(handler)
   }
 
-  fun removeServerListChangedHandler(handler: OnServerListChangeHandler) {
+  fun removeServerListChangedHandler(handler: Client.OnServerListChangeHandler) {
     serverListChangedHandlers.remove(handler)
   }
 
-  private val serverFoundHandlers = mutableListOf<OnServerFoundHandler>()
+  private val serverFoundHandlers = mutableListOf<Client.OnServerFoundHandler>()
 
-  fun addServerFoundHandler(handler: OnServerFoundHandler) {
+  fun addServerFoundHandler(handler: Client.OnServerFoundHandler) {
     serverFoundHandlers.add(handler)
   }
 
-  fun removeServerFoundHandler(handler: OnServerFoundHandler) {
+  fun removeServerFoundHandler(handler: Client.OnServerFoundHandler) {
     serverFoundHandlers.remove(handler)
   }
 
   private val serverGoneHandlers = mutableListOf<OnServerGoneHandler>()
+
+  fun interface OnServerGoneHandler {
+    fun onServerGone(server: Device)
+  }
 
   fun addServerGoneHandler(handler: OnServerGoneHandler) {
     serverGoneHandlers.add(handler)
@@ -56,77 +49,77 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     serverGoneHandlers.remove(handler)
   }
 
-  private val connectionErrorHandlers = mutableListOf<OnConnectionErrorHandler>()
+  private val connectionErrorHandlers = mutableListOf<Client.OnConnectionErrorHandler>()
 
-  fun addConnectionErrorHandler(handler: OnConnectionErrorHandler) {
+  fun addConnectionErrorHandler(handler: Client.OnConnectionErrorHandler) {
     connectionErrorHandlers.add(handler)
   }
 
-  fun removeConnectionErrorHandler(handler: OnConnectionErrorHandler) {
+  fun removeConnectionErrorHandler(handler: Client.OnConnectionErrorHandler) {
     connectionErrorHandlers.remove(handler)
   }
 
-  private val serverStatusChangedHandlers = mutableListOf<OnServerStatusChangeHandler>()
+  private val serverStatusChangedHandlers = mutableListOf<Client.OnServerStatusChangeHandler>()
 
-  fun addServerStatusChangedHandler(handler: OnServerStatusChangeHandler) {
+  fun addServerStatusChangedHandler(handler: Client.OnServerStatusChangeHandler) {
     serverStatusChangedHandlers.add(handler)
   }
 
-  fun removeServerStatusChangedHandler(handler: OnServerStatusChangeHandler) {
+  fun removeServerStatusChangedHandler(handler: Client.OnServerStatusChangeHandler) {
     serverStatusChangedHandlers.remove(handler)
   }
 
   //----------------------- server Signals ------------------------//
 
-  private val clientStateChangedHandlers = mutableListOf<OnClientStateChangeHandler>()
+  private val clientStateChangedHandlers = mutableListOf<Server.OnClientStateChangeHandler>()
 
-  fun addClientStateChangedHandler(handler: OnClientStateChangeHandler) {
+  fun addClientStateChangedHandler(handler: Server.OnClientStateChangeHandler) {
     clientStateChangedHandlers.add(handler)
   }
 
-  fun removeClientStateChangedHandler(handler: OnClientStateChangeHandler) {
+  fun removeClientStateChangedHandler(handler: Server.OnClientStateChangeHandler) {
     clientStateChangedHandlers.remove(handler)
   }
 
-  private val serverStateChangedHandlers = mutableListOf<OnServerStateChangeHandler>()
+  private val serverStateChangedHandlers = mutableListOf<Server.OnServerStateChangeHandler>()
 
-  fun addServerStateChangedHandler(handler: OnServerStateChangeHandler) {
+  fun addServerStateChangedHandler(handler: Server.OnServerStateChangeHandler) {
     serverStateChangedHandlers.add(handler)
   }
 
-  fun removeServerStateChangedHandler(handler: OnServerStateChangeHandler) {
+  fun removeServerStateChangedHandler(handler: Server.OnServerStateChangeHandler) {
     serverStateChangedHandlers.remove(handler)
   }
 
-  private val authRequestHandlers = mutableListOf<OnAuthRequestHandler>()
+  private val authRequestHandlers = mutableListOf<Server.OnAuthRequestHandler>()
 
-  fun addAuthRequestHandler(handler: OnAuthRequestHandler) {
+  fun addAuthRequestHandler(handler: Server.OnAuthRequestHandler) {
     authRequestHandlers.add(handler)
   }
 
-  fun removeAuthRequestHandler(handler: OnAuthRequestHandler) {
+  fun removeAuthRequestHandler(handler: Server.OnAuthRequestHandler) {
     authRequestHandlers.remove(handler)
   }
 
-  private val clientListChangedHandlers = mutableListOf<OnClientListChangeHandler>()
+  private val clientListChangedHandlers = mutableListOf<Server.OnClientListChangeHandler>()
 
-  fun addClientListChangedHandler(handler: OnClientListChangeHandler) {
+  fun addClientListChangedHandler(handler: Server.OnClientListChangeHandler) {
     clientListChangedHandlers.add(handler)
   }
 
-  fun removeClientListChangedHandler(handler: OnClientListChangeHandler) {
+  fun removeClientListChangedHandler(handler: Server.OnClientListChangeHandler) {
     clientListChangedHandlers.remove(handler)
   }
 
   //----------------------- Common Signals ------------------------//
 
-  private val syncRequestHandlers = mutableListOf<OnSyncRequestHandler>()
+  private val syncRequestHandlers = mutableListOf<com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler>()
 
-  fun addSyncRequestHandler(handler: OnSyncRequestHandler) {
+  fun addSyncRequestHandler(handler: com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler) {
     syncRequestHandlers.add(handler)
   }
 
-  fun removeSyncRequestHandler(handler: OnSyncRequestHandler) {
+  fun removeSyncRequestHandler(handler: com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler) {
     syncRequestHandlers.remove(handler)
   }
 
@@ -143,9 +136,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   //----------------------- Helper Functions ---------------------------//
 
   private fun destroyHost() {
-    if (host.holds(Server::class.java)) {
+    if (host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       // get the server and disconnect the signals
-      val server : Server = host.get() as Server
+      val server : com.srilakshmikanthanp.clipbirdroid.syncing.server.Server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
       // set null
       server.stopServer().also { host.set(null) }
@@ -206,7 +199,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   /**
    * Notify the server list changed (Client)
    */
-  private fun notifyServerListChanged(servers: List<Device>) {
+  private fun notifyServerListChanged(servers: Set<Device>) {
     for (handler in serverListChangedHandlers) {
       handler.onServerListChanged(servers)
     }
@@ -309,7 +302,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   private fun handleClientStateChanged(client: Device, connected: Boolean) {
     // if the host is not server then throw error
-    if (!this.host.holds(Server::class.java)) {
+    if (!this.host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
@@ -317,7 +310,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     if (!connected) return
 
     // Get the Host as Server
-    val server: Server = this.host.get() as Server
+    val server: com.srilakshmikanthanp.clipbirdroid.syncing.server.Server = this.host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // get the device certificate from the server
     val cert = server.getClientCertificate(client)
@@ -404,7 +397,11 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     if (host.hasObject()) this.destroyHost()
 
     // create the server object with context
-    val server: Server = host.set(Server(context)) as Server
+    val server: com.srilakshmikanthanp.clipbirdroid.syncing.server.Server = host.set(
+      com.srilakshmikanthanp.clipbirdroid.syncing.server.Server(
+        context
+      )
+    ) as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // set the ssl configuration
     server.setSslConfig(sslConfig)
@@ -511,12 +508,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun getConnectedClientsList(): List<Device> {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
     // get the server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // return the clients
     return server.getClients()
@@ -531,7 +528,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     val match = { i: Device -> i.ip == client.ip && i.port == client.port }
 
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
@@ -544,7 +541,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
 
     // get the Server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // disconnect the client
     server.disconnectClient(client)
@@ -555,12 +552,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun disconnectAllClients() {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
     // get the server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // disconnect all the clients
     server.disconnectAllClients()
@@ -571,12 +568,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun isServerStarted(): Boolean {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
     // get the server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // return the server status
     return server.isStarted()
@@ -587,12 +584,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun getServerInfo(): Device {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
     // get the server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // return the server address and port
     return server.getServerInfo()
@@ -603,12 +600,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun onClientAuthenticated(client: Device) {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
     // get the server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // call the server function
     server.onClientAuthenticated(client)
@@ -620,12 +617,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun onClientNotAuthenticated(client: Device) {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
     // get the server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // call the server function
     server.onClientNotAuthenticated(client)
@@ -636,7 +633,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun disposeServer() {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
@@ -652,7 +649,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   /**
    * Get the Server List object
    */
-  fun getServerList(): List<Device> {
+  fun getServerList(): Set<Device> {
     // if the host is not client then throw
     if (!host.holds(Client::class.java)) {
       throw RuntimeException("Host is not client")
@@ -743,12 +740,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun getUnAuthenticatedClients(): List<Device> {
     // if the host is not server then throw
-    if (!host.holds(Server::class.java)) {
+    if (!host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
       throw RuntimeException("Host is not server")
     }
 
     // get the server
-    val server = host.get() as Server
+    val server = host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 
     // return the unauthenticated clients
     return server.getUnauthenticatedClients()
@@ -761,8 +758,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun syncClipboard(data: List<Pair<String, ByteArray>>) {
     // if the host is server then sync the clipboard
-    if (host.holds(Server::class.java)) {
-      (host.get() as Server).syncItems(data)
+    if (host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java)) {
+      (host.get() as com.srilakshmikanthanp.clipbirdroid.syncing.server.Server).syncItems(data)
     }
 
     // if the host is not client then return
@@ -810,9 +807,10 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    */
   fun getHostType(): HostType {
     return when {
-      host.holds(Server::class.java) -> HostType.SERVER
+      host.holds(com.srilakshmikanthanp.clipbirdroid.syncing.server.Server::class.java) -> HostType.SERVER
       host.holds(Client::class.java) -> HostType.CLIENT
       else -> HostType.NONE
     }
   }
 }
+

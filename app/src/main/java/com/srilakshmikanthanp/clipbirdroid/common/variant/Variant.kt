@@ -15,13 +15,8 @@ class Variant {
    * Set the data to be held
    */
   fun set(obj: Any?): Any? {
-    // set the data to be held
     this.obj = obj
-
-    // clear
     aux.clear()
-
-    // return the data
     return obj
   }
 
@@ -43,10 +38,7 @@ class Variant {
    * Add auxiliary data
    */
   fun addAux(key: String, value: Any): Any {
-    // set the data to be held
     aux[key] = value
-
-    // return the data
     return value
   }
 

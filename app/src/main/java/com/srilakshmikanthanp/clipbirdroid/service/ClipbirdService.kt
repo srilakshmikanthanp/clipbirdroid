@@ -9,14 +9,14 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.types.Device
-import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.common.types.Device
+import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.notify.StatusNotification
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.StatusNotification
 
 /**
  * Service for the application
@@ -25,8 +25,8 @@ class ClipbirdService : Service() {
   // Create the Status Notification instance for the service instance
   private lateinit var notification: StatusNotification
 
-  // Notification ID for the CLipbird Foreground service notification
-  private val NOTIFICATION_ID = StatusNotification.SERVICE_ID
+  // Notification ID for the Clipbird Foreground service notification
+  private val notificationId = StatusNotification.SERVICE_ID
 
   // Controller foe the Whole Clipbird Designed by GRASP Pattern
   private lateinit var controller: AppController
@@ -93,7 +93,7 @@ class ClipbirdService : Service() {
       .setContentIntent(onTapIntent())
       .addAction(R.mipmap.ic_launcher_foreground, resources.getString(R.string.quit), onQuitIntent())
       .build().also {
-        startForeground(NOTIFICATION_ID, it)
+        startForeground(notificationId, it)
       }
   }
 

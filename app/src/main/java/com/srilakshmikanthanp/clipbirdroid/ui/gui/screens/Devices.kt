@@ -42,17 +42,15 @@ import androidx.compose.ui.unit.sp
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnClientListChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerListChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.interfaces.OnServerStatusChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.types.Device
-import com.srilakshmikanthanp.clipbirdroid.types.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.common.types.Device
+import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client
+import com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceActionable
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Host
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.HostAction
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Status
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.StatusType
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.Device
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DeviceStatus
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
@@ -71,7 +69,7 @@ private fun ServerGroup(controller: AppController) {
   )}
 
   // Change Handler for the list of clients
-  val clientListChangeHandler = OnClientListChangeHandler { list ->
+  val clientListChangeHandler = Server.OnClientListChangeHandler { list ->
     clients = list.map { DeviceActionable(it, HostAction.DISCONNECT) }
   }
 
@@ -134,12 +132,12 @@ private fun ClientGroup(controller: AppController) {
   var group by remember { mutableStateOf(controller.getConnectedServer()) }
 
   // Change Handler for the list of servers
-  val serverListChangeHandler = OnServerListChangeHandler { list ->
+  val serverListChangeHandler = Client.OnServerListChangeHandler { set ->
     // get connected server
     val connected = controller.getConnectedServer()
 
     // update servers
-    servers = list.filter {
+    servers = set.filter {
       it != connected
     }.map {
       DeviceActionable(it, HostAction.CONNECT)
@@ -147,9 +145,9 @@ private fun ClientGroup(controller: AppController) {
   }
 
   // Change Handler for Server Status
-  val serverStatusChangeHandler = OnServerStatusChangeHandler { connected, device ->
+  val serverStatusChangeHandler = Client.OnServerStatusChangeHandler { connected, device ->
     val groupsList = controller.getServerList()
-    group = if(connected) device else null
+    group = if (connected) device else null
     serverListChangeHandler.onServerListChanged(groupsList)
   }
 
@@ -281,18 +279,18 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   // infer client status
   val inferClientStatus = {
     if (controller.getConnectedServer() != null) {
-      StatusType.CONNECTED
+      DeviceStatus.CONNECTED
     } else {
-      StatusType.DISCONNECTED
+      DeviceStatus.DISCONNECTED
     }
   }
 
   // infer server status
   val inferServerStatus = {
     if (controller.isServerStarted()) {
-      StatusType.ACTIVE
+      DeviceStatus.ACTIVE
     } else {
-      StatusType.INACTIVE
+      DeviceStatus.INACTIVE
     }
   }
 
@@ -351,15 +349,15 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   val CLIENT_TAB = Pair(1,context.resources.getString(R.string.join_group))
 
   // Handler for Server Status
-  val serverStatusChangeHandler = OnServerStatusChangeHandler { s, d ->
+  val serverStatusChangeHandler = Client.OnServerStatusChangeHandler { s, d ->
     hostName = if (s) d.name else context.resources.getString(R.string.not_connected)
-    status   = if (s) StatusType.CONNECTED else StatusType.DISCONNECTED
+    status = if (s) DeviceStatus.CONNECTED else DeviceStatus.DISCONNECTED
   }
 
   // Handler for Server State
-  val serverStateChangeHandler = OnServerStateChangeHandler {
+  val serverStateChangeHandler = Server.OnServerStateChangeHandler {
     hostName = if (it) controller.getServerInfo().name else appMdnsServiceName(context)
-    status   = if (it) StatusType.ACTIVE else StatusType.INACTIVE
+    status = if (it) DeviceStatus.ACTIVE else DeviceStatus.INACTIVE
   }
 
   // Handler for Tab Click Event
@@ -466,7 +464,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
       Card (modifier = Modifier.padding(15.dp, 15.dp, 15.dp, 15.dp)) {
         Column (horizontalAlignment = Alignment.CenterHorizontally) {
           // Server Status % of parent
-          Status(
+          Device(
             modifier = Modifier
               .fillMaxWidth()
               .padding(top = tabHeight),

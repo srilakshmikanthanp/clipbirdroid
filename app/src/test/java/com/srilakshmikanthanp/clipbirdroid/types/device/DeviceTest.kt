@@ -1,6 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.types.device
 
-import com.srilakshmikanthanp.clipbirdroid.types.Device
+import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream

@@ -1,19 +1,22 @@
 package com.srilakshmikanthanp.clipbirdroid.network
 
-import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingItem
-import com.srilakshmikanthanp.clipbirdroid.network.packets.SyncingPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem
+import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
 import org.junit.Test
 
 class SyncingPacketTest {
   @Test fun syncingPacketTest() {
     val (mimeType, payload) = Pair("text/plain", "Hello")
-    val syncingItem = SyncingItem(mimeType.toByteArray(), payload.toByteArray())
-    val items = Array<SyncingItem>(5) { syncingItem }
-    val packSend = SyncingPacket(items)
+    val syncingItem = com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem(
+        mimeType.toByteArray(),
+        payload.toByteArray()
+    )
+    val items = Array<com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem>(5) { syncingItem }
+    val packSend = com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket(items)
     val array = packSend.toByteArray()
-    val packRecv = SyncingPacket.fromByteArray(array)
+    val packRecv = com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket.fromByteArray(array)
 
-    assert(packRecv.getPacketType() == SyncingPacket.PacketType.SyncPacket)
+    assert(packRecv.getPacketType() == com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket.PacketType.SyncPacket)
     assert(packRecv.getPacketLength() == packSend.size())
     assert(packRecv.getItemCount() == 5)
 

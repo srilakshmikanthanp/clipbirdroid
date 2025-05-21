@@ -10,6 +10,7 @@ import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.Base64
+import androidx.core.content.edit
 
 class Storage private constructor(context: Context) {
   // Shared Preference for General Group
@@ -53,9 +54,9 @@ class Storage private constructor(context: Context) {
   companion object {
     // Required variables for Singleton
     @Volatile private var instance: Storage? = null
-    private val HOST_STATE = "HOST_STATE"
-    private val HOST_KEY = "HOST_KEY"
-    private val HOST_CERT = "HOST_CERT"
+    private const val HOST_STATE = "HOST_STATE"
+    private const val HOST_KEY = "HOST_KEY"
+    private const val HOST_CERT = "HOST_CERT"
 
     // Get the instance of Storage
     fun getInstance(context: Context): Storage {
@@ -69,7 +70,7 @@ class Storage private constructor(context: Context) {
    * Set the Host Private key and cert
    */
   fun setHostCert(cert: X509Certificate) {
-    generalPref.edit().putString(HOST_CERT, cert.asString()).apply()
+    generalPref.edit() { putString(HOST_CERT, cert.asString()) }
   }
 
   /**
@@ -83,7 +84,7 @@ class Storage private constructor(context: Context) {
    * Clear the Host cert
    */
   fun clearHostCert() {
-    generalPref.edit().remove(HOST_CERT).apply()
+    generalPref.edit() { remove(HOST_CERT) }
   }
 
   /**
@@ -97,7 +98,7 @@ class Storage private constructor(context: Context) {
    * Set the Host Private key
    */
   fun setHostKey(key: PrivateKey) {
-    generalPref.edit().putString(HOST_KEY, key.asString()).apply()
+    generalPref.edit() { putString(HOST_KEY, key.asString()) }
   }
 
   /**
@@ -111,7 +112,7 @@ class Storage private constructor(context: Context) {
    * Clear the Host key
    */
   fun clearHostKey() {
-    generalPref.edit().remove(HOST_KEY).apply()
+    generalPref.edit() { remove(HOST_KEY) }
   }
 
   /**
@@ -126,7 +127,7 @@ class Storage private constructor(context: Context) {
    * Set the client name and cert
    */
   fun setClientCert(name: String, cert: X509Certificate) {
-    clientPref.edit().putString(name, cert.asString()).apply()
+    clientPref.edit() { putString(name, cert.asString()) }
   }
 
   /**
@@ -140,14 +141,14 @@ class Storage private constructor(context: Context) {
    * Clear the client cert
    */
   fun clearClientCert(name: String) {
-    clientPref.edit().remove(name).apply()
+    clientPref.edit() { remove(name) }
   }
 
   /**
    * Clear all client cert
    */
   fun clearAllClientCert() {
-    clientPref.edit().clear().apply()
+    clientPref.edit() { clear() }
   }
 
   /**
@@ -168,7 +169,7 @@ class Storage private constructor(context: Context) {
    * Set the server name and cert
    */
   fun setServerCert(name: String, cert: X509Certificate) {
-    serverPref.edit().putString(name, cert.asString()).apply()
+    serverPref.edit() { putString(name, cert.asString()) }
   }
 
   /**
@@ -182,14 +183,14 @@ class Storage private constructor(context: Context) {
    * Clear the server cert
    */
   fun clearServerCert(name: String) {
-    serverPref.edit().remove(name).apply()
+    serverPref.edit() { remove(name) }
   }
 
   /**
    * Clear all server cert
    */
   fun clearAllServerCert() {
-    serverPref.edit().clear().apply()
+    serverPref.edit() { clear() }
   }
 
   /**
@@ -210,7 +211,7 @@ class Storage private constructor(context: Context) {
    * Set the host state
    */
   fun setHostIsLastlyServer(isServer: Boolean) {
-    generalPref.edit().putBoolean(HOST_STATE, isServer).apply()
+    generalPref.edit() { putBoolean(HOST_STATE, isServer) }
   }
 
   /**
