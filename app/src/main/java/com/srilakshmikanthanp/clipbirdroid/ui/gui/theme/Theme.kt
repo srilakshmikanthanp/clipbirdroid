@@ -97,7 +97,7 @@ private val darkScheme = darkColorScheme(
 @Composable
 fun ClipbirdTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  dynamicColor: Boolean = false,
+  dynamicColor: Boolean = true,
   content: @Composable() () -> Unit
 ) {
   val colorScheme = when {
@@ -109,18 +109,19 @@ fun ClipbirdTheme(
     else -> lightScheme
   }
 
-  val bgColor = colorResource(id = R.color.secondary).toArgb()
   val view = LocalView.current
 
   if (!view.isInEditMode) {
     SideEffect {
       val window = (view.context as Activity).window
-      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-      window.statusBarColor = bgColor
-      window.navigationBarColor = bgColor
-      val insets = WindowCompat.getInsetsController(window, view)
-      insets.isAppearanceLightStatusBars = !darkTheme
-      insets.isAppearanceLightNavigationBars = !darkTheme
+      WindowCompat.setDecorFitsSystemWindows(window, false)
+      window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+      window.navigationBarColor = colorScheme.surface.toArgb()
+      window.statusBarColor = colorScheme.surface.toArgb()
+      WindowCompat.getInsetsController(window, view).apply {
+        isAppearanceLightNavigationBars = !darkTheme
+        isAppearanceLightStatusBars = !darkTheme
+      }
     }
   }
 

@@ -771,4 +771,3 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
     notifyServerStateChangeHandlers(true).also { isStarted = true }
   }
 }
-

@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -40,6 +41,7 @@ import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 
 /**
@@ -101,6 +103,7 @@ class MainActivity : ComponentActivity() {
     const val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.SplashActivity.QUIT_ACTION"
   }
 
+  @SuppressLint("BatteryLife")
   @OptIn(ExperimentalPermissionsApi::class)
   @Composable
   private fun RequestPermissionsAndStartService(p: MutableList<String>) {
@@ -114,7 +117,7 @@ class MainActivity : ComponentActivity() {
     val finalize : () -> Unit = {
       val powerManager: PowerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
       val action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-      val uri = Uri.parse("package:${this.packageName}")
+      val uri = "package:${this.packageName}".toUri()
 
       // if already ignored
       if (!powerManager.isIgnoringBatteryOptimizations(this.packageName)) {

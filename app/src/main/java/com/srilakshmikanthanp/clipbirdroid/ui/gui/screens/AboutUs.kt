@@ -9,13 +9,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -36,6 +40,7 @@ import com.srilakshmikanthanp.clipbirdroid.constant.appDonatePage
 import com.srilakshmikanthanp.clipbirdroid.constant.appHomePage
 import com.srilakshmikanthanp.clipbirdroid.constant.appIssuesPage
 import com.srilakshmikanthanp.clipbirdroid.constant.appVersion
+import androidx.core.net.toUri
 
 /**
  * An Action button used in About Screen
@@ -49,7 +54,7 @@ private fun Action(icon: Int, text: String, modifier: Modifier) {
       modifier = Modifier.padding(10.dp).fillMaxWidth(),
     ) {
       Image(painter = painterResource(icon), contentDescription = stringResource(id = R.string.icon))
-      Text(text = text, fontSize = 12.sp, modifier = Modifier.padding(5.dp))
+      Text(text = text, modifier = Modifier.padding(5.dp), style = MaterialTheme.typography.bodyMedium)
     }
   }
 }
@@ -65,19 +70,19 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
 
   // Bug Report Handler
   val onIssueReport = {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(appIssuesPage()))
+    val intent = Intent(Intent.ACTION_VIEW, appIssuesPage().toUri())
     context.startActivity(intent)
   }
 
   // website open Handler
   val onWebsiteOpen = {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(appHomePage()))
+    val intent = Intent(Intent.ACTION_VIEW, appHomePage().toUri())
     context.startActivity(intent)
   }
 
   // On Donation Handler
   val onDonation = {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(appDonatePage()))
+    val intent = Intent(Intent.ACTION_VIEW, appDonatePage().toUri())
     context.startActivity(intent)
   }
 
@@ -110,33 +115,37 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
         .padding(padding),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      Card (
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(15.dp)
+      Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
       ) {
-        Column (
+        Column(
           horizontalAlignment = Alignment.CenterHorizontally,
-          modifier = Modifier.padding(2.dp),
-          verticalArrangement = Arrangement.Center
+          verticalArrangement = Arrangement.Center,
+          modifier = Modifier.padding(16.dp)
         ) {
-          // Show the Clip Bird Logo
+          // ClipBird Logo
           Image(
             painter = painterResource(R.mipmap.ic_launcher_foreground),
-            modifier = Modifier.size(140.dp),
             contentDescription = stringResource(id = R.string.logo),
+            modifier = Modifier.size(140.dp)
           )
 
-          // Show the Version
+          // Version Text
           Text(
-            text  = "Version ${appVersion()}",
+            text = "Version ${appVersion()}",
+            style = MaterialTheme.typography.bodyMedium
           )
 
-          // Show the About Us
+          Spacer(modifier = Modifier.height(8.dp))
+
+          // About Us Text
           Text(
-            text  = stringResource(R.string.about_us),
-            modifier = Modifier.padding(10.dp),
-            textAlign = TextAlign.Center
+            text = stringResource(R.string.about_us),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
           )
         }
       }
@@ -163,12 +172,18 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
       }
 
       // Open Source License
-      Card (
-        modifier = Modifier.fillMaxWidth().padding(15.dp).clickable { onLicenseClick() }
+      Card(
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp, vertical = 8.dp)
+          .clickable { onLicenseClick() },
       ) {
         Text(
-          modifier = Modifier.padding(10.dp),
-          text = stringResource(id = R.string.open_source_licenses)
+          modifier = Modifier.padding(16.dp),
+          text = stringResource(id = R.string.open_source_licenses),
+          style = MaterialTheme.typography.bodyMedium
         )
       }
     }

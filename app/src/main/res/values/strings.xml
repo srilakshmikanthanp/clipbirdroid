@@ -2,9 +2,9 @@
   <string name="send_content">Send clipboard to Your devices</string>
   <string name="notification_content">This is the notification for Clipbird Service</string>
   <string name="join_request_content">wants to connect to your device</string>
-  <string name="devices_client_prompt">Clipbird Groups in your network would appear here</string>
-  <string name="devices_server_prompt">Devices connected to your group would appear here</string>
-  <string name="history_prompt">Latest Clipbird History would appear here</string>
+  <string name="devices_client_prompt">Groups will appear here</string>
+  <string name="devices_server_prompt">Devices in your group show up here</string>
+  <string name="history_prompt">Latest clipbird history would appear here</string>
   <string name="no_preview">No Preview</string>
   <string name="open_source_licenses">Open Source Licenses</string>
   <string name="join_to_a_group">Join to a Group</string>
@@ -60,4 +60,8 @@ s
   <string name="quit">Quit</string>
   <string name="status_notification">Status Notification</string>
   <string name="connection_request">Connection Request</string>
+  <string name="joined">Joined</string>
+  <string name="disconnect">Disconnect</string>
+  <string name="connected">Connected</string>
+  <string name="available">Available</string>
 </resources>

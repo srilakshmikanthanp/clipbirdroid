@@ -4,8 +4,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -43,46 +45,47 @@ private fun DrawerContent(
   selected: DrawerItems,
 ) {
   ModalDrawerSheet (
-    windowInsets = WindowInsets(10.dp, 10.dp, 10.dp, 10.dp),
-    modifier = Modifier.requiredWidth(280.dp),
+    modifier = Modifier.fillMaxWidth(fraction = 0.8f),
   ) {
     // Header for the Drawer
-    Column (
-      horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.padding(10.dp).fillMaxWidth()
-    ) {
-      Image(painter = painterResource(R.drawable.phone), contentDescription = stringResource(id = R.string.phone))
-      Text(style = MaterialTheme.typography.headlineMedium, text = appName())
-      Text(text = appMdnsServiceName(LocalContext.current), color = Color.Gray)
+    Column (modifier = Modifier.padding(10.dp)) {
+      Column (
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(10.dp).fillMaxWidth()
+      ) {
+        Image(painter = painterResource(R.drawable.phone), contentDescription = stringResource(id = R.string.phone))
+        Text(style = MaterialTheme.typography.headlineMedium, text = appName())
+        Text(text = appMdnsServiceName(LocalContext.current), color = Color.Gray)
+      }
+
+      // Divider for Drawer
+      HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+      // Item For Device
+      NavigationDrawerItem(
+        onClick =  { onItemClicked(DrawerItems.DEVICES) },
+        label = { Text(text =  stringResource(id = R.string.devices)) },
+        selected = selected == DrawerItems.DEVICES,
+      )
+
+      // Item For History
+      NavigationDrawerItem(
+        onClick =  { onItemClicked(DrawerItems.HISTORY) },
+        label = { Text(text = stringResource(id = R.string.history)) },
+        selected = selected == DrawerItems.HISTORY,
+      )
+
+      // Divider for Drawer
+      HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+      // Item For About
+      NavigationDrawerItem(
+        onClick =  { onItemClicked(DrawerItems.ABOUT) },
+        label = { Text(text = stringResource(id = R.string.about)) },
+        selected = selected == DrawerItems.ABOUT,
+      )
     }
-
-    // Divider for Drawer
-    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-    // Item For Device
-    NavigationDrawerItem(
-      onClick =  { onItemClicked(DrawerItems.DEVICES) },
-      label = { Text(text =  stringResource(id = R.string.devices)) },
-      selected = selected == DrawerItems.DEVICES,
-    )
-
-    // Item For History
-    NavigationDrawerItem(
-      onClick =  { onItemClicked(DrawerItems.HISTORY) },
-      label = { Text(text = stringResource(id = R.string.history)) },
-      selected = selected == DrawerItems.HISTORY,
-    )
-
-    // Divider for Drawer
-    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-    // Item For About
-    NavigationDrawerItem(
-      onClick =  { onItemClicked(DrawerItems.ABOUT) },
-      label = { Text(text = stringResource(id = R.string.about)) },
-      selected = selected == DrawerItems.ABOUT,
-    )
-  }
+    }
 }
 
 /**

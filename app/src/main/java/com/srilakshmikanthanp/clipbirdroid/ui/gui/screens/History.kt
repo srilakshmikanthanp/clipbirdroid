@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -109,7 +110,8 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
             Text(
               text = stringResource(id = R.string.history_prompt),
               textAlign = TextAlign.Center,
-              modifier = Modifier.width(200.dp),
+              style = MaterialTheme.typography.bodyLarge,
+              modifier = Modifier.padding(10.dp)
             )
           }
         } else {

@@ -18,7 +18,6 @@ import com.srilakshmikanthanp.clipbirdroid.R
 /**
  * Setting Up Screen
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Starting() {
   Scaffold {
