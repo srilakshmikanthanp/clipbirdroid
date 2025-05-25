@@ -16,7 +16,7 @@ android {
     targetSdk 34
     minSdk 28
     versionCode 1
-    versionName "1.1.2"
+    versionName "1.1.3"
     applicationId "com.srilakshmikanthanp.clipbirdroid"
     vectorDrawables {
       useSupportLibrary true
