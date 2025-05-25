@@ -42,12 +42,12 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
+import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
 
 
 /**
  * Clipbird Composable
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Clipbird(controller: AppController) {
   // Composable States and Scope

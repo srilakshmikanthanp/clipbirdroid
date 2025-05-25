@@ -46,7 +46,7 @@ class Register(private val context: Context) : RegistrationListener {
    */
   fun registerService(port: Int) {
     // create the service info
-    val serviceInfo: NsdServiceInfo = NsdServiceInfo()
+    val serviceInfo = NsdServiceInfo()
 
     // set the info
     serviceInfo.serviceName = appMdnsServiceName(context)

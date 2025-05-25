@@ -159,6 +159,15 @@ class ClipbirdService : Service() {
     return START_STICKY
   }
 
+  override fun onDestroy() {
+    val controller = (application as Clipbird).getController()
+    if (controller.getHostType() == HostType.SERVER) {
+      controller.disposeServer()
+    } else if (controller.getHostType() == HostType.CLIENT) {
+      controller.disposeClient()
+    }
+  }
+
   // static function to start the service
   companion object {
     fun start(context: Context) {
