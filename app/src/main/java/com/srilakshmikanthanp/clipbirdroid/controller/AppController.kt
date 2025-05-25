@@ -126,6 +126,10 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
   private val hostTypeChangeHandlers = mutableListOf<OnHostTypeChangeHandler>()
 
+  fun interface OnHostTypeChangeHandler {
+    fun onHostTypeChanged(host: HostType)
+  }
+
   fun addHostTypeChangeHandler(handler: OnHostTypeChangeHandler) {
     hostTypeChangeHandlers.add(handler)
   }
@@ -150,6 +154,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       server.removeClientStateChangeHandler(::notifyClientStateChanged)
       server.removeAuthRequestHandler(::notifyAuthRequest)
       server.removeSyncRequestHandler(::notifySyncRequest)
+      server.removeSyncRequestHandler(::handleSyncRequest)
+      server.removeSyncRequestHandler(clipboard::setClipboardContent)
       server.removeClientListChangeHandler(::notifyClientListChanged)
 
       // Disconnect the signals to Server
@@ -176,6 +182,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       client.removeServerListChangeHandler(::notifyServerListChanged)
       client.removeServerGoneHandler(::notifyServerGone)
       client.removeSyncRequestHandler(::notifySyncRequest)
+      client.removeSyncRequestHandler(::handleSyncRequest)
+      client.removeSyncRequestHandler(clipboard::setClipboardContent)
       client.removeConnectionErrorHandler(::notifyConnectionError)
 
       // Disconnect the signals to Client
@@ -379,7 +387,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   private fun handleSyncRequest(clip: List<Pair<String, ByteArray>>) {
     if (_history.value.size + 1 > appMaxHistory()) {
       val newClipHist = _history.value.toMutableList()
-      newClipHist.removeLast()
+      newClipHist.removeAt(newClipHist.lastIndex)
       _history.value = newClipHist
     }
 
