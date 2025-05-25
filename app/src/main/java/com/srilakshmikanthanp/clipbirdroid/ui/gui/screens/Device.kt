@@ -100,8 +100,7 @@ private fun ServerGroup(controller: AppController) {
 
   // Setup & Dispose the Server
   DisposableEffect(clients) {
-    setupServer();
-    onDispose(disposeServer)
+    setupServer(); onDispose(disposeServer)
   }
 
   // if no servers
@@ -208,8 +207,7 @@ private fun ClientGroup(controller: AppController) {
 
   // Setup & Dispose the Client
   DisposableEffect(servers) {
-    setupClient();
-    onDispose(disposeClient)
+    setupClient(); onDispose(disposeClient)
   }
 
   Column {
@@ -399,8 +397,8 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     controller.clearServerCertificates()
   }
 
-  val handleServerStart = Server.OnServerStateChangeHandler {
-    if (it) { Toast.makeText(context, "Created", Toast.LENGTH_SHORT).show() }
+  val handleServerStart = Server.OnMdnsRegisterStatusChangeHandler {
+    if (it) { Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show() }
   }
 
   val setup = {

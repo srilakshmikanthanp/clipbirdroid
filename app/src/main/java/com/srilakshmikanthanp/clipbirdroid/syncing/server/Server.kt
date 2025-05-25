@@ -67,24 +67,24 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   // Server State Change Handlers
-  private val serverStateChangeHandlers = mutableListOf<OnServerStateChangeHandler>()
+  private val mdnsRegisterStatusChangeHandlers = mutableListOf<OnMdnsRegisterStatusChangeHandler>()
 
-  fun interface OnServerStateChangeHandler {
-    fun onServerStateChanged(started: Boolean)
+  fun interface OnMdnsRegisterStatusChangeHandler {
+    fun onServerStateChanged(registered: Boolean)
   }
 
   /**
    * Add Server State Change Handler
    */
-  fun addServerStateChangeHandler(handler: OnServerStateChangeHandler) {
-    serverStateChangeHandlers.add(handler)
+  fun addMdnsRegisterStatusChangeHandler(handler: OnMdnsRegisterStatusChangeHandler) {
+    mdnsRegisterStatusChangeHandlers.add(handler)
   }
 
   /**
    * Remove Server State Change Handler
    */
-  fun removeServerStateChangeHandler(handler: OnServerStateChangeHandler) {
-    serverStateChangeHandlers.remove(handler)
+  fun removeMdnsRegisterStatusChangeHandler(handler: OnMdnsRegisterStatusChangeHandler) {
+    mdnsRegisterStatusChangeHandlers.remove(handler)
   }
 
 
@@ -198,7 +198,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   private var sslCert: SSLConfig? = null
 
   // is Server Started
-  private var isStarted: Boolean = false
+  private var isRegistered: Boolean = false
 
   // TAG for logging
   companion object {
@@ -217,8 +217,8 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   /**
    * Notify the Server State Change Handlers
    */
-  private fun notifyServerStateChangeHandlers(started: Boolean) {
-    serverStateChangeHandlers.forEach {
+  private fun notifyMdnsRegisterStatusChangeHandlers(started: Boolean) {
+    mdnsRegisterStatusChangeHandlers.forEach {
       it.onServerStateChanged(started)
     }
   }
@@ -324,23 +324,6 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
-   * Set Up the Server
-   */
-  private fun setUpServer(server: Channel?) {
-    // if the server is null
-    if (server == null) throw RuntimeException("Server Can't be SetUp")
-
-    // check for the non null assertion
-    this.sslServer = server
-
-    // Address
-    val addr = server.localAddress() as InetSocketAddress
-
-    // register the service
-    register.registerService(addr.port)
-  }
-
-  /**
    * Get Channel for the Device
    */
   private fun getChannel(device: Device): ChannelHandlerContext? {
@@ -368,7 +351,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
       ctx.writeAndFlush(PingPacket(PingType.Pong))
     }
 
-    Log.i(Server.Companion.TAG, "Ping: ${m.getPingType()}")
+    Log.i(TAG, "Ping: ${m.getPingType()}")
   }
 
   /**
@@ -402,9 +385,16 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
+   * Is server started
+   */
+  fun isRegistered(): Boolean {
+    return isRegistered
+  }
+
+  /**
    * Is Server Running
    */
-  fun isServerRunning(): Boolean {
+  fun isRunning(): Boolean {
     return sslServer != null && sslCert != null && sslServer?.isOpen == true
   }
 
@@ -412,35 +402,39 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Start the Server
    */
   fun startServer() {
-    // if the server is already running
-    if (this.isServerRunning()) throw RuntimeException("Server is already started")
-
-    // create the server
     val workerGroup = NioEventLoopGroup()
     val bossGroup = NioEventLoopGroup()
-
-    // create the server
-    val serverFuture = ServerBootstrap()
+    val server = ServerBootstrap()
      .channel(NioServerSocketChannel::class.java)
      .group(bossGroup, workerGroup)
      .childHandler(NewChannelInitializer())
      .childOption(ChannelOption.SO_KEEPALIVE, true)
      .bind(0)
+     .sync()
+     .channel()
 
-    // On Bind Completed
-    serverFuture.addListener {
-      this.setUpServer(serverFuture.channel())
-    }
+    val addr = server.localAddress() as InetSocketAddress
+    register.registerService(addr.port)
+
+    this.sslServer = server
   }
 
   /**
    * Stop the Server
    */
   fun stopServer() {
-    // check for the non null assertion
-    if (!this.isServerRunning()) return
+    if (!this.isRunning()) return
 
-    // Unregister the service
+    for (client in unauthenticatedClients) {
+      client.close()
+    }
+
+    for (client in authenticatedClients) {
+      client.close()
+    }
+
+    sslServer?.close()?.sync()
+    this.sslServer = null
     register.unRegisterService()
   }
 
@@ -448,7 +442,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Set the SSL certificate and key
    */
   fun setSslConfig(sslCert: SSLConfig) {
-    if (this.isServerRunning()) {
+    if (this.isRunning()) {
       throw RuntimeException("Server is already started")
     }
 
@@ -467,7 +461,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    */
   fun syncItems(items: List<Pair<String, ByteArray>>) {
     // if server is not running the throw error
-    if (!this.isServerRunning()) throw RuntimeException("Server is not started")
+    if (!this.isRunning()) throw RuntimeException("Server is not started")
 
     // create the syncing Items
     val syncingItems = items.map {
@@ -527,18 +521,11 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
-   * Is server started
-   */
-  fun isStarted(): Boolean {
-    return isStarted
-  }
-
-  /**
    * Get the Server Details
    */
   fun getServerInfo(): Device {
     // if server is not running the throw error
-    if (!this.isServerRunning()) throw RuntimeException("Server is not started")
+    if (!this.isRunning()) throw RuntimeException("Server is not started")
 
     // Get the Required parameters
     val address = sslServer?.localAddress() as InetSocketAddress?
@@ -638,7 +625,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    */
   @Deprecated("Deprecated in Java")
   override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-    Log.e(Server.Companion.TAG, "Exception Caught", cause); ctx.close()
+    Log.e(TAG, "Exception Caught", cause); ctx.close()
   }
 
   /**
@@ -739,35 +726,13 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Gets called if NSD service is un registered
    */
   override fun onServiceUnregistered() {
-    // close the server
-    val fut = sslServer?.closeFuture()
-
-    // close all the clients
-    for (client in unauthenticatedClients) {
-      client.close()
-    }
-
-    // close all the clients
-    for (client in authenticatedClients) {
-      client.close()
-    }
-
-    // Assign Null Value
-    this.sslServer = null
-
-    // is started
-    this.isStarted = false
-
-    // Add Listener for complete
-    fut?.addListener {
-      notifyServerStateChangeHandlers(false)
-    }
+    this.isRegistered = false; notifyMdnsRegisterStatusChangeHandlers(false)
   }
 
   /**
    * Gets called if NSD service is registered
    */
   override fun onServiceRegistered() {
-    notifyServerStateChangeHandlers(true).also { isStarted = true }
+    isRegistered = true; notifyMdnsRegisterStatusChangeHandlers(true)
   }
 }
