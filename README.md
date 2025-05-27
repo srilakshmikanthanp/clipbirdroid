@@ -152,12 +152,6 @@ Project Link: [https://github.com/srilakshmikanthanp/clipbirdroid](https://githu
 
 * [Santhosh Kumar T](https://github.com/santhoshkumartm)
 
-## Screenshots
-
-| ![clipbird](assets/images/clipbird_light.jpg)  | ![history](assets/images/history_light.jpg)  | ![about](assets/images/about_light.jpg) |
-|------------------------------------------|----------------------------------------|-----------------------------------|
-| ![clipbird](assets/images/clipbird_dark.jpg)   | ![history](assets/images/history_dark.jpg)   | ![about](assets/images/about_dark.jpg)  |
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
