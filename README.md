@@ -90,13 +90,11 @@ Clipbird Software helps you to sync your clipboard data between devices connecte
 
 To Install Clipbird on your system, you can either download the installer from the release or build it from the source. The following steps will guide you through the installation process.
 
-### Installing Clipbird on a Windows Platform
-
-Follow thw instructions on the [clipbirdesk](https://github.com/srilakshmikanthanp/clipbirdesk) repository to install Clipbird on your Windows system.
-
-### Installing Clipbird on an Android Platform
+### Installing Clipbird
 
 Just go to Github Release choose the suitable version for your system and download it. Then install it in your system. Note if there is any frequent disconnections try to disable battery optimization for the app manually.
+
+_For Desktop, you can download it from [clipbirdesk](https://github.com/srilakshmikanthanp/clipbirdesk)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
