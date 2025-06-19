@@ -9,6 +9,8 @@ import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxHistory
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client
+import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client.OnBrowsingStartFailedHandler
+import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client.OnBrowsingStopFailedHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +72,36 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     serverStatusChangedHandlers.remove(handler)
   }
 
+  private val browsingStatusChangeHandlers = mutableListOf<Client.OnBrowsingStatusChangeHandler>()
+
+  fun addBrowsingStatusChangeHandler(handler: Client.OnBrowsingStatusChangeHandler) {
+    browsingStatusChangeHandlers.add(handler)
+  }
+
+  fun removeBrowsingStatusChangeHandler(handler: Client.OnBrowsingStatusChangeHandler) {
+    browsingStatusChangeHandlers.remove(handler)
+  }
+
+  private val onStartBrowsingFailedHandlers = mutableListOf<Client.OnBrowsingStartFailedHandler>()
+
+  fun addBrowsingStartFailedHandler(handler: OnBrowsingStartFailedHandler) {
+    onStartBrowsingFailedHandlers.add(handler)
+  }
+
+  fun removeBrowsingStartFailedHandler(handler: OnBrowsingStartFailedHandler) {
+    onStartBrowsingFailedHandlers.remove(handler)
+  }
+
+  private val onStopBrowsingFailedHandlers = mutableListOf<OnBrowsingStopFailedHandler>()
+
+  fun addBrowsingStopFailedHandler(handler: OnBrowsingStopFailedHandler) {
+    onStopBrowsingFailedHandlers.add(handler)
+  }
+
+  fun removeBrowsingStopFailedHandler(handler: OnBrowsingStopFailedHandler) {
+    onStopBrowsingFailedHandlers.remove(handler)
+  }
+
   //----------------------- server Signals ------------------------//
 
   private val clientStateChangedHandlers = mutableListOf<Server.OnClientStateChangeHandler>()
@@ -82,14 +114,34 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     clientStateChangedHandlers.remove(handler)
   }
 
-  private val serverStateChangedHandlers = mutableListOf<Server.OnMdnsRegisterStatusChangeHandler>()
+  private val mdnsRegisterStatusChangeHandlers = mutableListOf<Server.OnMdnsRegisterStatusChangeHandler>()
 
   fun addServerStateChangedHandler(handler: Server.OnMdnsRegisterStatusChangeHandler) {
-    serverStateChangedHandlers.add(handler)
+    mdnsRegisterStatusChangeHandlers.add(handler)
   }
 
   fun removeServerStateChangedHandler(handler: Server.OnMdnsRegisterStatusChangeHandler) {
-    serverStateChangedHandlers.remove(handler)
+    mdnsRegisterStatusChangeHandlers.remove(handler)
+  }
+
+  private val mdnsServiceRegisterFailedHandlers = mutableListOf<Server.OnMdnsServiceRegisterFailedHandler>()
+
+  fun addMdnsServiceRegisterFailedHandler(handler: Server.OnMdnsServiceRegisterFailedHandler) {
+    mdnsServiceRegisterFailedHandlers.add(handler)
+  }
+
+  fun removeMdnsServiceRegisterFailedHandler(handler: Server.OnMdnsServiceRegisterFailedHandler) {
+    mdnsServiceRegisterFailedHandlers.remove(handler)
+  }
+
+  private val mdnsServiceUnregisterFailedHandlers = mutableListOf<Server.OnMdnsServiceUnregisterFailedHandler>()
+
+  fun addMdnsServiceUnregisterFailedHandler(handler: Server.OnMdnsServiceUnregisterFailedHandler) {
+    mdnsServiceUnregisterFailedHandlers.add(handler)
+  }
+
+  fun removeMdnsServiceUnregisterFailedHandler(handler: Server.OnMdnsServiceUnregisterFailedHandler) {
+    mdnsServiceUnregisterFailedHandlers.remove(handler)
   }
 
   private val authRequestHandlers = mutableListOf<Server.OnAuthRequestHandler>()
@@ -157,6 +209,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       server.removeSyncRequestHandler(::handleSyncRequest)
       server.removeSyncRequestHandler(clipboard::setClipboardContent)
       server.removeClientListChangeHandler(::notifyClientListChanged)
+      server.removeMdnsServiceRegisterFailedHandler(::notifyMdnsServiceRegisterFailed)
+      server.removeMdnsServiceUnregisterFailedHandler(::notifyMdnsServiceUnregisterFailed)
 
       // Disconnect the signals to Server
       clipboard.removeClipboardChangeListener(server::syncItems)
@@ -185,6 +239,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       client.removeSyncRequestHandler(::handleSyncRequest)
       client.removeSyncRequestHandler(clipboard::setClipboardContent)
       client.removeConnectionErrorHandler(::notifyConnectionError)
+      client.removeBrowsingStatusChangeHandler(::notifyBrowsingStatusChanged)
+      client.removeBrowsingStartFailedHandler(::notifyBrowsingStartFailed)
+      client.removeBrowsingStopFailedHandler(::notifyBrowsingStopFailed)
 
       // Disconnect the signals to Client
       clipboard.removeClipboardChangeListener(client::syncItems)
@@ -263,8 +320,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the server state changed (Server)
    */
   private fun notifyServerStateChanged(status: Boolean) {
-    for (handler in serverStateChangedHandlers) {
-      handler.onServerStateChanged(status)
+    for (handler in mdnsRegisterStatusChangeHandlers) {
+      handler.onMdnsRegisterStatusChanged(status)
     }
   }
 
@@ -301,6 +358,36 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   private fun notifyHostTypeChanged(host: HostType) {
     for (handler in hostTypeChangeHandlers) {
       handler.onHostTypeChanged(host)
+    }
+  }
+
+  private fun notifyBrowsingStatusChanged(isBrowsing: Boolean) {
+    for (handler in browsingStatusChangeHandlers) {
+      handler.onBrowsingStatusChanged(isBrowsing)
+    }
+  }
+
+  private fun notifyBrowsingStartFailed(error: Int) {
+    for (handler in onStartBrowsingFailedHandlers) {
+      handler.onStartBrowsingFailed(error)
+    }
+  }
+
+  private fun notifyBrowsingStopFailed(error: Int) {
+    for (handler in onStopBrowsingFailedHandlers) {
+      handler.onStopBrowsingFailed(error)
+    }
+  }
+
+  private fun notifyMdnsServiceRegisterFailed(error: Int) {
+    for (handler in mdnsServiceRegisterFailedHandlers) {
+      handler.onServiceRegistrationFailed(error)
+    }
+  }
+
+  private fun notifyMdnsServiceUnregisterFailed(error: Int) {
+    for (handler in mdnsServiceUnregisterFailedHandlers) {
+      handler.onServiceUnregistrationFailed(error)
     }
   }
 
@@ -432,6 +519,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     // connect the server state changed signal
     server.addMdnsRegisterStatusChangeHandler(::notifyServerStateChanged)
 
+    server.addMdnsServiceRegisterFailedHandler(::notifyMdnsServiceRegisterFailed)
+    server.addMdnsServiceUnregisterFailedHandler(::notifyMdnsServiceUnregisterFailed)
+
     // set the host is server
     storage.setHostIsLastlyServer(true)
 
@@ -479,6 +569,13 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // Connect the clipboard change signal
     clipboard.addClipboardChangeListener(client::syncItems)
+
+    // Connect the browsing status change signal
+    client.addBrowsingStatusChangeHandler(::notifyBrowsingStatusChanged)
+
+    client.addBrowsingStartFailedHandler(::notifyBrowsingStartFailed)
+
+    client.addBrowsingStopFailedHandler(::notifyBrowsingStopFailed)
 
     // set the host is client
     storage.setHostIsLastlyServer(false)
@@ -662,6 +759,58 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     notifyHostTypeChanged(HostType.NONE)
   }
 
+  fun registerService() {
+    // if the host is not server then throw
+    if (!host.holds(Server::class.java)) {
+      throw RuntimeException("Host is not server")
+    }
+
+    // get the server
+    val server = host.get() as Server
+
+    // register the service
+    server.registerService()
+  }
+
+  fun unregisterService() {
+    // if the host is not server then throw
+    if (!host.holds(Server::class.java)) {
+      throw RuntimeException("Host is not server")
+    }
+
+    // get the server
+    val server = host.get() as Server
+
+    // unregister the service
+    server.unregisterService()
+  }
+
+  fun isRegistered(): Boolean {
+    // if the host is not server then throw
+    if (!host.holds(Server::class.java)) {
+      throw RuntimeException("Host is not server")
+    }
+
+    // get the server
+    val server = host.get() as Server
+
+    // return the server registered status
+    return server.isRegistered()
+  }
+
+  fun reRegisterService() {
+    // if the host is not server then throw
+    if (!host.holds(Server::class.java)) {
+      throw RuntimeException("Host is not server")
+    }
+
+    // get the server
+    val server = host.get() as Server
+
+    // re-register the service
+    server.reRegisterService()
+  }
+
   //---------------------- Client functions -----------------------//
 
   /**
@@ -767,6 +916,58 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // return the unauthenticated clients
     return server.getUnauthenticatedClients()
+  }
+
+  fun startBrowsing() {
+    // if the host is not client then throw
+    if (!host.holds(Client::class.java)) {
+      throw RuntimeException("Host is not client")
+    }
+
+    // get the client
+    val client = host.get() as Client
+
+    // start browsing
+    client.startBrowsing()
+  }
+
+  fun stopBrowsing() {
+    // if the host is not client then throw
+    if (!host.holds(Client::class.java)) {
+      throw RuntimeException("Host is not client")
+    }
+
+    // get the client
+    val client = host.get() as Client
+
+    // stop browsing
+    client.stopBrowsing()
+  }
+
+  fun isBrowsing(): Boolean {
+    // if the host is not client then throw
+    if (!host.holds(Client::class.java)) {
+      throw RuntimeException("Host is not client")
+    }
+
+    // get the client
+    val client = host.get() as Client
+
+    // return the browsing status
+    return client.isBrowsing()
+  }
+
+  fun restartBrowsing() {
+    // if the host is not client then throw
+    if (!host.holds(Client::class.java)) {
+      throw RuntimeException("Host is not client")
+    }
+
+    // get the client
+    val client = host.get() as Client
+
+    // restart browsing
+    client.restartBrowsing()
   }
 
   //----------------------- Common functions -------------------------//

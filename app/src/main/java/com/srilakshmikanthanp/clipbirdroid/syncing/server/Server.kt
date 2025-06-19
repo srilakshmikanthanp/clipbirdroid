@@ -70,7 +70,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   private val mdnsRegisterStatusChangeHandlers = mutableListOf<OnMdnsRegisterStatusChangeHandler>()
 
   fun interface OnMdnsRegisterStatusChangeHandler {
-    fun onServerStateChanged(registered: Boolean)
+    fun onMdnsRegisterStatusChanged(registered: Boolean)
   }
 
   /**
@@ -87,6 +87,33 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
     mdnsRegisterStatusChangeHandlers.remove(handler)
   }
 
+  private val mdnsServiceRegisterFailedHandlers = mutableListOf<OnMdnsServiceRegisterFailedHandler>()
+
+  fun interface OnMdnsServiceRegisterFailedHandler {
+    fun onServiceRegistrationFailed(errorCode: Int)
+  }
+
+  fun addMdnsServiceRegisterFailedHandler(handler: OnMdnsServiceRegisterFailedHandler) {
+    mdnsServiceRegisterFailedHandlers.add(handler)
+  }
+
+  fun removeMdnsServiceRegisterFailedHandler(handler: OnMdnsServiceRegisterFailedHandler) {
+    mdnsServiceRegisterFailedHandlers.remove(handler)
+  }
+
+  private val mdnsServiceUnregisterFailedHandlers = mutableListOf<OnMdnsServiceUnregisterFailedHandler>()
+
+  fun interface OnMdnsServiceUnregisterFailedHandler {
+    fun onServiceUnregistrationFailed(errorCode: Int)
+  }
+
+  fun addMdnsServiceUnregisterFailedHandler(handler: OnMdnsServiceUnregisterFailedHandler) {
+    mdnsServiceUnregisterFailedHandlers.add(handler)
+  }
+
+  fun removeMdnsServiceUnregisterFailedHandler(handler: OnMdnsServiceUnregisterFailedHandler) {
+    mdnsServiceUnregisterFailedHandlers.remove(handler)
+  }
 
   // Auth Request Handlers
   private val authRequestHandlers = mutableListOf<OnAuthRequestHandler>()
@@ -197,9 +224,6 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   // Ssl Context for the Server
   private var sslCert: SSLConfig? = null
 
-  // is Server Started
-  private var isRegistered: Boolean = false
-
   // TAG for logging
   companion object {
     const val TAG = "Server"
@@ -219,7 +243,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    */
   private fun notifyMdnsRegisterStatusChangeHandlers(started: Boolean) {
     mdnsRegisterStatusChangeHandlers.forEach {
-      it.onServerStateChanged(started)
+      it.onMdnsRegisterStatusChanged(started)
     }
   }
 
@@ -247,6 +271,18 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   private fun notifyClientListChangeHandlers(clients: List<Device>) {
     clientListChangeHandlers.forEach {
       it.onClientListChanged(clients)
+    }
+  }
+
+  fun notifyMdnsServiceRegisterFailedHandlers(errorCode: Int) {
+    mdnsServiceRegisterFailedHandlers.forEach {
+      it.onServiceRegistrationFailed(errorCode)
+    }
+  }
+
+  fun notifyMdnsServiceUnregisterFailedHandlers(errorCode: Int) {
+    mdnsServiceUnregisterFailedHandlers.forEach {
+      it.onServiceUnregistrationFailed(errorCode)
     }
   }
 
@@ -388,7 +424,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Is server started
    */
   fun isRegistered(): Boolean {
-    return isRegistered
+    return register.isRegistered()
   }
 
   /**
@@ -420,6 +456,15 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   /**
+   * Register the Service
+   */
+  fun registerService() {
+    if (!this.isRunning()) throw RuntimeException("Server is not started")
+    val addr = sslServer?.localAddress() as InetSocketAddress
+    register.registerService(addr.port)
+  }
+
+  /**
    * Stop the Server
    */
   fun stopServer() {
@@ -436,6 +481,20 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
     sslServer?.close()?.sync()
     this.sslServer = null
     register.unRegisterService()
+  }
+
+  /**
+   * Un register the Service
+   */
+  fun unregisterService() {
+    if (!this.isRunning()) throw RuntimeException("Server is not started")
+    register.unRegisterService()
+  }
+
+  fun reRegisterService() {
+    if (!this.isRunning()) throw RuntimeException("Server is not started")
+    val addr = sslServer?.localAddress() as InetSocketAddress
+    register.reRegister(addr.port)
   }
 
   /**
@@ -726,13 +785,21 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Gets called if NSD service is un registered
    */
   override fun onServiceUnregistered() {
-    this.isRegistered = false; notifyMdnsRegisterStatusChangeHandlers(false)
+    notifyMdnsRegisterStatusChangeHandlers(false)
   }
 
   /**
    * Gets called if NSD service is registered
    */
   override fun onServiceRegistered() {
-    isRegistered = true; notifyMdnsRegisterStatusChangeHandlers(true)
+    notifyMdnsRegisterStatusChangeHandlers(true)
+  }
+
+  override fun onServiceRegistrationFailed(errorCode: Int) {
+    notifyMdnsServiceRegisterFailedHandlers(errorCode)
+  }
+
+  override fun onServiceUnregistrationFailed(errorCode: Int) {
+    notifyMdnsServiceUnregisterFailedHandlers(errorCode)
   }
 }

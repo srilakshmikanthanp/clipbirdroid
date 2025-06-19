@@ -5,19 +5,30 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdManager.PROTOCOL_DNS_SD
 import android.net.nsd.NsdManager.RegistrationListener
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiManager.MulticastLock
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class Register(private val context: Context) : RegistrationListener {
-  // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
-  // List of listeners that will be notified of browser events.
+  private val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
+
   private val listeners: MutableList<RegisterListener> = mutableListOf()
+
+  private var isRegistered: AtomicBoolean = AtomicBoolean(false)
+
+  private var pendingRestartPort: AtomicInteger = AtomicInteger(-1)
+
+  private val multicastLock: MulticastLock = wifiManager.createMulticastLock(MULTICAST_LOCK_TAG)
 
   // TAG for logging.
   companion object {
+    private const val MULTICAST_LOCK_TAG = "com.srilakshmikanthanp.clipbirdroid:mdns:browser"
     private const val TAG = "Register"
   }
 
@@ -25,6 +36,8 @@ class Register(private val context: Context) : RegistrationListener {
   interface RegisterListener {
     fun onServiceUnregistered()
     fun onServiceRegistered()
+    fun onServiceRegistrationFailed(errorCode: Int)
+    fun onServiceUnregistrationFailed(errorCode: Int)
   }
 
   /**
@@ -45,6 +58,8 @@ class Register(private val context: Context) : RegistrationListener {
    * Register the Service
    */
   fun registerService(port: Int) {
+    if (this.isRegistered()) throw IllegalStateException("Service is already registered")
+
     // create the service info
     val serviceInfo = NsdServiceInfo()
 
@@ -52,6 +67,8 @@ class Register(private val context: Context) : RegistrationListener {
     serviceInfo.serviceName = appMdnsServiceName(context)
     serviceInfo.serviceType = appMdnsServiceType()
     serviceInfo.port = port
+
+    multicastLock.acquire()
 
     // register the service
     nsdManager.registerService(
@@ -63,34 +80,58 @@ class Register(private val context: Context) : RegistrationListener {
    * Unregister the Service
    */
   fun unRegisterService() {
-    nsdManager.unregisterService(this)
+    try {
+      nsdManager.unregisterService(this)
+      multicastLock.release()
+    } catch (e: IllegalStateException) {
+      Log.w(TAG, e.message, e)
+    }
+  }
+
+  fun reRegister(port: Int) {
+    if (isRegistered()) {
+      pendingRestartPort.set(port)
+      unRegisterService()
+      return
+    } else {
+      registerService(port)
+    }
+  }
+
+  fun isRegistered(): Boolean {
+    return isRegistered.get()
   }
 
   /**
    * @brief called when the unregistering service Failed
    */
   override fun onUnregistrationFailed(p0: NsdServiceInfo?, p1: Int) {
-    Log.e(TAG, "Failed to unregister service: $p0")
+    for (listener in listeners) listener.onServiceUnregistrationFailed(p1)
   }
 
   /**
    * @brief called when the service is registered
    */
   override fun onServiceRegistered(p0: NsdServiceInfo?) {
-    for (listener in listeners) listener.onServiceRegistered()
+    isRegistered.set(true); for (listener in listeners) listener.onServiceRegistered()
   }
 
   /**
    * @brief called when the service is unregistered
    */
   override fun onServiceUnregistered(p0: NsdServiceInfo?) {
+    isRegistered.set(false)
     for (listener in listeners) listener.onServiceUnregistered()
+    if (pendingRestartPort.get() != -1) {
+      registerService(pendingRestartPort.get())
+      pendingRestartPort.set(-1)
+    }
   }
 
   /**
    * @brief called when the service registration is Failed
    */
   override fun onRegistrationFailed(p0: NsdServiceInfo?, p1: Int) {
-    Log.e(TAG, "Failed to register service: $p0")
+    for (listener in listeners) listener.onServiceRegistrationFailed(p1)
   }
 }

@@ -6,33 +6,40 @@ import android.net.nsd.NsdManager.DiscoveryListener
 import android.net.nsd.NsdManager.ResolveListener
 import android.net.nsd.NsdManager.ServiceInfoCallback
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiManager.MulticastLock
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
-import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Browser that allows to discover services of a given type.
  */
 class Browser(private val context: Context) : DiscoveryListener {
-  // NsdManager instance used to discover services of a given type.
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
-  // Executor instance for running tasks in the background.
+  private val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
+
   private val executor: Executor = Executors.newSingleThreadExecutor()
 
-  // List of listeners that will be notified of browser events.
   private val listeners: MutableList<BrowserListener> = mutableListOf()
 
-  // List of Map of service name and ip
   private val serviceMap: MutableMap<String, Pair<InetAddress, Int>> = mutableMapOf()
+
+  private var isBrowsing: AtomicBoolean = AtomicBoolean(false)
+
+  private var isPendingRestart: AtomicBoolean = AtomicBoolean(false)
+
+  private val multicastLock: MulticastLock = wifiManager.createMulticastLock(MULTICAST_LOCK_TAG)
 
   /**
    * Removes a listener from the browser.
@@ -147,20 +154,34 @@ class Browser(private val context: Context) : DiscoveryListener {
 
   // TAG for logging.
   companion object {
+    private const val MULTICAST_LOCK_TAG = "com.srilakshmikanthanp.clipbirdroid:mdns:browser"
     private const val TAG = "Browser"
   }
 
   // callbacks for service discovery events.
   interface BrowserListener {
+    fun onBrowsingStatusChanged(isBrowsing: Boolean)
     fun onServiceRemoved(device: Device)
     fun onServiceAdded(device: Device)
+    fun onStartBrowsingFailed(errorCode: Int)
+    fun onStopBrowsingFailed(errorCode: Int)
+  }
+
+  fun isBrowsing(): Boolean {
+    return isBrowsing.get()
   }
 
   /**
    * Starts the browser.
    */
   fun start() {
-    nsdManager.discoverServices(appMdnsServiceType(), NsdManager.PROTOCOL_DNS_SD, this)
+    if (isBrowsing()) throw IllegalStateException("Browser is already started")
+    multicastLock.acquire()
+    nsdManager.discoverServices(
+      appMdnsServiceType(),
+      NsdManager.PROTOCOL_DNS_SD,
+      this
+    )
   }
 
   /**
@@ -169,8 +190,18 @@ class Browser(private val context: Context) : DiscoveryListener {
   fun stop() {
     try {
       nsdManager.stopServiceDiscovery(this)
+      multicastLock.release()
     } catch (e: IllegalStateException) {
       Log.w(TAG, e.message, e)
+    }
+  }
+
+  fun restart() {
+    if (isBrowsing()) {
+      isPendingRestart.set(true)
+      stop()
+    } else {
+      start()
     }
   }
 
@@ -198,27 +229,33 @@ class Browser(private val context: Context) : DiscoveryListener {
    * Called when a discovery is started. [Not Used]
    */
   override fun onDiscoveryStarted(p0: String?) {
-    Log.d(TAG, "Discovery started: $p0")
+    isBrowsing.set(true); for (l in listeners) l.onBrowsingStatusChanged(true)
   }
 
   /**
    * Called when a discovery is stopped. [Not Used]
    */
   override fun onDiscoveryStopped(p0: String?) {
-    Log.d(TAG, "Discovery stopped: $p0")
+    isBrowsing.set(false)
+    for (l in listeners) l.onBrowsingStatusChanged(false)
+    serviceMap.clear()
+    if (isPendingRestart.get()) {
+      isPendingRestart.set(false)
+      start()
+    }
   }
 
   /**
    * Called when a start discovery fails. [Not Used]
    */
   override fun onStartDiscoveryFailed(p0: String?, p1: Int) {
-    Log.e(TAG, "Failed to start discovery: $p0")
+    for (l in listeners) l.onStartBrowsingFailed(p1)
   }
 
   /**
    * Called when a stop discovery fails. [Not Used]
    */
   override fun onStopDiscoveryFailed(p0: String?, p1: Int) {
-    Log.e(TAG, "Failed to stop discovery: $p0")
+    for (l in listeners) l.onStopBrowsingFailed(p1)
   }
 }

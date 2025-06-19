@@ -165,6 +165,49 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
     onSyncRequestHandlers.remove(handler)
   }
 
+  // Handler for browsing status changed
+  private val onBrowsingStatusStartedHandlers = mutableListOf<OnBrowsingStatusChangeHandler>()
+
+  fun interface OnBrowsingStatusChangeHandler {
+    fun onBrowsingStatusChanged(isBrowsing: Boolean)
+  }
+
+  fun addBrowsingStatusChangeHandler(handler: OnBrowsingStatusChangeHandler) {
+    onBrowsingStatusStartedHandlers.add(handler)
+  }
+
+  fun removeBrowsingStatusChangeHandler(handler: OnBrowsingStatusChangeHandler) {
+    onBrowsingStatusStartedHandlers.remove(handler)
+  }
+
+  private val onBrowsingStartFailedHandlers = mutableListOf<OnBrowsingStartFailedHandler>()
+
+  fun interface OnBrowsingStartFailedHandler {
+    fun onStartBrowsingFailed(errorCode: Int)
+  }
+
+  fun addBrowsingStartFailedHandler(handler: OnBrowsingStartFailedHandler) {
+    onBrowsingStartFailedHandlers.add(handler)
+  }
+
+  fun removeBrowsingStartFailedHandler(handler: OnBrowsingStartFailedHandler) {
+    onBrowsingStartFailedHandlers.remove(handler)
+  }
+
+  private val onBrowsingStopFailedHandlers = mutableListOf<OnBrowsingStopFailedHandler>()
+
+  fun interface OnBrowsingStopFailedHandler {
+    fun onStopBrowsingFailed(errorCode: Int)
+  }
+
+  fun addBrowsingStopFailedHandler(handler: OnBrowsingStopFailedHandler) {
+    onBrowsingStopFailedHandlers.add(handler)
+  }
+
+  fun removeBrowsingStopFailedHandler(handler: OnBrowsingStopFailedHandler) {
+    onBrowsingStopFailedHandlers.remove(handler)
+  }
+
   // TAG for logging
   companion object {
     const val TAG = "Client"
@@ -399,6 +442,24 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
   private fun notifyInvalidPacket(code: Int, message: String) {
     for (handler in onInvalidPacketHandlers) {
       handler.onInvalidPacket(code, message)
+    }
+  }
+
+  private fun notifyBrowsingStatusChanged(isBrowsing: Boolean) {
+    for (handler in onBrowsingStatusStartedHandlers) {
+      handler.onBrowsingStatusChanged(isBrowsing)
+    }
+  }
+
+  private fun notifyStartBrowsingFailed(errorCode: Int) {
+    for (handler in onBrowsingStartFailedHandlers) {
+      handler.onStartBrowsingFailed(errorCode)
+    }
+  }
+
+  private fun notifyStopBrowsingFailed(errorCode: Int) {
+    for (handler in onBrowsingStopFailedHandlers) {
+      handler.onStopBrowsingFailed(errorCode)
     }
   }
 
@@ -669,6 +730,14 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
     this.browser.stop()
   }
 
+  fun isBrowsing(): Boolean {
+    return this.browser.isBrowsing()
+  }
+
+  fun restartBrowsing() {
+    this.browser.restart()
+  }
+
   /**
    * Called when a service is lost.
    */
@@ -694,6 +763,18 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
     notifyServerFound(device)
     this.servers.add(device)
     notifyServerListChanged()
+  }
+
+  override fun onStartBrowsingFailed(errorCode: Int) {
+    notifyStartBrowsingFailed(errorCode)
+  }
+
+  override fun onStopBrowsingFailed(errorCode: Int) {
+    notifyStopBrowsingFailed(errorCode)
+  }
+
+  override fun onBrowsingStatusChanged(isBrowsing: Boolean) {
+    notifyBrowsingStatusChanged(isBrowsing)
   }
 
   /**
