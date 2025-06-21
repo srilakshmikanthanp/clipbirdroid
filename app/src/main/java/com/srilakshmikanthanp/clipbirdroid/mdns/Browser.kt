@@ -4,21 +4,17 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdManager.DiscoveryListener
 import android.net.nsd.NsdManager.ResolveListener
-import android.net.nsd.NsdManager.ServiceInfoCallback
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.MulticastLock
 import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
-import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
+import java.util.LinkedList
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -29,8 +25,6 @@ class Browser(private val context: Context) : DiscoveryListener {
 
   private val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-  private val executor: Executor = Executors.newSingleThreadExecutor()
-
   private val listeners: MutableList<BrowserListener> = mutableListOf()
 
   private val serviceMap: MutableMap<String, Pair<InetAddress, Int>> = mutableMapOf()
@@ -40,6 +34,8 @@ class Browser(private val context: Context) : DiscoveryListener {
   private var isPendingRestart: AtomicBoolean = AtomicBoolean(false)
 
   private val multicastLock: MulticastLock = wifiManager.createMulticastLock(MULTICAST_LOCK_TAG)
+
+  private val serviceResolveQueue = ServiceResolveQueue(nsdManager)
 
   /**
    * Removes a listener from the browser.
@@ -77,7 +73,7 @@ class Browser(private val context: Context) : DiscoveryListener {
     val serviceName: String = info.serviceName
     val port: Int = info.port
     val host: InetAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-      info.hostAddresses.find { it is Inet4Address }
+      info.hostAddresses.first()
     } else {
       info.host
     } ?: return
@@ -129,26 +125,6 @@ class Browser(private val context: Context) : DiscoveryListener {
 
     override fun onServiceResolved(info: NsdServiceInfo) {
       serviceResolved(info)
-    }
-  }
-
-  // Resolve Listener for Network Service Discovery API 34
-  @RequiresApi(34)
-  private inner class ResolverNew : ServiceInfoCallback {
-    override fun onServiceInfoCallbackRegistrationFailed(p0: Int) {
-      Log.e(TAG, "Failed to resolve service: $p0")
-    }
-
-    override fun onServiceUpdated(info: NsdServiceInfo) {
-      serviceResolved(info)
-    }
-
-    override fun onServiceLost() {
-      Log.e(TAG, "Failed to resolve service")
-    }
-
-    override fun onServiceInfoCallbackUnregistered() {
-      Log.d(TAG, "onServiceInfoCallbackUnregistered")
     }
   }
 
@@ -218,10 +194,8 @@ class Browser(private val context: Context) : DiscoveryListener {
   override fun onServiceFound(info: NsdServiceInfo) {
     if (info.serviceName == appMdnsServiceName(context)) {
       return
-    } else if (Build.VERSION.SDK_INT >= 34) {
-      nsdManager.registerServiceInfoCallback(info, executor, ResolverNew())
     } else {
-      nsdManager.resolveService(info, ResolverOld())
+      serviceResolveQueue.enqueue(info, ResolverOld())
     }
   }
 
@@ -257,5 +231,46 @@ class Browser(private val context: Context) : DiscoveryListener {
    */
   override fun onStopDiscoveryFailed(p0: String?, p1: Int) {
     for (l in listeners) l.onStopBrowsingFailed(p1)
+  }
+}
+
+@Deprecated("Using resolveService which is deprecated in android")
+class ServiceResolveQueue(private val nsdManager: NsdManager) {
+  private val resolveQueue: LinkedList<Pair<NsdServiceInfo, ResolveListener>> = LinkedList()
+  private val lock: Any = Any()
+
+  private inner class ResolveListenerWrapper(private val listener: ResolveListener) : ResolveListener {
+    override fun onResolveFailed(p0: NsdServiceInfo?, p1: Int) {
+      listener.onResolveFailed(p0, p1)
+      postResolve()
+    }
+
+    override fun onServiceResolved(info: NsdServiceInfo) {
+      listener.onServiceResolved(info)
+      postResolve()
+    }
+  }
+
+  private fun resolveNext() {
+    val pair = resolveQueue.peek() ?: return
+    val info = pair.first
+    val listener = pair.second
+    nsdManager.resolveService(info, listener)
+  }
+
+  private fun postResolve() {
+    synchronized(lock) {
+      resolveQueue.pop()
+      resolveNext()
+    }
+  }
+
+  fun enqueue(info: NsdServiceInfo, listener: ResolveListener) {
+    synchronized(lock) {
+      resolveQueue.add(Pair(info, ResolveListenerWrapper(listener)))
+      if (resolveQueue.size == 1) {
+        resolveNext()
+      }
+    }
   }
 }
