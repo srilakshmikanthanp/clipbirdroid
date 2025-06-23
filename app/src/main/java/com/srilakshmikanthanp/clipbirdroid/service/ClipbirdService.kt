@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.IBinder
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -11,6 +12,7 @@ import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.handlers.WifiApStateChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
@@ -30,6 +32,8 @@ class ClipbirdService : Service() {
 
   // Controller foe the Whole Clipbird Designed by GRASP Pattern
   private lateinit var controller: AppController
+
+  private val wifiApStateChangeHandler = WifiApStateChangeHandler()
 
   // Function used to get the Pending intent for onSend
   private fun onSendIntent(): PendingIntent {
@@ -149,6 +153,11 @@ class ClipbirdService : Service() {
     controller.addHostTypeChangeHandler {
       this.showNotification(notificationTitle())
     }
+
+    this.registerReceiver(
+      wifiApStateChangeHandler,
+      IntentFilter(WifiApStateChangeHandler.ACTION_WIFI_AP_STATE_CHANGED)
+    )
 
     // show the notification
     this.showNotification(this.notificationTitle())

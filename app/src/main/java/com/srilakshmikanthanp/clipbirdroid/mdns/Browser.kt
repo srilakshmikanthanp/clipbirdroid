@@ -16,11 +16,9 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.LinkedList
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
-/**
- * Browser that allows to discover services of a given type.
- */
-class Browser(private val context: Context) : DiscoveryListener {
+class Browser(private val context: Context) {
   private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
   private val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -29,7 +27,7 @@ class Browser(private val context: Context) : DiscoveryListener {
 
   private val serviceMap: MutableMap<String, Pair<InetAddress, Int>> = mutableMapOf()
 
-  private var isBrowsing: AtomicBoolean = AtomicBoolean(false)
+  private val listener = AtomicReference<DiscoveryListener?>(null)
 
   private var isPendingRestart: AtomicBoolean = AtomicBoolean(false)
 
@@ -37,37 +35,78 @@ class Browser(private val context: Context) : DiscoveryListener {
 
   private val serviceResolveQueue = ServiceResolveQueue(nsdManager)
 
-  /**
-   * Removes a listener from the browser.
-   */
+  private inner class BrowserDiscoveryListener: DiscoveryListener {
+    override fun onServiceFound(info: NsdServiceInfo) {
+      if (info.serviceName == appMdnsServiceName(context)) {
+        return
+      } else {
+        serviceResolveQueue.enqueue(info, ResolverOld())
+      }
+    }
+
+    override fun onServiceLost(info: NsdServiceInfo) {
+      serviceLost(info)
+    }
+
+    override fun onDiscoveryStarted(p0: String?) {
+      multicastLock.acquire()
+      for (l in listeners) {
+        l.onBrowsingStatusChanged(true)
+      }
+    }
+
+    override fun onDiscoveryStopped(p0: String?) {
+      multicastLock.release()
+      serviceMap.clear()
+      listener.set(null)
+      for (l in listeners) {
+        l.onBrowsingStatusChanged(false)
+      }
+      if (isPendingRestart.get()) {
+        isPendingRestart.set(false)
+        start()
+      }
+    }
+
+    override fun onStartDiscoveryFailed(p0: String?, p1: Int) {
+      for (l in listeners) {
+        l.onStartBrowsingFailed(p1)
+      }
+    }
+
+    override fun onStopDiscoveryFailed(p0: String?, p1: Int) {
+      for (l in listeners) {
+        l.onStopBrowsingFailed(p1)
+      }
+    }
+  }
+
+  private inner class ResolverOld : ResolveListener {
+    override fun onResolveFailed(p0: NsdServiceInfo?, p1: Int) {
+      Log.e(TAG, "Failed to resolve service: $p0")
+    }
+
+    override fun onServiceResolved(info: NsdServiceInfo) {
+      serviceResolved(info)
+    }
+  }
+
   fun removeListener(listener: BrowserListener) {
     listeners.remove(listener)
   }
 
-  /**
-   * Adds a listener to the browser.
-   */
   fun addListener(listener: BrowserListener) {
     listeners.add(listener)
   }
 
-  /**
-   * Notifies the listeners that a service has been removed.
-   */
   private fun notifyServiceRemoved(device: Device) {
     for (l in listeners) l.onServiceRemoved(device)
   }
 
-  /**
-   * Notifies the listeners that a service has been added.
-   */
   private fun notifyServiceAdded(device: Device) {
     for (l in listeners) l.onServiceAdded(device)
   }
 
-  /**
-   * service Resolved
-   */
   private fun serviceResolved(info: NsdServiceInfo) {
     // notify the listeners
     val serviceName: String = info.serviceName
@@ -98,9 +137,6 @@ class Browser(private val context: Context) : DiscoveryListener {
     notifyServiceAdded(Device(host, port, serviceName))
   }
 
-  /**
-   * service Lost Call Back
-   */
   private fun serviceLost(info: NsdServiceInfo) {
     // ignore the service of this app
     if (info.serviceName == appMdnsServiceName(context)) return
@@ -115,17 +151,6 @@ class Browser(private val context: Context) : DiscoveryListener {
 
     // notify the listeners
     notifyServiceRemoved(Device(ip, port, serviceName))
-  }
-
-  // Resolve Listener for Network Service Discovery API 28
-  private inner class ResolverOld : ResolveListener {
-    override fun onResolveFailed(p0: NsdServiceInfo?, p1: Int) {
-      Log.e(TAG, "Failed to resolve service: $p0")
-    }
-
-    override fun onServiceResolved(info: NsdServiceInfo) {
-      serviceResolved(info)
-    }
   }
 
   // TAG for logging.
@@ -144,28 +169,21 @@ class Browser(private val context: Context) : DiscoveryListener {
   }
 
   fun isBrowsing(): Boolean {
-    return isBrowsing.get()
+    return listener.get() != null
   }
 
-  /**
-   * Starts the browser.
-   */
   fun start() {
     if (isBrowsing()) throw IllegalStateException("Browser is already started")
-    multicastLock.acquire()
+    this.listener.set(BrowserDiscoveryListener())
     nsdManager.discoverServices(
       appMdnsServiceType(),
       NsdManager.PROTOCOL_DNS_SD,
-      this
+      this.listener.get()
     )
   }
 
-  /**
-   * Stops the browser.
-   */
   fun stop() {
-    nsdManager.stopServiceDiscovery(this)
-    multicastLock.release()
+    nsdManager.stopServiceDiscovery(this.listener.get())
   }
 
   fun restart() {
@@ -175,58 +193,6 @@ class Browser(private val context: Context) : DiscoveryListener {
     } else {
       start()
     }
-  }
-
-  /**
-   * Called when a service is lost.
-   */
-  override fun onServiceLost(info: NsdServiceInfo) {
-    serviceLost(info)
-  }
-
-  /**
-   * Called when a service is found.
-   */
-  override fun onServiceFound(info: NsdServiceInfo) {
-    if (info.serviceName == appMdnsServiceName(context)) {
-      return
-    } else {
-      serviceResolveQueue.enqueue(info, ResolverOld())
-    }
-  }
-
-  /**
-   * Called when a discovery is started. [Not Used]
-   */
-  override fun onDiscoveryStarted(p0: String?) {
-    isBrowsing.set(true); for (l in listeners) l.onBrowsingStatusChanged(true)
-  }
-
-  /**
-   * Called when a discovery is stopped. [Not Used]
-   */
-  override fun onDiscoveryStopped(p0: String?) {
-    isBrowsing.set(false)
-    for (l in listeners) l.onBrowsingStatusChanged(false)
-    serviceMap.clear()
-    if (isPendingRestart.get()) {
-      isPendingRestart.set(false)
-      start()
-    }
-  }
-
-  /**
-   * Called when a start discovery fails. [Not Used]
-   */
-  override fun onStartDiscoveryFailed(p0: String?, p1: Int) {
-    for (l in listeners) l.onStartBrowsingFailed(p1)
-  }
-
-  /**
-   * Called when a stop discovery fails. [Not Used]
-   */
-  override fun onStopDiscoveryFailed(p0: String?, p1: Int) {
-    for (l in listeners) l.onStopBrowsingFailed(p1)
   }
 }
 
