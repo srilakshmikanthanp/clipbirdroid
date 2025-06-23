@@ -164,12 +164,8 @@ class Browser(private val context: Context) : DiscoveryListener {
    * Stops the browser.
    */
   fun stop() {
-    try {
-      nsdManager.stopServiceDiscovery(this)
-      multicastLock.release()
-    } catch (e: IllegalStateException) {
-      Log.w(TAG, e.message, e)
-    }
+    nsdManager.stopServiceDiscovery(this)
+    multicastLock.release()
   }
 
   fun restart() {

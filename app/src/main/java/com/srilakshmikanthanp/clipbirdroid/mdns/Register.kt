@@ -80,12 +80,8 @@ class Register(private val context: Context) : RegistrationListener {
    * Unregister the Service
    */
   fun unRegisterService() {
-    try {
-      nsdManager.unregisterService(this)
-      multicastLock.release()
-    } catch (e: IllegalStateException) {
-      Log.w(TAG, e.message, e)
-    }
+    nsdManager.unregisterService(this)
+    multicastLock.release()
   }
 
   fun reRegister(port: Int) {
