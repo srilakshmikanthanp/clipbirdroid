@@ -20,19 +20,11 @@ class WifiApStateChangeHandler : BroadcastReceiver() {
   }
 
   private fun onHotspotDisabled(clipbird: Clipbird) {
-    when (clipbird.getController().getHostType()) {
-      HostType.SERVER -> clipbird.getController().reRegisterService()
-      HostType.CLIENT -> clipbird.getController().restartBrowsing()
-      HostType.NONE -> Unit
-    }
+    // Need to handle
   }
 
   private fun onHotspotEnabled(clipbird: Clipbird) {
-    when (clipbird.getController().getHostType()) {
-      HostType.SERVER -> clipbird.getController().reRegisterService()
-      HostType.CLIENT -> clipbird.getController().restartBrowsing()
-      HostType.NONE -> Unit
-    }
+    // Need to handle
   }
 
   companion object {
