@@ -746,6 +746,10 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
       return
     }
 
+    if (this.getConnectedServer() == device) {
+      this.disconnectFromServer()
+    }
+
     notifyServerGone(device)
     this.servers.remove(device)
     notifyServerListChanged()
