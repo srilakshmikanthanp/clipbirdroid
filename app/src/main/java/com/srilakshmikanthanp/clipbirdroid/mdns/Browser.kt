@@ -57,8 +57,11 @@ class Browser(private val context: Context) {
 
     override fun onDiscoveryStopped(p0: String?) {
       multicastLock.release()
-      serviceMap.clear()
       listener.set(null)
+      for (service in serviceMap.keys) {
+        serviceLost(NsdServiceInfo().apply { serviceName = service })
+      }
+      serviceMap.clear()
       for (l in listeners) {
         l.onBrowsingStatusChanged(false)
       }

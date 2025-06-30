@@ -11,20 +11,16 @@ class WifiApStateChangeHandler : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     if (intent.action == ACTION_WIFI_AP_STATE_CHANGED) {
       val state = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, 0)
-      if (WifiManager.WIFI_STATE_DISABLED == state % 10) {
-        onHotspotDisabled(context.applicationContext as Clipbird)
-      } else if (WifiManager.WIFI_STATE_ENABLED == state % 10) {
+      if (WifiManager.WIFI_STATE_ENABLED == state % 10) {
         onHotspotEnabled(context.applicationContext as Clipbird)
       }
     }
   }
 
-  private fun onHotspotDisabled(clipbird: Clipbird) {
-    // Need to handle
-  }
-
   private fun onHotspotEnabled(clipbird: Clipbird) {
-    // Need to handle
+    if (clipbird.getController().getHostType() == HostType.CLIENT) {
+      clipbird.getController().restartBrowsing()
+    }
   }
 
   companion object {
