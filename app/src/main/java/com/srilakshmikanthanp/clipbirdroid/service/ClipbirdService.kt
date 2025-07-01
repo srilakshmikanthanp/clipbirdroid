@@ -13,7 +13,7 @@ import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.handlers.WifiApStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
+import com.srilakshmikanthanp.clipbirdroid.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler

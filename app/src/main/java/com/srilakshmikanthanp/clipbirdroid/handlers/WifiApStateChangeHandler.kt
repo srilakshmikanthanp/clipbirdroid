@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
 import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
+import com.srilakshmikanthanp.clipbirdroid.Clipbird
 
 class WifiApStateChangeHandler : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {

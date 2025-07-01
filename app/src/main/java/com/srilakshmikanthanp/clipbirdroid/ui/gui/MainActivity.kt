@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -14,7 +13,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
@@ -42,7 +40,7 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
-import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.Clipbird
 
 
 /**

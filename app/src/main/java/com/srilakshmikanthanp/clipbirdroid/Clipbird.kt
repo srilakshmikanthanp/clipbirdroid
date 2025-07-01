@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.ui.gui
+package com.srilakshmikanthanp.clipbirdroid
 
 import android.app.Application
 import android.util.Log
@@ -16,7 +16,6 @@ import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
-
 
 class Clipbird : Application() {
   // Function used to get the Private Key and the Certificate New

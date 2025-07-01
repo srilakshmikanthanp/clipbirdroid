@@ -4,7 +4,7 @@ import android.app.NotificationManager
 import android.content.Context
 import androidx.activity.ComponentActivity
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.Clipbird
+import com.srilakshmikanthanp.clipbirdroid.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.StatusNotification
 
 class RejectHandler : ComponentActivity() {
