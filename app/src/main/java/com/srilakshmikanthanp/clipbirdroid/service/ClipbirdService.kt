@@ -92,10 +92,12 @@ class ClipbirdService : Service() {
 
     NotificationCompat.Builder(this, notification.getChannelID())
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setStyle(NotificationCompat.DecoratedCustomViewStyle())
       .setCustomContentView(notificationLayout)
       .setContentIntent(onTapIntent())
       .addAction(R.mipmap.ic_launcher_foreground, resources.getString(R.string.quit), onQuitIntent())
+      .setOngoing(true)
       .build().also {
         startForeground(notificationId, it)
       }
