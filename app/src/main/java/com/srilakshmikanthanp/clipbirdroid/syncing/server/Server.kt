@@ -145,14 +145,14 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
   /**
    * Add Sync Request Handler
    */
-  fun addSyncRequestHandler(handler: SyncRequestHandler) {
+  override fun addSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.add(handler)
   }
 
   /**
    * Remove Sync Request Handler
    */
-  fun removeSyncRequestHandler(handler: SyncRequestHandler) {
+  override fun removeSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.remove(handler)
   }
 

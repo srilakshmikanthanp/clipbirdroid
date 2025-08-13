@@ -158,12 +158,12 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
   private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
 
   // Add handler for sync request
-  fun addSyncRequestHandler(handler: SyncRequestHandler) {
+  override fun addSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.add(handler)
   }
 
   // Remove handler for sync request
-  fun removeSyncRequestHandler(handler: SyncRequestHandler) {
+  override fun removeSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.remove(handler)
   }
 
