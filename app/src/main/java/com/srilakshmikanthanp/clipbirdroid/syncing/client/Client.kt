@@ -9,16 +9,19 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleReadTime
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleWriteTime
-import com.srilakshmikanthanp.clipbirdroid.mdns.Browser
+import com.srilakshmikanthanp.clipbirdroid.mdns.BrowserListener
+import com.srilakshmikanthanp.clipbirdroid.mdns.MdnsBrowser
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.AuthenticationEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.InvalidPacketEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.PacketDecoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.PingPacketEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.SyncingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.AuthenticationEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.InvalidPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
+import com.srilakshmikanthanp.clipbirdroid.syncing.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.PingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
+import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingPacketEncoder
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -45,11 +48,10 @@ import java.net.InetSocketAddress
 import java.security.cert.X509Certificate
 import java.util.concurrent.locks.ReentrantLock
 
-
 /**
  * Client Class for Syncing the Clipboard
  */
-class Client(private val context: Context) : Browser.BrowserListener, ChannelInboundHandler {
+class Client(private val context: Context) : BrowserListener, ChannelInboundHandler, Synchronizer {
   // List handlers for server list changed
   private val onServerListChangeHandlers = mutableListOf<OnServerListChangeHandler>()
 
@@ -153,16 +155,16 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
   }
 
   // List handlers for sync request
-  private val onSyncRequestHandlers = mutableListOf<com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler>()
+  private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
 
   // Add handler for sync request
-  fun addSyncRequestHandler(handler: com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler) {
-    onSyncRequestHandlers.add(handler)
+  fun addSyncRequestHandler(handler: SyncRequestHandler) {
+    syncRequestHandlers.add(handler)
   }
 
   // Remove handler for sync request
-  fun removeSyncRequestHandler(handler: com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler) {
-    onSyncRequestHandlers.remove(handler)
+  fun removeSyncRequestHandler(handler: SyncRequestHandler) {
+    syncRequestHandlers.remove(handler)
   }
 
   // Handler for browsing status changed
@@ -380,7 +382,7 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
   private val lock = ReentrantLock()
 
   // Browser
-  private val browser = Browser(context)
+  private val mdnsBrowser = MdnsBrowser(context)
 
   /**
    * Notify all the listeners for server list changed
@@ -431,7 +433,7 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
    * Notify all the listeners for sync request
    */
   private fun notifySyncRequest(items: List<Pair<String, ByteArray>>) {
-    for (handler in onSyncRequestHandlers) {
+    for (handler in syncRequestHandlers) {
       handler.onSyncRequest(items)
     }
   }
@@ -589,7 +591,7 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
    * Init
    */
   init {
-    this.browser.addListener(this)
+    this.mdnsBrowser.addListener(this)
   }
 
   /**
@@ -609,7 +611,7 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
   /**
    * Sync the Items
    */
-  fun syncItems(items: List<Pair<String, ByteArray>>) {
+  override fun synchronize(items: List<Pair<String, ByteArray>>) {
     // check if channel is initialized
     if (this.getConnectedServer() == null) {
       return
@@ -720,22 +722,22 @@ class Client(private val context: Context) : Browser.BrowserListener, ChannelInb
    * Start the browser
    */
   fun startBrowsing() {
-    this.browser.start()
+    this.mdnsBrowser.start()
   }
 
   /**
    * Stop the browser
    */
   fun stopBrowsing() {
-    this.browser.stop()
+    this.mdnsBrowser.stop()
   }
 
   fun isBrowsing(): Boolean {
-    return this.browser.isBrowsing()
+    return this.mdnsBrowser.isBrowsing()
   }
 
   fun restartBrowsing() {
-    this.browser.restart()
+    this.mdnsBrowser.restart()
   }
 
   /**

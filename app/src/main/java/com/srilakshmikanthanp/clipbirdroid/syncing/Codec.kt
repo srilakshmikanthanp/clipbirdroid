@@ -1,10 +1,9 @@
-package com.srilakshmikanthanp.clipbirdroid.syncing.common
+package com.srilakshmikanthanp.clipbirdroid.syncing
 
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
-import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.common.enums.ErrorCode
 import com.srilakshmikanthanp.clipbirdroid.common.exceptions.MalformedPacket
 import com.srilakshmikanthanp.clipbirdroid.common.exceptions.NotThisPacket

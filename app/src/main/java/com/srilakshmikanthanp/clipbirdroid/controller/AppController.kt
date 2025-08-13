@@ -11,7 +11,7 @@ import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client
 import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client.OnBrowsingStartFailedHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client.OnBrowsingStopFailedHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler
+import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -166,13 +166,13 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
   //----------------------- Common Signals ------------------------//
 
-  private val syncRequestHandlers = mutableListOf<OnSyncRequestHandler>()
+  private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
 
-  fun addSyncRequestHandler(handler: OnSyncRequestHandler) {
+  fun addSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.add(handler)
   }
 
-  fun removeSyncRequestHandler(handler: OnSyncRequestHandler) {
+  fun removeSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.remove(handler)
   }
 
@@ -213,7 +213,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       server.removeMdnsServiceUnregisterFailedHandler(::notifyMdnsServiceUnregisterFailed)
 
       // Disconnect the signals to Server
-      clipboard.removeClipboardChangeListener(server::syncItems)
+      clipboard.removeClipboardChangeListener(server::synchronize)
     }
 
     if (host.holds(Client::class.java)) {
@@ -244,7 +244,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       client.removeBrowsingStopFailedHandler(::notifyBrowsingStopFailed)
 
       // Disconnect the signals to Client
-      clipboard.removeClipboardChangeListener(client::syncItems)
+      clipboard.removeClipboardChangeListener(client::synchronize)
     }
   }
 
@@ -450,7 +450,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
     // if the client is connected then connect the signals
     if (status) {
-      clipboard.addClipboardChangeListener(client::syncItems)
+      clipboard.addClipboardChangeListener(client::synchronize)
       val cert = client.getConnectedServerCertificate()
       val name = srv.name
       storage.setServerCert(name, cert)
@@ -458,7 +458,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     }
 
     // Remove the clipboard change listener
-    clipboard.removeClipboardChangeListener(client::syncItems)
+    clipboard.removeClipboardChangeListener(client::synchronize)
 
     // get all server
     for (s in client.getServerList()) {
@@ -503,7 +503,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     server.addClientStateChangeHandler(::notifyClientStateChanged)
 
     // connect the OnClipboardChange signal to the server
-    clipboard.addClipboardChangeListener(server::syncItems)
+    clipboard.addClipboardChangeListener(server::synchronize)
 
     // connect the auth request signal
     server.addAuthRequestHandler(::notifyAuthRequest)
@@ -568,7 +568,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     client.addConnectionErrorHandler(::notifyConnectionError)
 
     // Connect the clipboard change signal
-    clipboard.addClipboardChangeListener(client::syncItems)
+    clipboard.addClipboardChangeListener(client::synchronize)
 
     // Connect the browsing status change signal
     client.addBrowsingStatusChangeHandler(::notifyBrowsingStatusChanged)
@@ -978,12 +978,12 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
   fun syncClipboard(data: List<Pair<String, ByteArray>>) {
     // if the host is server then sync the clipboard
     if (host.holds(Server::class.java)) {
-      (host.get() as Server).syncItems(data)
+      (host.get() as Server).synchronize(data)
     }
 
     // if the host is not client then return
     if (host.holds(Client::class.java)) {
-      (host.get() as Client).syncItems(data)
+      (host.get() as Client).synchronize(data)
     }
   }
 

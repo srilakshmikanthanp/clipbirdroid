@@ -9,15 +9,18 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleReadTime
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleWriteTime
-import com.srilakshmikanthanp.clipbirdroid.mdns.Register
+import com.srilakshmikanthanp.clipbirdroid.mdns.MdnsRegister
+import com.srilakshmikanthanp.clipbirdroid.mdns.RegisterListener
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.AuthenticationEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.InvalidPacketEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.PacketDecoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.PingPacketEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.common.SyncingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.AuthenticationEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.InvalidPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
+import com.srilakshmikanthanp.clipbirdroid.syncing.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.PingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
+import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingPacketEncoder
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -44,7 +47,7 @@ import java.security.cert.X509Certificate
 /**
  * A SSl Server Using Netty as a Backend
  */
-class Server(private val context: Context) : ChannelInboundHandler, Register.RegisterListener {
+class Server(private val context: Context) : ChannelInboundHandler, RegisterListener, Synchronizer {
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
 
@@ -137,19 +140,19 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   }
 
   // Sync Request Handlers
-  private val syncRequestHandlers = mutableListOf<com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler>()
+  private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
 
   /**
    * Add Sync Request Handler
    */
-  fun addSyncRequestHandler(handler: com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler) {
+  fun addSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.add(handler)
   }
 
   /**
    * Remove Sync Request Handler
    */
-  fun removeSyncRequestHandler(handler: com.srilakshmikanthanp.clipbirdroid.syncing.common.OnSyncRequestHandler) {
+  fun removeSyncRequestHandler(handler: SyncRequestHandler) {
     syncRequestHandlers.remove(handler)
   }
 
@@ -219,7 +222,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   private var sslServer: Channel? = null
 
   // Register instance
-  private val register = Register(context)
+  private val mdnsRegister = MdnsRegister(context)
 
   // Ssl Context for the Server
   private var sslCert: SSLConfig? = null
@@ -417,14 +420,14 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    * Initialize the Server
    */
   init {
-    register.addRegisterListener(this)
+    mdnsRegister.addRegisterListener(this)
   }
 
   /**
    * Is server started
    */
   fun isRegistered(): Boolean {
-    return register.isRegistered()
+    return mdnsRegister.isRegistered()
   }
 
   /**
@@ -450,7 +453,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
      .channel()
 
     val addr = server.localAddress() as InetSocketAddress
-    register.registerService(addr.port)
+    mdnsRegister.registerService(addr.port)
 
     this.sslServer = server
   }
@@ -461,7 +464,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   fun registerService() {
     if (!this.isRunning()) throw RuntimeException("Server is not started")
     val addr = sslServer?.localAddress() as InetSocketAddress
-    register.registerService(addr.port)
+    mdnsRegister.registerService(addr.port)
   }
 
   /**
@@ -480,7 +483,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
 
     sslServer?.close()?.sync()
     this.sslServer = null
-    register.unRegisterService()
+    mdnsRegister.unRegisterService()
   }
 
   /**
@@ -488,13 +491,13 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
    */
   fun unregisterService() {
     if (!this.isRunning()) throw RuntimeException("Server is not started")
-    register.unRegisterService()
+    mdnsRegister.unRegisterService()
   }
 
   fun reRegisterService() {
     if (!this.isRunning()) throw RuntimeException("Server is not started")
     val addr = sslServer?.localAddress() as InetSocketAddress
-    register.reRegister(addr.port)
+    mdnsRegister.reRegister(addr.port)
   }
 
   /**
@@ -518,7 +521,7 @@ class Server(private val context: Context) : ChannelInboundHandler, Register.Reg
   /**
    * Sync the Items
    */
-  fun syncItems(items: List<Pair<String, ByteArray>>) {
+  override fun synchronize(items: List<Pair<String, ByteArray>>) {
     // if server is not running the throw error
     if (!this.isRunning()) throw RuntimeException("Server is not started")
 
