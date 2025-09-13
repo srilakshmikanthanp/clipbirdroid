@@ -8,11 +8,11 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 import com.srilakshmikanthanp.clipbirdroid.constant.appMaxHistory
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client
-import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client.OnBrowsingStartFailedHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client.OnBrowsingStopFailedHandler
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client.OnBrowsingStartFailedHandler
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client.OnBrowsingStopFailedHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.server.Server
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -82,7 +82,7 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
     browsingStatusChangeHandlers.remove(handler)
   }
 
-  private val onStartBrowsingFailedHandlers = mutableListOf<Client.OnBrowsingStartFailedHandler>()
+  private val onStartBrowsingFailedHandlers = mutableListOf<OnBrowsingStartFailedHandler>()
 
   fun addBrowsingStartFailedHandler(handler: OnBrowsingStartFailedHandler) {
     onStartBrowsingFailedHandlers.add(handler)

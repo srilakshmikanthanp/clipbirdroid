@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.syncing
+package com.srilakshmikanthanp.clipbirdroid.syncing.lan
 
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
@@ -7,6 +7,7 @@ import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.common.enums.ErrorCode
 import com.srilakshmikanthanp.clipbirdroid.common.exceptions.MalformedPacket
 import com.srilakshmikanthanp.clipbirdroid.common.exceptions.NotThisPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToByteEncoder
@@ -44,8 +45,8 @@ class PingPacketEncoder : MessageToByteEncoder<PingPacket>() {
 /**
  * Sync Packet encoder
  */
-class SyncingPacketEncoder : MessageToByteEncoder<com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket>() {
-  override fun encode(ctx: ChannelHandlerContext, msg: com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket, out: ByteBuf) {
+class SyncingPacketEncoder : MessageToByteEncoder<SyncingPacket>() {
+  override fun encode(ctx: ChannelHandlerContext, msg: SyncingPacket, out: ByteBuf) {
     out.writeBytes(msg.toByteArray())
   }
 }
@@ -119,7 +120,7 @@ class PacketDecoder : ReplayingDecoder<Void>() {
 
     // try to parse the Syncing Packet
     try {
-      out.add(com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket.fromByteArray(buffer.array()))
+      out.add(SyncingPacket.fromByteArray(buffer.array()))
       return
     } catch (e: MalformedPacket) {
       ctx.writeAndFlush(InvalidPacket(e.errorCode, e.message.toByteArray()))

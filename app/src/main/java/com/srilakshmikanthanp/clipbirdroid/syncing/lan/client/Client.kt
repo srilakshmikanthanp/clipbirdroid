@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.syncing.client
+package com.srilakshmikanthanp.clipbirdroid.syncing.lan.client
 
 import android.content.Context
 import android.util.Log
@@ -14,14 +14,16 @@ import com.srilakshmikanthanp.clipbirdroid.mdns.MdnsBrowser
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem
+import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.syncing.AuthenticationEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.InvalidPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.AuthenticationEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.PacketDecoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.PingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.PingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
-import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.SyncingPacketEncoder
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -551,7 +553,7 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
   /**
    * Process the SyncingPacket
    */
-  private fun onSyncingPacket(ctx: ChannelHandlerContext, m: com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket) {
+  private fun onSyncingPacket(ctx: ChannelHandlerContext, m: SyncingPacket) {
     // list of items to be synced
     val items = mutableListOf<Pair<String, ByteArray>>()
 
@@ -619,7 +621,7 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
 
     // create the syncing Items
     val syncingItems = items.map {
-      return@map com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem(
+      return@map SyncingItem(
         it.first.toByteArray(),
         it.second
       )
@@ -630,7 +632,7 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
 
     // send the packet
     try {
-      this.sendPacket(com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket(array))
+      this.sendPacket(SyncingPacket(array))
     } catch (e: Exception) {
       Log.e(TAG, e.message, e)
     }
@@ -849,7 +851,7 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
       is Authentication -> onAuthentication(ctx, msg)
       is InvalidPacket -> onInvalidPacket(ctx, msg)
       is PingPacket -> onPingPacket(ctx, msg)
-      is com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket -> onSyncingPacket(ctx, msg)
+      is SyncingPacket -> onSyncingPacket(ctx, msg)
     }
   }
 

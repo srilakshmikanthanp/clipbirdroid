@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.syncing.server
+package com.srilakshmikanthanp.clipbirdroid.syncing.lan.server
 
 import android.content.Context
 import android.util.Log
@@ -13,14 +13,16 @@ import com.srilakshmikanthanp.clipbirdroid.mdns.MdnsRegister
 import com.srilakshmikanthanp.clipbirdroid.mdns.RegisterListener
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem
+import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.syncing.AuthenticationEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.InvalidPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.AuthenticationEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.InvalidPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.PacketDecoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.PingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.PacketDecoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.PingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
-import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.SyncingPacketEncoder
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -396,7 +398,7 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
   /**
    * On Syncing Packet Received
    */
-  private fun onSyncingPacket(ctx: ChannelHandlerContext, m: com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket) {
+  private fun onSyncingPacket(ctx: ChannelHandlerContext, m: SyncingPacket) {
     // list of items to be synced
     val items = mutableListOf<Pair<String, ByteArray>>()
 
@@ -527,7 +529,7 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
 
     // create the syncing Items
     val syncingItems = items.map {
-      return@map com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem(
+      return@map SyncingItem(
         it.first.toByteArray(),
         it.second
       )
@@ -537,7 +539,7 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
     val array = syncingItems.toTypedArray()
 
     // send the packet to all the clients
-    sendPacketToAllClients(com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket(array))
+    sendPacketToAllClients(SyncingPacket(array))
   }
 
   /**
@@ -745,7 +747,7 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
     if (!authenticatedClients.contains(ctx)) { return }
 
     when (msg) {
-      is com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket -> return onSyncingPacket(ctx, msg)
+      is SyncingPacket -> return onSyncingPacket(ctx, msg)
       is PingPacket -> return onPingPacket(ctx, msg)
     }
   }

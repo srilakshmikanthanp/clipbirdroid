@@ -50,8 +50,8 @@ import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.syncing.client.Client
-import com.srilakshmikanthanp.clipbirdroid.syncing.server.Server
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.server.Server
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
