@@ -1,9 +1,9 @@
-package com.srilakshmikanthanp.clipbirdroid.utilities.functions
+package com.srilakshmikanthanp.clipbirdroid.common.functions
 
 import android.content.Context
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.constant.appName
-import com.srilakshmikanthanp.clipbirdroid.constant.appOrgName
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
+import com.srilakshmikanthanp.clipbirdroid.constants.appName
+import com.srilakshmikanthanp.clipbirdroid.constants.appOrgName
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.cert.X509v3CertificateBuilder

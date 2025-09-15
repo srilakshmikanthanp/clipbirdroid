@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.constant
+package com.srilakshmikanthanp.clipbirdroid.constants
 
 import android.content.Context
 import android.os.Build
@@ -127,4 +127,12 @@ fun appMaxIdleReadTime(): Int {
  */
 fun appMaxIdleWriteTime(): Int {
   return 10
+}
+
+fun getClipbirdApiUrl(): String {
+  return BuildConfig.APP_API_URL
+}
+
+fun getClipbirdWebsocketUrl(): String {
+  return BuildConfig.APP_WEBSOCKET_URL
 }

@@ -1,7 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.screens
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,13 +32,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.constant.appDonatePage
-import com.srilakshmikanthanp.clipbirdroid.constant.appHomePage
-import com.srilakshmikanthanp.clipbirdroid.constant.appIssuesPage
-import com.srilakshmikanthanp.clipbirdroid.constant.appVersion
+import com.srilakshmikanthanp.clipbirdroid.constants.appDonatePage
+import com.srilakshmikanthanp.clipbirdroid.constants.appHomePage
+import com.srilakshmikanthanp.clipbirdroid.constants.appIssuesPage
+import com.srilakshmikanthanp.clipbirdroid.constants.appVersion
 import androidx.core.net.toUri
 
 /**

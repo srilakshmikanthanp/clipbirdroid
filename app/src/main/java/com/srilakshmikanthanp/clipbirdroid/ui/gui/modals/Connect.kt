@@ -37,7 +37,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.isHostAvailable
+import com.srilakshmikanthanp.clipbirdroid.common.functions.isHostAvailable
 import org.json.JSONObject
 import java.net.InetAddress
 import java.util.concurrent.Executors.newSingleThreadExecutor

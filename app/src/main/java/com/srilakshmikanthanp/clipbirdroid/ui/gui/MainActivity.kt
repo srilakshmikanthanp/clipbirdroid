@@ -37,10 +37,11 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
+import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
 import com.srilakshmikanthanp.clipbirdroid.Clipbird
+import dagger.hilt.android.AndroidEntryPoint
 
 
 /**
@@ -95,6 +96,7 @@ private fun PreviewClipbird() {
 /**
  * Main Activity
  */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
   // companion object
   companion object {
@@ -226,7 +228,7 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent).also { handleIntent(intent) }
   }
 
