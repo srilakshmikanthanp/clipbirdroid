@@ -2,12 +2,8 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.composables
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -26,8 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.constant.appName
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
+import com.srilakshmikanthanp.clipbirdroid.constants.appName
 
 /**
  * Enum Class for Drawer Items

@@ -6,7 +6,7 @@ import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
-import com.srilakshmikanthanp.clipbirdroid.constant.appMaxHistory
+import com.srilakshmikanthanp.clipbirdroid.constants.appMaxHistory
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client.OnBrowsingStartFailedHandler

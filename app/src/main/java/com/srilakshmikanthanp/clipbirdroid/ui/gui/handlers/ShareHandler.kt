@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.Clipbird
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.toPNG
+import com.srilakshmikanthanp.clipbirdroid.common.functions.toPNG
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

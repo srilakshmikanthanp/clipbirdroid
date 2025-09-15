@@ -48,14 +48,14 @@ import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.server.Server
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.getAllInterfaceAddresses
+import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
+import com.srilakshmikanthanp.clipbirdroid.common.functions.getAllInterfaceAddresses
 import org.json.JSONObject
 import java.net.InetAddress
 import java.util.Locale

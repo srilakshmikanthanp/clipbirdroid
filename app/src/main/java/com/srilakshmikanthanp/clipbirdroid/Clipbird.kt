@@ -5,18 +5,20 @@ import android.util.Log
 import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
-import com.srilakshmikanthanp.clipbirdroid.constant.appCertExpiryInterval
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
+import com.srilakshmikanthanp.clipbirdroid.common.extensions.toPem
+import com.srilakshmikanthanp.clipbirdroid.constants.appCertExpiryInterval
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.generateX509Certificate
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.toPem
+import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
+import dagger.hilt.android.HiltAndroidApp
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
 
+@HiltAndroidApp
 class Clipbird : Application() {
   // Function used to get the Private Key and the Certificate New
   private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {

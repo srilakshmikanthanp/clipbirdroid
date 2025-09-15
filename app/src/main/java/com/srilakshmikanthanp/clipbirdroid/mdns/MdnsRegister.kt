@@ -6,8 +6,8 @@ import android.net.nsd.NsdManager.RegistrationListener
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.MulticastLock
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceType
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 

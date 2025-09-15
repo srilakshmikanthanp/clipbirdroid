@@ -5,9 +5,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
-import com.srilakshmikanthanp.clipbirdroid.constant.appName
-import com.srilakshmikanthanp.clipbirdroid.constant.appProvider
-import com.srilakshmikanthanp.clipbirdroid.utilities.functions.toPNG
+import com.srilakshmikanthanp.clipbirdroid.constants.appName
+import com.srilakshmikanthanp.clipbirdroid.constants.appProvider
+import com.srilakshmikanthanp.clipbirdroid.common.functions.toPNG
 import java.io.File
 import java.io.FileNotFoundException
 

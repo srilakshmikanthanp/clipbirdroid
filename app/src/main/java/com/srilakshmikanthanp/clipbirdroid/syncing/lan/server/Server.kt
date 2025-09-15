@@ -7,8 +7,8 @@ import com.srilakshmikanthanp.clipbirdroid.common.enums.PingType
 import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
-import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleReadTime
-import com.srilakshmikanthanp.clipbirdroid.constant.appMaxIdleWriteTime
+import com.srilakshmikanthanp.clipbirdroid.constants.appMaxIdleReadTime
+import com.srilakshmikanthanp.clipbirdroid.constants.appMaxIdleWriteTime
 import com.srilakshmikanthanp.clipbirdroid.mdns.MdnsRegister
 import com.srilakshmikanthanp.clipbirdroid.mdns.RegisterListener
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication

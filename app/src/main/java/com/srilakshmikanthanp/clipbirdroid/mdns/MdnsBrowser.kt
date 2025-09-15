@@ -10,8 +10,8 @@ import android.net.wifi.WifiManager.MulticastLock
 import android.os.Build
 import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.constant.appMdnsServiceType
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceType
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.LinkedList
