@@ -19,11 +19,18 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.StatusNotification
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Service for the application
  */
 class ClipbirdService : Service() {
+  private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
   // Create the Status Notification instance for the service instance
   private lateinit var notification: StatusNotification
 
@@ -132,28 +139,40 @@ class ClipbirdService : Service() {
     controller = (this.application as Clipbird).getController()
 
     // Add the Sync Request Handler
-    controller.addSyncRequestHandler(controller::setClipboard)
+    this.serviceScope.launch {
+      controller.syncRequests.collect { controller.setClipboard(it) }
+    }
 
     // Add the AuthRequest Handler
-    controller.addAuthRequestHandler(this::onJoinRequest)
-
-    // on client connected to the group change notification
-    controller.addServerStatusChangedHandler { s, d ->
-      this.showNotification(if(s) {
-        resources.getString(R.string.notification_title_client, d.name)
-      } else {
-        resources.getString(R.string.no_connection)
-      })
+    this.serviceScope.launch {
+      controller.authRequest.collect { onJoinRequest(it) }
     }
 
     // on client connected to the group change notification
-    controller.addClientListChangedHandler {
-      this.showNotification(resources.getString(R.string.notification_title_server, it.size))
+    this.serviceScope.launch {
+      controller.serverStatus.collect { (s, d) ->
+        this@ClipbirdService.showNotification(if (s) {
+          resources.getString(R.string.notification_title_client, d.name)
+        } else {
+          resources.getString(R.string.no_connection)
+        })
+      }
+    }
+
+    // on client connected to the group change notification
+    this.serviceScope.launch {
+      controller.clients.collect { clients ->
+        this@ClipbirdService.showNotification(
+          resources.getString(R.string.notification_title_server, clients.size)
+        )
+      }
     }
 
     // on host type change
-    controller.addHostTypeChangeHandler {
-      this.showNotification(notificationTitle())
+    this.serviceScope.launch {
+      controller.hostTypeChangeEvent.collect {
+        this@ClipbirdService.showNotification(notificationTitle())
+      }
     }
 
     this.registerReceiver(
@@ -177,6 +196,7 @@ class ClipbirdService : Service() {
     } else if (controller.getHostType() == HostType.CLIENT) {
       controller.disposeClient()
     }
+    this.serviceScope.cancel()
   }
 
   // static function to start the service
