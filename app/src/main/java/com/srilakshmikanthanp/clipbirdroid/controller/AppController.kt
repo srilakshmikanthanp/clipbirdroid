@@ -9,186 +9,70 @@ import com.srilakshmikanthanp.clipbirdroid.common.variant.Variant
 import com.srilakshmikanthanp.clipbirdroid.constants.appMaxHistory
 import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client.OnBrowsingStartFailedHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client.OnBrowsingStopFailedHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.server.Server
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class AppController(private val sslConfig: SSLConfig, private val context: Context) {
+class AppController(private val sslConfig: SSLConfig, private val context: Context): AutoCloseable {
   //----------------------- client Signals -------------------------//
-  private val serverListChangedHandlers = mutableListOf<Client.OnServerListChangeHandler>()
+  private val _servers = MutableStateFlow<Set<Device>>(emptySet())
+  val servers = _servers.asStateFlow()
 
-  fun addServerListChangedHandler(handler: Client.OnServerListChangeHandler) {
-    serverListChangedHandlers.add(handler)
-  }
+  private val _serverFoundEvents = MutableSharedFlow<Device>()
+  val serverFoundEvents: SharedFlow<Device> = _serverFoundEvents.asSharedFlow()
 
-  fun removeServerListChangedHandler(handler: Client.OnServerListChangeHandler) {
-    serverListChangedHandlers.remove(handler)
-  }
+  private val _serverGoneEvents = MutableSharedFlow<Device>()
+  val serverGoneEvents: SharedFlow<Device> = _serverGoneEvents.asSharedFlow()
 
-  private val serverFoundHandlers = mutableListOf<Client.OnServerFoundHandler>()
+  private val _connectionErrors = MutableSharedFlow<String>()
+  val connectionErrors: SharedFlow<String> = _connectionErrors.asSharedFlow()
 
-  fun addServerFoundHandler(handler: Client.OnServerFoundHandler) {
-    serverFoundHandlers.add(handler)
-  }
+  private val _serverStatus = MutableSharedFlow<Pair<Boolean, Device>>()
+  val serverStatus = _serverStatus.asSharedFlow()
 
-  fun removeServerFoundHandler(handler: Client.OnServerFoundHandler) {
-    serverFoundHandlers.remove(handler)
-  }
+  private val _browsingStatus = MutableSharedFlow<Boolean>()
+  val browsingStatus = _browsingStatus.asSharedFlow()
 
-  private val serverGoneHandlers = mutableListOf<OnServerGoneHandler>()
+  private val _browsingStartFailedEvents = MutableSharedFlow<Int>()
+  val browsingStartFailedEvents: SharedFlow<Int> = _browsingStartFailedEvents
 
-  fun interface OnServerGoneHandler {
-    fun onServerGone(server: Device)
-  }
-
-  fun addServerGoneHandler(handler: OnServerGoneHandler) {
-    serverGoneHandlers.add(handler)
-  }
-
-  fun removeServerGoneHandler(handler: OnServerGoneHandler) {
-    serverGoneHandlers.remove(handler)
-  }
-
-  private val connectionErrorHandlers = mutableListOf<Client.OnConnectionErrorHandler>()
-
-  fun addConnectionErrorHandler(handler: Client.OnConnectionErrorHandler) {
-    connectionErrorHandlers.add(handler)
-  }
-
-  fun removeConnectionErrorHandler(handler: Client.OnConnectionErrorHandler) {
-    connectionErrorHandlers.remove(handler)
-  }
-
-  private val serverStatusChangedHandlers = mutableListOf<Client.OnServerStatusChangeHandler>()
-
-  fun addServerStatusChangedHandler(handler: Client.OnServerStatusChangeHandler) {
-    serverStatusChangedHandlers.add(handler)
-  }
-
-  fun removeServerStatusChangedHandler(handler: Client.OnServerStatusChangeHandler) {
-    serverStatusChangedHandlers.remove(handler)
-  }
-
-  private val browsingStatusChangeHandlers = mutableListOf<Client.OnBrowsingStatusChangeHandler>()
-
-  fun addBrowsingStatusChangeHandler(handler: Client.OnBrowsingStatusChangeHandler) {
-    browsingStatusChangeHandlers.add(handler)
-  }
-
-  fun removeBrowsingStatusChangeHandler(handler: Client.OnBrowsingStatusChangeHandler) {
-    browsingStatusChangeHandlers.remove(handler)
-  }
-
-  private val onStartBrowsingFailedHandlers = mutableListOf<OnBrowsingStartFailedHandler>()
-
-  fun addBrowsingStartFailedHandler(handler: OnBrowsingStartFailedHandler) {
-    onStartBrowsingFailedHandlers.add(handler)
-  }
-
-  fun removeBrowsingStartFailedHandler(handler: OnBrowsingStartFailedHandler) {
-    onStartBrowsingFailedHandlers.remove(handler)
-  }
-
-  private val onStopBrowsingFailedHandlers = mutableListOf<OnBrowsingStopFailedHandler>()
-
-  fun addBrowsingStopFailedHandler(handler: OnBrowsingStopFailedHandler) {
-    onStopBrowsingFailedHandlers.add(handler)
-  }
-
-  fun removeBrowsingStopFailedHandler(handler: OnBrowsingStopFailedHandler) {
-    onStopBrowsingFailedHandlers.remove(handler)
-  }
+  private val _browsingStopFailedEvents = MutableSharedFlow<Int>()
+  val browsingStopFailedEvents: SharedFlow<Int> = _browsingStopFailedEvents
 
   //----------------------- server Signals ------------------------//
+  private val _clientStateChangedEvents = MutableSharedFlow<Pair<Device, Boolean>>()
+  val clientStateChangedEvents: SharedFlow<Pair<Device, Boolean>> = _clientStateChangedEvents.asSharedFlow()
 
-  private val clientStateChangedHandlers = mutableListOf<Server.OnClientStateChangeHandler>()
+  private val _mdnsRegisterStatusEvents = MutableSharedFlow<Boolean>()
+  val mdnsRegisterStatusEvents: SharedFlow<Boolean> = _mdnsRegisterStatusEvents.asSharedFlow()
 
-  fun addClientStateChangedHandler(handler: Server.OnClientStateChangeHandler) {
-    clientStateChangedHandlers.add(handler)
-  }
+  private val _mdnsServiceRegisterFailedEvents = MutableSharedFlow<Int>()
+  val mdnsServiceRegisterFailedEvents: SharedFlow<Int> = _mdnsServiceRegisterFailedEvents.asSharedFlow()
 
-  fun removeClientStateChangedHandler(handler: Server.OnClientStateChangeHandler) {
-    clientStateChangedHandlers.remove(handler)
-  }
+  private val _mdnsServiceUnregisterFailedEvents = MutableSharedFlow<Int>()
+  val mdnsServiceUnregisterFailedEvents: SharedFlow<Int> = _mdnsServiceUnregisterFailedEvents.asSharedFlow()
 
-  private val mdnsRegisterStatusChangeHandlers = mutableListOf<Server.OnMdnsRegisterStatusChangeHandler>()
+  private val _authRequest = MutableSharedFlow<Device>()
+  val authRequest: SharedFlow<Device> = _authRequest.asSharedFlow()
 
-  fun addServerStateChangedHandler(handler: Server.OnMdnsRegisterStatusChangeHandler) {
-    mdnsRegisterStatusChangeHandlers.add(handler)
-  }
-
-  fun removeServerStateChangedHandler(handler: Server.OnMdnsRegisterStatusChangeHandler) {
-    mdnsRegisterStatusChangeHandlers.remove(handler)
-  }
-
-  private val mdnsServiceRegisterFailedHandlers = mutableListOf<Server.OnMdnsServiceRegisterFailedHandler>()
-
-  fun addMdnsServiceRegisterFailedHandler(handler: Server.OnMdnsServiceRegisterFailedHandler) {
-    mdnsServiceRegisterFailedHandlers.add(handler)
-  }
-
-  fun removeMdnsServiceRegisterFailedHandler(handler: Server.OnMdnsServiceRegisterFailedHandler) {
-    mdnsServiceRegisterFailedHandlers.remove(handler)
-  }
-
-  private val mdnsServiceUnregisterFailedHandlers = mutableListOf<Server.OnMdnsServiceUnregisterFailedHandler>()
-
-  fun addMdnsServiceUnregisterFailedHandler(handler: Server.OnMdnsServiceUnregisterFailedHandler) {
-    mdnsServiceUnregisterFailedHandlers.add(handler)
-  }
-
-  fun removeMdnsServiceUnregisterFailedHandler(handler: Server.OnMdnsServiceUnregisterFailedHandler) {
-    mdnsServiceUnregisterFailedHandlers.remove(handler)
-  }
-
-  private val authRequestHandlers = mutableListOf<Server.OnAuthRequestHandler>()
-
-  fun addAuthRequestHandler(handler: Server.OnAuthRequestHandler) {
-    authRequestHandlers.add(handler)
-  }
-
-  fun removeAuthRequestHandler(handler: Server.OnAuthRequestHandler) {
-    authRequestHandlers.remove(handler)
-  }
-
-  private val clientListChangedHandlers = mutableListOf<Server.OnClientListChangeHandler>()
-
-  fun addClientListChangedHandler(handler: Server.OnClientListChangeHandler) {
-    clientListChangedHandlers.add(handler)
-  }
-
-  fun removeClientListChangedHandler(handler: Server.OnClientListChangeHandler) {
-    clientListChangedHandlers.remove(handler)
-  }
+  private val _clients = MutableStateFlow<List<Device>>(emptyList())
+  val clients = _clients.asStateFlow()
 
   //----------------------- Common Signals ------------------------//
 
-  private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
+  private val _syncRequests = MutableSharedFlow<List<Pair<String, ByteArray>>>()
+  val syncRequests: SharedFlow<List<Pair<String, ByteArray>>> = _syncRequests.asSharedFlow()
 
-  fun addSyncRequestHandler(handler: SyncRequestHandler) {
-    syncRequestHandlers.add(handler)
-  }
-
-  fun removeSyncRequestHandler(handler: SyncRequestHandler) {
-    syncRequestHandlers.remove(handler)
-  }
-
-  private val hostTypeChangeHandlers = mutableListOf<OnHostTypeChangeHandler>()
-
-  fun interface OnHostTypeChangeHandler {
-    fun onHostTypeChanged(host: HostType)
-  }
-
-  fun addHostTypeChangeHandler(handler: OnHostTypeChangeHandler) {
-    hostTypeChangeHandlers.add(handler)
-  }
-
-  fun removeHostTypeChangeHandler(handler: OnHostTypeChangeHandler) {
-    hostTypeChangeHandlers.remove(handler)
-  }
+  private val _hostTypeChangeEvent = MutableSharedFlow<HostType>()
+  val hostTypeChangeEvent: SharedFlow<HostType> = _hostTypeChangeEvent
 
   //----------------------- Helper Functions ---------------------------//
 
@@ -250,14 +134,13 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
 
   //------------------------- Member Variables -------------------------//
 
-  // Private
-  private val _history = MutableStateFlow(emptyList<List<Pair<String, ByteArray>>>().toMutableList())
+  private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
   private val storage: Storage = Storage.getInstance(context)
   private val host: Variant = Variant()
   private val clipboard: Clipboard = Clipboard(context)
   private val TAG = "AppController"
 
-  // Public
+  private val _history = MutableStateFlow(emptyList<List<Pair<String, ByteArray>>>().toMutableList())
   val history = _history.asStateFlow()
 
   //----------------------- private notifiers ------------------------//
@@ -266,17 +149,15 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the server list changed (Client)
    */
   private fun notifyServerListChanged(servers: Set<Device>) {
-    for (handler in serverListChangedHandlers) {
-      handler.onServerListChanged(servers)
-    }
+    this._servers.value = servers
   }
 
   /**
    * Notify the server Found (Client)
    */
   private fun notifyServerFound(server: Device) {
-    for (handler in serverFoundHandlers) {
-      handler.onServerFound(server)
+    this.scope.launch {
+      this@AppController._serverFoundEvents.emit(server)
     }
   }
 
@@ -284,8 +165,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the server gone (Client)
    */
   private fun notifyServerGone(server: Device) {
-    for (handler in serverGoneHandlers) {
-      handler.onServerGone(server)
+    this.scope.launch {
+      this@AppController._serverGoneEvents.emit(server)
     }
   }
 
@@ -293,8 +174,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the connection error (Client)
    */
   private fun notifyConnectionError(error: String) {
-    for (handler in connectionErrorHandlers) {
-      handler.onConnectionError(error)
+    this.scope.launch {
+      this@AppController._connectionErrors.emit(error)
     }
   }
 
@@ -302,8 +183,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the server status changed (Client)
    */
   private fun notifyServerStatusChanged(status: Boolean, server: Device) {
-    for (handler in serverStatusChangedHandlers) {
-      handler.onServerStatusChanged(status, server)
+    this.scope.launch {
+      this@AppController._serverStatus.emit(Pair(status, server))
     }
   }
 
@@ -311,8 +192,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the client state changed (Server)
    */
   private fun notifyClientStateChanged(client: Device, connected: Boolean) {
-    for (handler in clientStateChangedHandlers) {
-      handler.onClientStateChanged(client, connected)
+    this.scope.launch {
+      this@AppController._clientStateChangedEvents.emit(Pair(client, connected))
     }
   }
 
@@ -320,8 +201,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the server state changed (Server)
    */
   private fun notifyServerStateChanged(status: Boolean) {
-    for (handler in mdnsRegisterStatusChangeHandlers) {
-      handler.onMdnsRegisterStatusChanged(status)
+    this.scope.launch {
+      this@AppController._mdnsRegisterStatusEvents.emit(status)
     }
   }
 
@@ -329,8 +210,8 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the auth request (Server)
    */
   private fun notifyAuthRequest(client: Device) {
-    for (handler in authRequestHandlers) {
-      handler.onAuthRequest(client)
+    this.scope.launch {
+      this@AppController._authRequest.emit(client)
     }
   }
 
@@ -338,17 +219,15 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the client list changed (Server)
    */
   private fun notifyClientListChanged(clients: List<Device>) {
-    for (handler in clientListChangedHandlers) {
-      handler.onClientListChanged(clients)
-    }
+    this._clients.value = clients
   }
 
   /**
    * Notify the sync request (Common)
    */
   private fun notifySyncRequest(data: List<Pair<String, ByteArray>>) {
-    for (handler in syncRequestHandlers) {
-      handler.onSyncRequest(data)
+    this.scope.launch {
+      this@AppController._syncRequests.emit(data)
     }
   }
 
@@ -356,38 +235,38 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
    * Notify the host type changed (Common)
    */
   private fun notifyHostTypeChanged(host: HostType) {
-    for (handler in hostTypeChangeHandlers) {
-      handler.onHostTypeChanged(host)
+    this.scope.launch {
+      this@AppController._hostTypeChangeEvent.emit(host)
     }
   }
 
   private fun notifyBrowsingStatusChanged(isBrowsing: Boolean) {
-    for (handler in browsingStatusChangeHandlers) {
-      handler.onBrowsingStatusChanged(isBrowsing)
+    this.scope.launch {
+      this@AppController._browsingStatus.emit(isBrowsing)
     }
   }
 
   private fun notifyBrowsingStartFailed(error: Int) {
-    for (handler in onStartBrowsingFailedHandlers) {
-      handler.onStartBrowsingFailed(error)
+    this.scope.launch {
+      this@AppController._browsingStartFailedEvents.emit(error)
     }
   }
 
   private fun notifyBrowsingStopFailed(error: Int) {
-    for (handler in onStopBrowsingFailedHandlers) {
-      handler.onStopBrowsingFailed(error)
+    this.scope.launch {
+      this@AppController._browsingStopFailedEvents.emit(error)
     }
   }
 
   private fun notifyMdnsServiceRegisterFailed(error: Int) {
-    for (handler in mdnsServiceRegisterFailedHandlers) {
-      handler.onServiceRegistrationFailed(error)
+    this.scope.launch {
+      this@AppController._mdnsServiceRegisterFailedEvents.emit(error)
     }
   }
 
   private fun notifyMdnsServiceUnregisterFailed(error: Int) {
-    for (handler in mdnsServiceUnregisterFailedHandlers) {
-      handler.onServiceUnregistrationFailed(error)
+    this.scope.launch {
+      this@AppController._mdnsServiceUnregisterFailedEvents.emit(error)
     }
   }
 
@@ -1030,5 +909,9 @@ class AppController(private val sslConfig: SSLConfig, private val context: Conte
       host.holds(Client::class.java) -> HostType.CLIENT
       else -> HostType.NONE
     }
+  }
+
+  override fun close() {
+    this.scope.cancel()
   }
 }

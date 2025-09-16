@@ -32,6 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +58,7 @@ import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
 import com.srilakshmikanthanp.clipbirdroid.common.functions.getAllInterfaceAddresses
+import kotlinx.coroutines.flow.map
 import org.json.JSONObject
 import java.net.InetAddress
 import java.util.Locale
@@ -77,31 +80,9 @@ private enum class HostAction {
 @Composable
 private fun ServerGroup(controller: AppController) {
   // list of client devices
-  var clients by remember {
-    mutableStateOf(
-      controller.getConnectedClientsList().map { ActionableDevice(it, HostAction.DISCONNECT) }
-    )
-  }
-
-  // Change Handler for the list of clients
-  val clientListChangeHandler = Server.OnClientListChangeHandler { list ->
-    clients = list.map { ActionableDevice(it, HostAction.DISCONNECT) }
-  }
-
-  // Setup the Server
-  val setupServer = {
-    controller.addClientListChangedHandler(clientListChangeHandler)
-  }
-
-  // dispose the Server
-  val disposeServer = {
-    controller.removeClientListChangedHandler(clientListChangeHandler)
-  }
-
-  // Setup & Dispose the Server
-  DisposableEffect(clients) {
-    setupServer(); onDispose(disposeServer)
-  }
+  val clients by controller.clients.map { list ->
+    list.map { ActionableDevice(it, HostAction.DISCONNECT) }
+  }.collectAsState(emptyList())
 
   // if no servers
   if (clients.isNotEmpty()) {
@@ -163,51 +144,12 @@ private fun ServerGroup(controller: AppController) {
  */
 @Composable
 private fun ClientGroup(controller: AppController) {
-  // list of client devices (state)
-  var servers by remember { mutableStateOf(emptyList<ActionableDevice>()) }
+  val group by controller.serverStatus.map { (connected, device) -> if (connected) device else null }.collectAsState(null)
+  val servers by controller.servers.map { it.toList() }.collectAsState(emptyList())
 
-  // connected
-  var group by remember { mutableStateOf(controller.getConnectedServer()) }
-
-  // Change Handler for the list of servers
-  val serverListChangeHandler = Client.OnServerListChangeHandler { groups ->
-    val connected = controller.getConnectedServer()
-    servers = groups.filter {
-      it != connected
-    }.map {
-      ActionableDevice(it, HostAction.CONNECT)
-    }
-  }
-
-  // Change Handler for Server Status
-  val serverStatusChangeHandler = Client.OnServerStatusChangeHandler { connected, device ->
-    val groupsList = controller.getServerList()
-    group = if (connected) device else null
-    serverListChangeHandler.onServerListChanged(groupsList)
-  }
-
-  // Action Handler
   val onAction = { device: Device, action: HostAction ->
     if (action == HostAction.CONNECT) controller.connectToServer(device)
     else controller.disconnectFromServer(device)
-  }
-
-  // set up the Client
-  val setupClient = {
-    serverListChangeHandler.onServerListChanged(controller.getServerList())
-    controller.addServerStatusChangedHandler(serverStatusChangeHandler)
-    controller.addServerListChangedHandler(serverListChangeHandler)
-  }
-
-  // dispose the Client
-  val disposeClient = {
-    controller.removeServerListChangedHandler(serverListChangeHandler)
-    controller.removeServerStatusChangedHandler(serverStatusChangeHandler)
-  }
-
-  // Setup & Dispose the Client
-  DisposableEffect(servers) {
-    setupClient(); onDispose(disposeClient)
   }
 
   Column {
@@ -256,7 +198,7 @@ private fun ClientGroup(controller: AppController) {
             headlineContent = {
               Text(
                 style = MaterialTheme.typography.labelLarge,
-                text = servers[i].first.name,
+                text = servers[i].name,
                 modifier = Modifier.padding(start = 10.dp),
               )
             },
@@ -268,7 +210,7 @@ private fun ClientGroup(controller: AppController) {
               )
             },
             trailingContent = {
-              IconButton(onClick = { onAction(servers[i].first, servers[i].second) }) {
+              IconButton(onClick = { onAction(servers[i], if (servers[i] == group) HostAction.DISCONNECT else HostAction.CONNECT) }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.join))
               }
             },
@@ -358,10 +300,10 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
   }
 
   // Server Tab Index
-  val serverTab = Pair(0, context.resources.getString(R.string.create_group))
+  val serverTab = Pair(0, stringResource(R.string.create_group))
 
   // Client Tab Index
-  val clintTab = Pair(1, context.resources.getString(R.string.join_group))
+  val clintTab = Pair(1, stringResource(R.string.join_group))
 
   // Handler for Tab Click Event
   val tabClickHandler = { index: Int ->
@@ -397,21 +339,10 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     controller.clearServerCertificates()
   }
 
-  val handleServerStart = Server.OnMdnsRegisterStatusChangeHandler {
-    if (it) { Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show() }
-  }
-
-  val setup = {
-    controller.addServerStateChangedHandler(handleServerStart)
-  }
-
-  val dispose = {
-    controller.removeServerStateChangedHandler(handleServerStart)
-  }
-
-  DisposableEffect(Unit) {
-    setup()
-    onDispose { dispose() }
+  LaunchedEffect(controller) {
+    controller.mdnsRegisterStatusEvents.collect {
+      if (it) { Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show() }
+    }
   }
 
   // Actions Drop Down Menu
@@ -420,7 +351,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
       IconButton(onClick = { expanded = true }) {
         Image(
           painter = painterResource(R.drawable.more),
-          contentDescription = context.resources.getString(R.string.more),
+          contentDescription = stringResource(R.string.more),
         )
       }
 
@@ -440,7 +371,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     IconButton(onClick = onMenuClick) {
       Image(
         painter = painterResource(R.drawable.menu),
-        contentDescription = context.resources.getString(R.string.menu),
+        contentDescription = stringResource(R.string.menu),
       )
     }
   }
@@ -456,7 +387,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
         TopAppBar(
           title = {
             Text(
-              context.resources.getString(R.string.clipbird_devices),
+              stringResource(R.string.clipbird_devices),
               modifier = Modifier.padding(horizontal = 10.dp)
             )
           },
@@ -508,7 +439,7 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     if (isConnectDialogOpen) Connect(
       onDismissRequest = { isConnectDialogOpen = false },
       onConnect = onConnect,
-      title = context.resources.getString(R.string.join_group),
+      title = stringResource(R.string.join_group),
       modifier = Modifier.padding(15.dp, 25.dp)
     )
   }
