@@ -29,7 +29,7 @@ import com.srilakshmikanthanp.clipbirdroid.constants.appName
  * Enum Class for Drawer Items
  */
 enum class DrawerItems {
-  DEVICES, HISTORY, ABOUT
+  DEVICES, HISTORY, ACCOUNT, ABOUT
 }
 
 /**
@@ -69,6 +69,13 @@ private fun DrawerContent(
         onClick =  { onItemClicked(DrawerItems.HISTORY) },
         label = { Text(text = stringResource(id = R.string.history)) },
         selected = selected == DrawerItems.HISTORY,
+      )
+
+      // Item For Account
+      NavigationDrawerItem(
+        onClick =  { onItemClicked(DrawerItems.ACCOUNT) },
+        label = { Text(text = stringResource(id = R.string.account)) },
+        selected = selected == DrawerItems.ACCOUNT,
       )
 
       // Divider for Drawer

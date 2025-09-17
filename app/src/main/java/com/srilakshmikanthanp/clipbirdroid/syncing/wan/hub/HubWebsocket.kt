@@ -36,6 +36,10 @@ class HubWebsocket(hubHostDevice: HubHostDevice) : AbstractHub(hubHostDevice) {
   val listener = HubWebSocketListener(this)
   val webSocket : WebSocket = client.newWebSocket(request, listener)
 
+  fun disconnect() {
+    webSocket.close(1000, "Client closed connection")
+  }
+
   override fun sendMessage(message: HubMessage<*>) {
     webSocket.send(message.toJson())
   }
