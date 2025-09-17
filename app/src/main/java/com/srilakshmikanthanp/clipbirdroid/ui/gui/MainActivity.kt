@@ -2,11 +2,13 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -25,24 +27,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.srilakshmikanthanp.clipbirdroid.R
+import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
 import com.srilakshmikanthanp.clipbirdroid.controller.AppController
+import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
-import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
-import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
-import kotlinx.coroutines.launch
-import androidx.core.net.toUri
-import com.srilakshmikanthanp.clipbirdroid.Clipbird
 import dagger.hilt.android.AndroidEntryPoint
-
+import kotlinx.coroutines.launch
 
 /**
  * Clipbird Composable
@@ -80,6 +80,7 @@ private fun Clipbird(controller: AppController) {
       DrawerItems.HISTORY -> History(controller, onMenuClick)
       DrawerItems.ABOUT -> AboutUs(onMenuClick)
       DrawerItems.DEVICES -> Devices(controller, onMenuClick)
+      DrawerItems.ACCOUNT -> {}
     }
   }
 }
@@ -98,6 +99,49 @@ private fun PreviewClipbird() {
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+  private val connection = object : ServiceConnection {
+    override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
+      val clipbirdBinder = binder as? ClipbirdService.ClipbirdBinder ?: return
+      val controller = clipbirdBinder.getService().getController()
+
+      this@MainActivity.clipbirdBinder = clipbirdBinder
+
+      // Permissions defined on Manifest
+      val permissions = mutableListOf<String>()
+
+      // if api >= 34
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        permissions.add(Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC)
+      }
+
+      // if api >= 33
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+      }
+
+      // Add Receive boot completed
+      permissions.add(Manifest.permission.RECEIVE_BOOT_COMPLETED)
+
+      // check self permissions
+      permissions.removeIf {
+        checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
+      }
+
+      // Set Content
+      setContent {
+        ClipbirdTheme {
+          Clipbird(controller).also { RequestPermissionsAndStartService(permissions) }
+        }
+      }
+    }
+
+    override fun onServiceDisconnected(p0: ComponentName?) {
+      clipbirdBinder = null
+    }
+  }
+
+  private var clipbirdBinder: ClipbirdService.ClipbirdBinder? = null
+
   // companion object
   companion object {
     const val QUIT_ACTION = "com.srilakshmikanthanp.clipbirdroid.ui.gui.SplashActivity.QUIT_ACTION"
@@ -115,7 +159,7 @@ class MainActivity : ComponentActivity() {
 
     // finalize
     val finalize : () -> Unit = {
-      val powerManager: PowerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+      val powerManager: PowerManager = getSystemService(POWER_SERVICE) as PowerManager
       val action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
       val uri = "package:${this.packageName}".toUri()
 
@@ -193,38 +237,8 @@ class MainActivity : ComponentActivity() {
     // call super class method
     super.onCreate(savedInstanceState)
 
-    // Initialize App Controller
-    (application as Clipbird).initialize()
-
-    // Permissions defined on Manifest
-    val permissions = mutableListOf<String>()
-
-    // if api >= 34
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-      permissions.add(Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC)
-    }
-
-    // if api >= 33
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    // Add Receive boot completed
-    permissions.add(Manifest.permission.RECEIVE_BOOT_COMPLETED)
-
-    // check self permissions
-    permissions.removeIf {
-      checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
-    }
-
-    // get controller
-    val controller = (application as Clipbird).getController()
-
-    // Set Content
-    setContent {
-      ClipbirdTheme {
-        Clipbird(controller).also { RequestPermissionsAndStartService(permissions) }
-      }
+    Intent(this, ClipbirdService::class.java).also { intent ->
+      bindService(intent, connection, BIND_AUTO_CREATE)
     }
   }
 
@@ -235,5 +249,13 @@ class MainActivity : ComponentActivity() {
   // on Start
   override fun onStart() {
     super.onStart().also { handleIntent(intent) }
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    if (clipbirdBinder != null) {
+      unbindService(connection)
+      clipbirdBinder = null
+    }
   }
 }

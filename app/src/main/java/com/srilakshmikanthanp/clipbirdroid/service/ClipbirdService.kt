@@ -9,11 +9,14 @@ import android.os.IBinder
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
+import com.srilakshmikanthanp.clipbirdroid.common.types.Device
+import com.srilakshmikanthanp.clipbirdroid.constants.appCertExpiryInterval
+import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
+import com.srilakshmikanthanp.clipbirdroid.controller.AppController
 import com.srilakshmikanthanp.clipbirdroid.handlers.WifiApStateChangeHandler
-import com.srilakshmikanthanp.clipbirdroid.Clipbird
+import com.srilakshmikanthanp.clipbirdroid.store.Storage
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
@@ -24,6 +27,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import org.bouncycastle.asn1.x500.style.BCStyle
+import org.bouncycastle.asn1.x500.style.IETFUtils
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
+import java.security.PrivateKey
+import java.security.cert.X509Certificate
 
 /**
  * Service for the application
@@ -41,6 +49,63 @@ class ClipbirdService : Service() {
   private lateinit var controller: AppController
 
   private val wifiApStateChangeHandler = WifiApStateChangeHandler()
+
+  // Function used to get the Private Key and the Certificate New
+  private fun getNewSslConfig(): Pair<PrivateKey, X509Certificate> {
+    val sslConfig = generateX509Certificate(this)
+    val store = Storage.getInstance(this)
+    store.setHostKey(sslConfig.first)
+    store.setHostCert(sslConfig.second)
+    return sslConfig
+  }
+
+  // Function used to get the Private Key and the Certificate Old
+  private fun getOldSslConfig(): Pair<PrivateKey, X509Certificate> {
+    // Get the Certificate Details
+    val store = Storage.getInstance(this)
+    val key = store.getHostKey()!!
+    val cert = store.getHostCert()!!
+
+    // Get the Required parameters
+    val x500Name = JcaX509CertificateHolder(cert).subject
+    val cn = x500Name.getRDNs(BCStyle.CN)[0]
+    val name = IETFUtils.valueToString(cn.first.value)
+
+    // device name
+    val deviceName = appMdnsServiceName(this)
+
+    // check the name is same
+    if (name != deviceName) {
+      return getNewSslConfig()
+    }
+
+    // is certificate is to expiry in two months
+    if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiryInterval()) {
+      val sslConfig = generateX509Certificate(this)
+      store.setHostKey(sslConfig.first)
+      store.setHostCert(sslConfig.second)
+      return sslConfig
+    }
+
+    // done return
+    return Pair(key, cert)
+  }
+
+  // Function used to get the the Private Key and the Certificate
+  private fun getSslConfig(): Pair<PrivateKey, X509Certificate> {
+    // Get the Storage instance for the application
+    val store = Storage.getInstance(this)
+
+    // Check the Host key and cert is available
+    val config = if (store.hasHostKey() && store.hasHostCert()) {
+      getOldSslConfig()
+    } else {
+      getNewSslConfig()
+    }
+
+    // return the config
+    return config
+  }
 
   // Function used to get the Pending intent for onSend
   private fun onSendIntent(): PendingIntent {
@@ -113,22 +178,13 @@ class ClipbirdService : Service() {
   // infer the title
   private fun notificationTitle(): String {
     return if (controller.getHostType() == HostType.CLIENT) {
-      val server = controller.getConnectedServer()
-      if (server != null) {
-        resources.getString(R.string.notification_title_client, server.name)
-      } else {
-        resources.getString(R.string.no_connection)
-      }
+      controller.getConnectedServer()?.name?.let { resources.getString(R.string.notification_title_client, it) } ?: resources.getString(R.string.no_connection)
     } else if (controller.getHostType() == HostType.SERVER) {
-      val clients = controller.getConnectedClientsList().size
-      resources.getString(R.string.notification_title_server, clients)
+      resources.getString(R.string.notification_title_server, controller.getConnectedClientsList().size)
     } else {
       throw Exception("Invalid Host Type")
     }
   }
-
-  // Return the binder instance
-  override fun onBind(p0: Intent?): IBinder? = null
 
   // Initialize the controller instance
   override fun onCreate() {
@@ -136,7 +192,13 @@ class ClipbirdService : Service() {
     super.onCreate().also { notification = StatusNotification(this) }
 
     // Initialize the controller
-    controller = (this.application as Clipbird).getController()
+    controller = AppController(getSslConfig(), this)
+
+    if (controller.isLastlyHostIsServer()) {
+      controller.setCurrentHostAsServer()
+    } else {
+      controller.setCurrentHostAsClient()
+    }
 
     // Add the Sync Request Handler
     this.serviceScope.launch {
@@ -186,21 +248,38 @@ class ClipbirdService : Service() {
 
   // On start command of the service
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    if (intent?.getBooleanExtra(HOTSPOT_ENABLED, false) == true) {
+      if (controller.getHostType() == HostType.CLIENT) {
+        controller.restartBrowsing()
+      }
+    }
     return START_STICKY
   }
 
   override fun onDestroy() {
-    val controller = (application as Clipbird).getController()
     if (controller.getHostType() == HostType.SERVER) {
       controller.disposeServer()
     } else if (controller.getHostType() == HostType.CLIENT) {
       controller.disposeClient()
     }
     this.serviceScope.cancel()
+    this.controller.close()
   }
+
+  fun getController(): AppController = controller
+
+  inner class ClipbirdBinder : android.os.Binder() {
+    fun getService(): ClipbirdService = this@ClipbirdService
+  }
+
+  val binder = ClipbirdBinder()
+
+  override fun onBind(intent: Intent?): IBinder = binder
 
   // static function to start the service
   companion object {
+    const val HOTSPOT_ENABLED = "com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService.HOTSPOT_ENABLED"
+
     fun start(context: Context) {
       Intent(context, ClipbirdService::class.java).also {
         context.startForegroundService(it)
