@@ -19,6 +19,7 @@ class WifiApStateChangeHandler : BroadcastReceiver() {
       }
     }
   }
+
   companion object {
     const val ACTION_WIFI_AP_STATE_CHANGED = "android.net.wifi.WIFI_AP_STATE_CHANGED"
   }

@@ -21,84 +21,88 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.controller.AppController
+import com.srilakshmikanthanp.clipbirdroid.viewmodel.ControllerViewModel
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipHistory
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipSend
-import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 /**
  * History Screen Used To See the History of the Clipboard
  */
-@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
-  // State List that has last max copied items
-  val history by controller.history.collectAsState()
+fun History(
+  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>(),
+  onMenuClick: () -> Unit = {},
+) {
+  val history by controllerViewModel.historyController.history.collectAsState()
 
-  // On Send Handler
   val sendHandler: () -> Unit = {
-    GlobalScope.launch {
-      controller.syncClipboard(controller.getClipboard())
-    }
+    controllerViewModel.lanController.synchronize(
+      controllerViewModel.clipboardController.getClipboard().getClipboardContent()
+    )
+    controllerViewModel.wanController.synchronize(
+      controllerViewModel.clipboardController.getClipboard().getClipboardContent()
+    )
   }
 
-  // OnCopy Handler
   val onCopy = { idx: Int ->
-    controller.setClipboard(history[idx])
+    controllerViewModel.clipboardController.getClipboard().setClipboardContent(history[idx])
   }
 
-  // OnDelete Handler
   val onDelete = { idx: Int ->
-    controller.deleteHistoryAt(idx)
+    controllerViewModel.historyController.deleteHistoryAt(idx)
   }
 
-  // Navigation Icon is the Menu Icon
   val menuIcon = @Composable {
     IconButton(onClick = onMenuClick) {
-      Image(painter = painterResource(R.drawable.menu), contentDescription = stringResource(id = R.string.menu))
+      Image(
+        painter = painterResource(R.drawable.menu),
+        contentDescription = stringResource(id = R.string.menu)
+      )
     }
   }
 
-  // History Top Bar
   val historyTopBar = @Composable {
     TopAppBar(
       navigationIcon = { menuIcon() },
-      title = { Text(stringResource(id = R.string.clipbird_history), modifier = Modifier.padding(horizontal = 3.dp)) },
+      title = {
+        Text(
+          stringResource(id = R.string.clipbird_history),
+          modifier = Modifier.padding(horizontal = 3.dp)
+        )
+      },
       modifier = Modifier.padding(3.dp),
     )
   }
 
-  // history Content
-  val historyContent = @Composable { padding : PaddingValues ->
-    Box (modifier = Modifier.padding(padding), contentAlignment = Alignment.Center,) {
+  val historyContent = @Composable { padding: PaddingValues ->
+    Box(modifier = Modifier.padding(padding), contentAlignment = Alignment.Center) {
       Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth().padding(10.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(10.dp),
       ) {
-        // White Space
         Spacer(modifier = Modifier.padding(5.dp))
 
-        // Clip Send Box
         ClipSend(
           modifier = Modifier.fillMaxWidth(),
           onSend = sendHandler,
         )
 
         if (history.isEmpty()) {
-          Column (
+          Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+            modifier = Modifier
+              .fillMaxWidth()
+              .fillMaxHeight(),
           ) {
             Image(
               contentDescription = stringResource(id = R.string.history_prompt),
@@ -126,18 +130,8 @@ fun History(controller: AppController, onMenuClick: () -> Unit = {}) {
     }
   }
 
-  // Scaffold
   Scaffold(
     topBar = historyTopBar,
     content = historyContent,
   )
-}
-
-/**
- * Preview History
- */
-@Preview(showBackground = true)
-@Composable
-private fun PreviewHistory() {
-  History(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
 }

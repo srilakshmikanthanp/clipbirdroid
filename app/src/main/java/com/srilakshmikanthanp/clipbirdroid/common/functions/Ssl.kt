@@ -62,3 +62,16 @@ fun generateX509Certificate(context: Context, bits: Int = 1024): Pair<PrivateKey
   // return the key pair and certificate
   return Pair(keyPair.private, cert)
 }
+
+fun generateAESKey(bits: Int = 256): ByteArray {
+  val keyGen = javax.crypto.KeyGenerator.getInstance("AES")
+  keyGen.init(bits)
+  val secretKey = keyGen.generateKey()
+  return secretKey.encoded
+}
+
+fun generateIV(bits: Int = 128): ByteArray {
+  val byteArray = ByteArray(bits / 8)
+  java.security.SecureRandom().nextBytes(byteArray)
+  return byteArray
+}

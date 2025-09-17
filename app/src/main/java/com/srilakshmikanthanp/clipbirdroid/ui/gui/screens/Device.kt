@@ -31,8 +31,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,46 +43,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.common.functions.getAllInterfaceAddresses
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.controller.AppController
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.client.Client
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.server.Server
+import com.srilakshmikanthanp.clipbirdroid.storage.Storage
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
+import com.srilakshmikanthanp.clipbirdroid.viewmodel.ControllerViewModel
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
-import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
-import com.srilakshmikanthanp.clipbirdroid.common.functions.getAllInterfaceAddresses
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
 import java.net.InetAddress
-import java.util.Locale
-
-private typealias ActionableDevice = Pair<Device, HostAction>
-
-private enum class HostAction {
-  // Allowed Types connect or disconnect
-  CONNECT, DISCONNECT;
-
-  // Enum to String in Capitalize
-  override fun toString(): String {
-    return super.toString().lowercase(Locale.getDefault()).replaceFirstChar {
-      it.titlecase(Locale.getDefault())
-    }
-  }
-}
 
 @Composable
-private fun ServerGroup(controller: AppController) {
-  // list of client devices
-  val clients by controller.clients.map { list ->
-    list.map { ActionableDevice(it, HostAction.DISCONNECT) }
-  }.collectAsState(emptyList())
+private fun ServerGroup(
+  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>()
+) {
+  val isRegistered by controllerViewModel.lanController.mdnsRegisterStatusEvents.collectAsState(false)
+  val clients by controllerViewModel.lanController.clients.collectAsState()
 
-  // if no servers
+  val context = LocalContext.current
+
+  if (isRegistered) Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show()
+
+  val onDisconnectClick = { device: Device ->
+    controllerViewModel.lanController.getHostAsServerOrThrow().disconnectClient(device)
+  }
+
   if (clients.isNotEmpty()) {
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
       items(clients.size) { i ->
@@ -99,7 +88,7 @@ private fun ServerGroup(controller: AppController) {
           headlineContent = {
             Text(
               style = MaterialTheme.typography.labelLarge,
-              text = clients[i].first.name,
+              text = clients[i].name,
               modifier = Modifier.padding(start = 10.dp),
             )
           },
@@ -111,8 +100,11 @@ private fun ServerGroup(controller: AppController) {
             )
           },
           trailingContent = {
-            IconButton(onClick = { controller.disconnectClient(clients[i].first) }) {
-              Icon(Icons.Default.Clear, contentDescription = stringResource(id = R.string.disconnect))
+            IconButton(onClick = { onDisconnectClick(clients[i]) }) {
+              Icon(
+                Icons.Default.Clear,
+                contentDescription = stringResource(id = R.string.disconnect)
+              )
             }
           },
         )
@@ -122,14 +114,15 @@ private fun ServerGroup(controller: AppController) {
     Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
-      modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+      modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight(),
     ) {
       Image(
         contentDescription = stringResource(id = R.string.devices_server_prompt),
         painter = painterResource(id = R.drawable.devices),
         modifier = Modifier.fillMaxSize(0.3f)
       )
-
       Text(
         text = stringResource(id = R.string.devices_server_prompt),
         textAlign = TextAlign.Center,
@@ -139,21 +132,23 @@ private fun ServerGroup(controller: AppController) {
   }
 }
 
-/**
- * Client Group Composable That gonna active when user Clicks Client Tab
- */
 @Composable
-private fun ClientGroup(controller: AppController) {
-  val group by controller.serverStatus.map { (connected, device) -> if (connected) device else null }.collectAsState(null)
-  val servers by controller.servers.map { it.toList() }.collectAsState(emptyList())
+private fun ClientGroup(
+  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>()
+) {
+  val connectedGroup by controllerViewModel.lanController.serverStatusEvents.map { if (it.first) it.second else null }.collectAsState(null)
+  val servers by controllerViewModel.lanController.servers.map { it.toList() }.collectAsState(emptyList())
 
-  val onAction = { device: Device, action: HostAction ->
-    if (action == HostAction.CONNECT) controller.connectToServer(device)
-    else controller.disconnectFromServer(device)
+  val onDisconnect = { device: Device ->
+    controllerViewModel.lanController.getHostAsClientOrThrow().disconnectFromServer()
+  }
+
+  val onConnect = { device: Device ->
+    controllerViewModel.lanController.getHostAsClientOrThrow().connectToServer(device)
   }
 
   Column {
-    group?.let { ActionableDevice(it, HostAction.DISCONNECT) }?.let {
+    connectedGroup?.let {
       ListItem(
         leadingContent = {
           Icon(
@@ -165,7 +160,7 @@ private fun ClientGroup(controller: AppController) {
         headlineContent = {
           Text(
             style = MaterialTheme.typography.labelLarge,
-            text = it.first.name,
+            text = it.name,
             modifier = Modifier.padding(start = 10.dp),
           )
         },
@@ -177,8 +172,11 @@ private fun ClientGroup(controller: AppController) {
           )
         },
         trailingContent = {
-          IconButton(onClick = { onAction(it.first, it.second) }) {
-            Icon(Icons.Default.Clear, contentDescription = stringResource(id = R.string.disconnect))
+          IconButton(onClick = { onDisconnect(it) }) {
+            Icon(
+              Icons.Default.Clear,
+              contentDescription = stringResource(id = R.string.disconnect)
+            )
           }
         }
       )
@@ -210,7 +208,9 @@ private fun ClientGroup(controller: AppController) {
               )
             },
             trailingContent = {
-              IconButton(onClick = { onAction(servers[i], if (servers[i] == group) HostAction.DISCONNECT else HostAction.CONNECT) }) {
+              IconButton(onClick = {
+                onConnect(servers[i])
+              }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.join))
               }
             },
@@ -219,11 +219,13 @@ private fun ClientGroup(controller: AppController) {
       }
     }
 
-    if (servers.isEmpty() && group == null) {
+    if (servers.isEmpty() && connectedGroup == null) {
       Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+        modifier = Modifier
+          .fillMaxWidth()
+          .fillMaxHeight(),
       ) {
         Image(
           contentDescription = stringResource(id = R.string.devices_client_prompt),
@@ -249,103 +251,138 @@ private fun ClientGroup(controller: AppController) {
 @Composable
 private fun ActionsDropDownMenu(
   modifier: Modifier = Modifier,
-  isServerGroup: Boolean = true,
-  onQRCodeClick: () -> Unit,
-  onJoinClick: () -> Unit,
-  onResetClick: () -> Unit,
-  expanded: Boolean,
+  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>(),
+  expanded: Boolean = false,
   onDismissRequest: () -> Unit,
 ) {
-  DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {
-    if (isServerGroup) {
-      DropdownMenuItem(
-        text = { Text(stringResource(id = R.string.group_qrcode)) },
-        onClick = onQRCodeClick
-      )
-    } else {
-      DropdownMenuItem(
-        text = { Text(stringResource(id = R.string.join_to_a_group)) },
-        onClick = onJoinClick
-      )
-    }.also {
-      DropdownMenuItem(
-        text = { Text(stringResource(id = R.string.reset_devices)) },
-        onClick = onResetClick
-      )
-    }
-  }
-}
+  val hostType by controllerViewModel.lanController.hostTypeChangeEvent.collectAsState(controllerViewModel.lanController.getHostType())
+  val hubState by controllerViewModel.wanController.hubConnectionStatus.collectAsState(false)
 
-/**
- * Groups Composable That manage the Server & Client Groups
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
-  var isServer by remember { mutableStateOf(controller.getHostType() == HostType.SERVER) }
-  var expanded by remember { mutableStateOf(false) }
   var isConnectDialogOpen by remember { mutableStateOf(false) }
   var isGroupDialogOpen by remember { mutableStateOf(false) }
 
   val context = LocalContext.current
 
-  // Helper to make json
+  val hubHostDevice by Storage.getInstance(context).hubHostDeviceFlow.collectAsState()
+  val hubAuthToken by Storage.getInstance(context).hubAuthTokenFlow.collectAsState()
+
   val makeJson = {
     val interfaces = getAllInterfaceAddresses()
-    val port = controller.getServerInfo().port
+    val port = controllerViewModel.lanController.getHostAsServerOrThrow().getServerInfo().port
     val obj = JSONObject()
     obj.put("port", port)
     obj.put("ips", interfaces)
     obj.toString(0)
   }
 
-  // Server Tab Index
-  val serverTab = Pair(0, stringResource(R.string.create_group))
+  val onQRCodeClick = {
+    isGroupDialogOpen = true
+    onDismissRequest()
+  }
 
-  // Client Tab Index
+  val onJoinClick = {
+    isConnectDialogOpen = true
+    onDismissRequest()
+  }
+
+  val onConnect = { ip: InetAddress, port: Int ->
+    controllerViewModel.lanController.getHostAsClientOrThrow().connectToServer(Device(ip, port, ip.hostName))
+    isConnectDialogOpen = false
+    onDismissRequest()
+  }
+
+  val onResetClick = {
+    Storage.getInstance(context).clearAllClientCert()
+    Storage.getInstance(context).clearAllServerCert()
+    Toast.makeText(context, R.string.reset_done, Toast.LENGTH_SHORT).show()
+    onDismissRequest()
+  }
+
+  val onLeaveHubClick = {
+    controllerViewModel.wanController.disconnectFromHub()
+    onDismissRequest()
+  }
+
+  val onJoinHubClick = {
+    controllerViewModel.wanController.connectToHub(hubHostDevice!!)
+    onDismissRequest()
+  }
+
+  DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {
+    if (hostType == HostType.SERVER) {
+      DropdownMenuItem(
+        text = { Text(stringResource(id = R.string.group_qrcode)) },
+        onClick = onQRCodeClick
+      )
+    }
+
+    if (hostType == HostType.CLIENT) {
+      DropdownMenuItem(
+        text = { Text(stringResource(id = R.string.join_to_a_group)) },
+        onClick = onJoinClick
+      )
+    }
+
+    if (hubAuthToken != null && hubHostDevice != null && !hubState) {
+      DropdownMenuItem(
+        text = { Text(stringResource(id = R.string.join_hub)) },
+        onClick = onJoinHubClick,
+      )
+    }
+
+    if (hubState) {
+      DropdownMenuItem(
+        text = { Text(stringResource(id = R.string.leave_hub)) },
+        onClick = onLeaveHubClick,
+      )
+    }
+
+    DropdownMenuItem(
+      text = { Text(stringResource(id = R.string.reset_devices)) },
+      onClick = onResetClick
+    )
+  }
+
+  if (isGroupDialogOpen) Group(
+    onDismissRequest = { isGroupDialogOpen = false },
+    title = appMdnsServiceName(context),
+    code = makeJson(),
+    port = controllerViewModel.lanController.getHostAsServerOrThrow().getServerInfo().port,
+    modifier = Modifier.padding(5.dp, 25.dp, 5.dp, 15.dp)
+  )
+
+  if (isConnectDialogOpen) Connect(
+    onDismissRequest = { isConnectDialogOpen = false },
+    onConnect = onConnect,
+    title = stringResource(R.string.join_group),
+    modifier = Modifier.padding(15.dp, 25.dp)
+  )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Devices(
+  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>(),
+  onMenuClick: () -> Unit = {}
+) {
+  var isServer by remember { mutableStateOf(controllerViewModel.lanController.getHost() is Server) }
+  var expanded by remember { mutableStateOf(false) }
+
+  val serverTab = Pair(0, stringResource(R.string.create_group))
   val clintTab = Pair(1, stringResource(R.string.join_group))
 
-  // Handler for Tab Click Event
   val tabClickHandler = { index: Int ->
     isServer = if (index == serverTab.first && !isServer) {
-      controller.setCurrentHostAsServer()
+      controllerViewModel.lanController.setAsServer()
       true
     } else if (index == clintTab.first && isServer) {
-      controller.setCurrentHostAsClient()
+      controllerViewModel.lanController.setAsClient()
       false
     } else {
       isServer
     }
   }
 
-  // on Connect Handler
-  val onConnect = { ip: InetAddress, port: Int ->
-    controller.connectToServer(Device(ip, port, ip.hostName)).also { isConnectDialogOpen = false }
-  }
-
-  // Handler for Group QrCode Click Event
-  val onQRCodeClick = {
-    isGroupDialogOpen = true
-  }
-
-  // Handler for Join Group Click Event
-  val onJoinClick = {
-    isConnectDialogOpen = true
-  }
-
-  // Handler for Reset Click Event
-  val onResetClick = {
-    controller.clearClientCertificates()
-    controller.clearServerCertificates()
-  }
-
-  LaunchedEffect(controller) {
-    controller.mdnsRegisterStatusEvents.collect {
-      if (it) { Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show() }
-    }
-  }
-
-  // Actions Drop Down Menu
   val actionsDropDownMenu = @Composable {
     Box {
       IconButton(onClick = { expanded = true }) {
@@ -356,17 +393,13 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
       }
 
       ActionsDropDownMenu(
-        onQRCodeClick = { expanded = false; onQRCodeClick() },
-        onJoinClick = { expanded = false; onJoinClick() },
-        onResetClick = { expanded = false; onResetClick() },
+        controllerViewModel = controllerViewModel,
         expanded = expanded,
-        isServerGroup = isServer,
-        onDismissRequest = { expanded = false }
+        onDismissRequest = { expanded = false },
       )
     }
   }
 
-  // Menu Icon for the Top Bar
   val menuIcon = @Composable {
     IconButton(onClick = onMenuClick) {
       Image(
@@ -376,7 +409,6 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     }
   }
 
-  // A Inner Composable just to make code more readable
   val devicesTopBar = @Composable {
     Surface(
       color = MaterialTheme.colorScheme.surface,
@@ -418,44 +450,18 @@ fun Devices(controller: AppController, onMenuClick: () -> Unit = {}) {
     }
   }
 
-  // Content Composable
   val content = @Composable { padding: PaddingValues ->
     Column(modifier = Modifier.padding(padding)) {
       if (isServer) {
-        ServerGroup(controller)
+        ServerGroup(controllerViewModel)
       } else {
-        ClientGroup(controller)
+        ClientGroup(controllerViewModel)
       }
     }
-
-    if (isGroupDialogOpen) Group(
-      onDismissRequest = { isGroupDialogOpen = false },
-      title = appMdnsServiceName(context),
-      code = makeJson(),
-      port = controller.getServerInfo().port,
-      modifier = Modifier.padding(5.dp, 25.dp, 5.dp, 15.dp)
-    )
-
-    if (isConnectDialogOpen) Connect(
-      onDismissRequest = { isConnectDialogOpen = false },
-      onConnect = onConnect,
-      title = stringResource(R.string.join_group),
-      modifier = Modifier.padding(15.dp, 25.dp)
-    )
   }
 
-  // Scaffold Composable
   Scaffold(
     topBar = devicesTopBar,
     content = content,
   )
-}
-
-/**
- * Preview for Groups Composable
- */
-@Preview(showBackground = true)
-@Composable
-private fun DevicesPreview() {
-  Devices(AppController(generateX509Certificate(LocalContext.current), LocalContext.current))
 }

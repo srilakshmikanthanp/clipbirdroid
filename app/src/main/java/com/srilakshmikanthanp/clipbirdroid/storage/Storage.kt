@@ -1,6 +1,7 @@
-package com.srilakshmikanthanp.clipbirdroid.store
+package com.srilakshmikanthanp.clipbirdroid.storage
 
 import android.content.Context
+import android.content.SharedPreferences
 import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator
 import org.bouncycastle.util.io.pem.PemWriter
 import java.io.StringWriter
@@ -11,10 +12,19 @@ import java.security.cert.X509Certificate
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.Base64
 import androidx.core.content.edit
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth.AuthToken
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubHostDevice
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
-class Storage private constructor(context: Context) {
+class Storage private constructor(context: Context): SharedPreferences.OnSharedPreferenceChangeListener {
   // Shared Preference for General Group
   private val generalPref = context.getSharedPreferences("GENERAL", Context.MODE_PRIVATE)
+
+  // Shared Preference for Hub Group
+  private val hubPref = context.getSharedPreferences("HUB", Context.MODE_PRIVATE)
 
   // Shared Preference for Client Group
   private val clientPref = context.getSharedPreferences("CLIENT", Context.MODE_PRIVATE)
@@ -57,6 +67,8 @@ class Storage private constructor(context: Context) {
     private const val HOST_STATE = "HOST_STATE"
     private const val HOST_KEY = "HOST_KEY"
     private const val HOST_CERT = "HOST_CERT"
+    private const val HUB_AUTH_TOKEN = "HUB_AUTH_TOKEN"
+    private const val HUB_HOST_DEVICE = "HUB_HOST_DEVICE"
 
     // Get the instance of Storage
     fun getInstance(context: Context): Storage {
@@ -64,6 +76,33 @@ class Storage private constructor(context: Context) {
         instance ?: Storage(context).also { instance = it }
       }
     }
+  }
+
+  // Flows for observing changes
+  private val _hostCertFlow = MutableStateFlow(getHostCert())
+  val hostCertFlow: StateFlow<X509Certificate?> = _hostCertFlow.asStateFlow()
+
+  private val _hostKeyFlow = MutableStateFlow(getHostKey())
+  val hostKeyFlow: StateFlow<PrivateKey?> = _hostKeyFlow.asStateFlow()
+
+  private val _clientCertsFlow = MutableStateFlow(getAllClientCert())
+  val clientCertsFlow: StateFlow<Map<String, X509Certificate>> = _clientCertsFlow.asStateFlow()
+
+  private val _serverCertsFlow = MutableStateFlow(getAllServerCert())
+  val serverCertsFlow: StateFlow<Map<String, X509Certificate>> = _serverCertsFlow.asStateFlow()
+
+  private val _hostStateFlow = MutableStateFlow(getHostIsLastlyServer())
+  val hostStateFlow: StateFlow<Boolean> = _hostStateFlow.asStateFlow()
+
+  private val _hubAuthTokenFlow = MutableStateFlow(getHubAuthToken())
+  val hubAuthTokenFlow: StateFlow<AuthToken?> = _hubAuthTokenFlow.asStateFlow()
+
+  private val _hubHostDeviceFlow = MutableStateFlow(getHubHostDevice())
+  val hubHostDeviceFlow: StateFlow<HubHostDevice?> = _hubHostDeviceFlow.asStateFlow()
+
+  init {
+    generalPref.registerOnSharedPreferenceChangeListener(this)
+    hubPref.registerOnSharedPreferenceChangeListener(this)
   }
 
   /**
@@ -161,8 +200,8 @@ class Storage private constructor(context: Context) {
   /**
    * Get all client cert
    */
-  fun getAllClientCert(): List<X509Certificate> {
-    return clientPref.all.values.map { (it as String).asCertificate() }
+  fun getAllClientCert(): Map<String, X509Certificate> {
+    return clientPref.all.mapValues { (_, value) -> (value as String).asCertificate() }
   }
 
   /**
@@ -203,8 +242,8 @@ class Storage private constructor(context: Context) {
   /**
    * Get all server cert
    */
-  fun getAllServerCert(): List<X509Certificate> {
-    return serverPref.all.values.map { (it as String).asCertificate() }
+  fun getAllServerCert(): Map<String, X509Certificate> {
+    return serverPref.all.mapValues { (_, value) -> (value as String).asCertificate() }
   }
 
   /**
@@ -219,5 +258,72 @@ class Storage private constructor(context: Context) {
    */
   fun getHostIsLastlyServer(): Boolean {
     return generalPref.getBoolean(HOST_STATE, false)
+  }
+
+  fun setHubAuthToken(token: AuthToken) {
+    val objectMapper = jacksonObjectMapper()
+    val json = objectMapper.writeValueAsString(token)
+    hubPref.edit() { putString(HUB_AUTH_TOKEN, json) }
+  }
+
+  fun hasHubAuthToken(): Boolean {
+    return hubPref.contains(HUB_AUTH_TOKEN)
+  }
+
+  fun getHubAuthToken(): AuthToken? {
+    val json = hubPref.getString(HUB_AUTH_TOKEN, null) ?: return null
+    val objectMapper = jacksonObjectMapper()
+    return objectMapper.readValue(json, AuthToken::class.java)
+  }
+
+  fun clearHubAuthToken() {
+    hubPref.edit() { remove(HUB_AUTH_TOKEN) }
+  }
+
+  fun setHubHostDevice(device: HubHostDevice) {
+    val objectMapper = jacksonObjectMapper()
+    val json = objectMapper.writeValueAsString(device)
+    hubPref.edit() { putString(HUB_HOST_DEVICE, json) }
+  }
+
+  fun hasHubHostDevice(): Boolean {
+    return hubPref.contains(HUB_HOST_DEVICE)
+  }
+
+  fun getHubHostDevice(): HubHostDevice? {
+    val json = hubPref.getString(HUB_HOST_DEVICE, null) ?: return null
+    val objectMapper = jacksonObjectMapper()
+    return objectMapper.readValue(json, HubHostDevice::class.java)
+  }
+
+  fun clearHubHostDevice() {
+    hubPref.edit() { remove(HUB_HOST_DEVICE) }
+  }
+
+  override fun onSharedPreferenceChanged(
+    sharedPreferences: SharedPreferences,
+    key: String?
+  ) {
+    when (sharedPreferences) {
+      generalPref -> {
+        when (key) {
+          HOST_CERT -> _hostCertFlow.value = getHostCert()
+          HOST_KEY -> _hostKeyFlow.value = getHostKey()
+          HOST_STATE -> _hostStateFlow.value = getHostIsLastlyServer()
+        }
+      }
+      clientPref -> {
+        _clientCertsFlow.value = getAllClientCert()
+      }
+      serverPref -> {
+        _serverCertsFlow.value = getAllServerCert()
+      }
+      hubPref -> {
+        when (key) {
+          HUB_AUTH_TOKEN -> _hubAuthTokenFlow.value = getHubAuthToken()
+          HUB_HOST_DEVICE -> _hubHostDeviceFlow.value = getHubHostDevice()
+        }
+      }
+    }
   }
 }
