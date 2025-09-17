@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.syncing.lan.server
+package com.srilakshmikanthanp.clipbirdroid.syncing.lan
 
 import android.content.Context
 import android.util.Log
@@ -15,14 +15,9 @@ import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
-import com.srilakshmikanthanp.clipbirdroid.store.Storage
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.AuthenticationEncoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.InvalidPacketEncoder
+import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.PacketDecoder
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.PingPacketEncoder
 import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.SyncingPacketEncoder
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -49,7 +44,7 @@ import java.security.cert.X509Certificate
 /**
  * A SSl Server Using Netty as a Backend
  */
-class Server(private val context: Context) : ChannelInboundHandler, RegisterListener, Synchronizer {
+class Server(private val context: Context) : ChannelInboundHandler, RegisterListener, Host {
   // Client State Change Handlers
   private val clientStateChangeHandlers = mutableListOf<OnClientStateChangeHandler>()
 

@@ -51,6 +51,8 @@ s
   <string name="group_qrcode">Group QrCode</string>
   <string name="join_group">Join Group</string>
   <string name="not_connected">Not Connected</string>
+  <string name="join_hub">Join Hub</string>
+  <string name="leave_hub">Leave Hub</string>
   <string name="reset_devices">Reset Devices</string>
   <string name="create_group">Create Group</string>
   <string name="more">More</string>
@@ -64,4 +66,6 @@ s
   <string name="disconnect">Disconnect</string>
   <string name="connected">Connected</string>
   <string name="available">Available</string>
+  <string name="account">Account</string>
+  <string name="reset_done">Reset Done</string>
 </resources>

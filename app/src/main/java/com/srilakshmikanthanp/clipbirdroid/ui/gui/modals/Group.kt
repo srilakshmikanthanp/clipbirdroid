@@ -23,6 +23,8 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
 import com.srilakshmikanthanp.clipbirdroid.R
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 
 /**
  * Group modal to show the group details
@@ -43,11 +45,11 @@ fun Group(
       return null
     }
 
-    val bmp = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
+    val bmp = createBitmap(matrix.width, matrix.height)
 
     for (x in 0 until matrix.width) {
       for (y in 0 until matrix.height) {
-        bmp.setPixel(x, y, if (matrix[x, y]) color.toArgb() else Color.Transparent.toArgb())
+        bmp[x, y] = if (matrix[x, y]) color.toArgb() else Color.Transparent.toArgb()
       }
     }
 

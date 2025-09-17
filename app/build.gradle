@@ -9,7 +9,7 @@ plugins {
 
 android {
   defaultConfig {
-    def APP_API_DOMAIN = "clipbird-api.srilakshmikanthanp.com"
+    def APP_API_DOMAIN = project.findProperty("APP_API_DOMAIN") ?: "clipbird-api.srilakshmikanthanp.com"
 
     buildConfigField "String", "APP_ISSUE", "\"https://github.com/srilakshmikanthanp/clipbirdroid/issues\""
     buildConfigField "String", "APP_API_DOMAIN", "\"${APP_API_DOMAIN}\""
@@ -82,7 +82,7 @@ dependencies {
   implementation 'androidx.core:core-ktx:1.17.0'
   implementation platform('org.jetbrains.kotlin:kotlin-bom:2.2.0')
   implementation("com.google.android.gms:play-services-oss-licenses:17.3.0")
-  implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.9.3'
+  implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.9.4'
   implementation 'androidx.activity:activity-compose:1.11.0'
   implementation platform('androidx.compose:compose-bom:2025.09.00')
   implementation 'androidx.compose.ui:ui'
@@ -101,6 +101,7 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.0")
   implementation("com.squareup.okhttp3:okhttp:5.1.0")
   implementation("com.google.dagger:hilt-android:2.57.1")
+  implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
   ksp("com.google.dagger:hilt-android-compiler:2.57.1")
   testImplementation 'junit:junit:4.13.2'
   debugImplementation 'androidx.compose.ui:ui-tooling'

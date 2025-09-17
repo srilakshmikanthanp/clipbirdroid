@@ -1,10 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.net.Uri
-import android.os.IBinder
 import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
@@ -13,45 +10,29 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.srilakshmikanthanp.clipbirdroid.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.common.functions.toPNG
-import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
+import kotlinx.coroutines.DelicateCoroutinesApi
 import java.io.FileNotFoundException
 
 class ShareHandler : ComponentActivity() {
-  private val connection = object : ServiceConnection {
-    override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
-      clipbirdBinder = binder as? ClipbirdService.ClipbirdBinder
-      synchronized(this) {
-        process()
-      }
-    }
+  @OptIn(DelicateCoroutinesApi::class)
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    if (!hasFocus) return
 
-    override fun onServiceDisconnected(p0: ComponentName?) {
-      clipbirdBinder = null
-    }
-  }
+    val lanController = (this.application as Clipbird).lanController
+    val wanController = (this.application as Clipbird).wanController
 
-  private var clipbirdBinder: ClipbirdService.ClipbirdBinder? = null
-  private var hasFocus = false
-  private var hasProcessed = false
-
-  private fun process() {
-    val controller = clipbirdBinder?.getService()?.getController()
-    if (!hasFocus || controller == null || hasProcessed) return
-    controller.syncClipboard(controller.getClipboard())
-
-    // if the Type in image/*
     if (intent.type?.startsWith("image/") != true) return
 
-    // Get the URI
     val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: return
 
-    // get the content
     val result = try {
       this.contentResolver.openInputStream(uri)
     } catch (e: FileNotFoundException) {
@@ -66,32 +47,20 @@ class ShareHandler : ComponentActivity() {
       return@use Pair(mimeType, content)
     } ?: return
 
-    // Sync the Clipboard
-    controller.syncClipboard(listOf(Pair(result.first, result.second)))
+    val content = listOf(Pair(result.first, result.second))
+    lanController.synchronize(content)
+    wanController.synchronize(content)
 
     runOnUiThread {
       Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
       this.finish()
     }
-
-    hasProcessed = true
   }
 
-  override fun onWindowFocusChanged(hasFocus: Boolean) {
-    this.hasFocus = hasFocus
-    synchronized(this) {
-      process()
-    }
-  }
-
+  @OptIn(ExperimentalMaterial3Api::class)
   override fun onStart() {
     super.onStart()
 
-    Intent(this, ClipbirdService::class.java).also { intent ->
-      bindService(intent, connection, BIND_AUTO_CREATE)
-    }
-
-    // show loading
     setContent {
       Surface(
         modifier = Modifier.fillMaxSize(),
@@ -104,16 +73,6 @@ class ShareHandler : ComponentActivity() {
           CircularProgressIndicator()
         }
       }
-    }
-  }
-
-  override fun onStop() {
-    super.onStop()
-    hasProcessed = false
-    hasFocus = false
-    if (clipbirdBinder != null) {
-      unbindService(connection)
-      clipbirdBinder = null
     }
   }
 }
