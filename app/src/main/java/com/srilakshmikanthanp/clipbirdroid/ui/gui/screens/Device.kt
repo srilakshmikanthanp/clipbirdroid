@@ -52,7 +52,7 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
-import com.srilakshmikanthanp.clipbirdroid.viewmodel.ControllerViewModel
+import com.srilakshmikanthanp.clipbirdroid.controller.ControllerViewModel
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import kotlinx.coroutines.flow.map
