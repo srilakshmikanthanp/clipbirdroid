@@ -1,5 +1,6 @@
-package com.srilakshmikanthanp.clipbirdroid.controller
+package com.srilakshmikanthanp.clipbirdroid.syncing.wan
 
+import com.srilakshmikanthanp.clipbirdroid.controller.Controller
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubHostDevice
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubListener
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubWebsocket
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.Optional
 
-class WanController(coroutineScope: CoroutineScope): HubListener {
+class WanController(coroutineScope: CoroutineScope): HubListener, Controller {
   private val _syncRequestEvents = MutableSharedFlow<List<Pair<String, ByteArray>>>()
   val syncRequestEvents: SharedFlow<List<Pair<String, ByteArray>>> = _syncRequestEvents.asSharedFlow()
 

@@ -1,14 +1,14 @@
-package com.srilakshmikanthanp.clipbirdroid.controller
+package com.srilakshmikanthanp.clipbirdroid.clipboard
 
 import android.content.Context
-import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
+import com.srilakshmikanthanp.clipbirdroid.controller.Controller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-class ClipboardController(private val context: Context, coroutineScope: CoroutineScope) {
+class ClipboardController(private val context: Context, coroutineScope: CoroutineScope): Controller {
   private val scope = CoroutineScope(coroutineScope.coroutineContext + SupervisorJob())
   private val clipboard: Clipboard = Clipboard(context)
 

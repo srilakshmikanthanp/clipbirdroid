@@ -1,12 +1,10 @@
-package com.srilakshmikanthanp.clipbirdroid.controller
+package com.srilakshmikanthanp.clipbirdroid.syncing.lan
 
 import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Client
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Host
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
+import com.srilakshmikanthanp.clipbirdroid.controller.Controller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,10 +15,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LanController(
-  private val sslConfig: SSLConfig,
-  private val context: Context,
-  coroutineScope: CoroutineScope
-) {
+    private val sslConfig: SSLConfig,
+    private val context: Context,
+    coroutineScope: CoroutineScope
+): Controller {
   //----------------------- client Signals -------------------------//
   private val _servers = MutableStateFlow<Set<Device>>(emptySet())
   val servers = _servers.asStateFlow()
