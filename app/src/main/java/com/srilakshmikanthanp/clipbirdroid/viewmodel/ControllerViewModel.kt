@@ -1,10 +1,10 @@
 package com.srilakshmikanthanp.clipbirdroid.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.srilakshmikanthanp.clipbirdroid.controller.ClipboardController
-import com.srilakshmikanthanp.clipbirdroid.controller.HistoryController
-import com.srilakshmikanthanp.clipbirdroid.controller.LanController
-import com.srilakshmikanthanp.clipbirdroid.controller.WanController
+import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardController
+import com.srilakshmikanthanp.clipbirdroid.history.HistoryController
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.LanController
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

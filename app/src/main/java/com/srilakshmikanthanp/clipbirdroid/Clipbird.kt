@@ -8,10 +8,10 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.srilakshmikanthanp.clipbirdroid.common.functions.generateX509Certificate
 import com.srilakshmikanthanp.clipbirdroid.constants.appCertExpiryInterval
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.controller.ClipboardController
-import com.srilakshmikanthanp.clipbirdroid.controller.HistoryController
-import com.srilakshmikanthanp.clipbirdroid.controller.LanController
-import com.srilakshmikanthanp.clipbirdroid.controller.WanController
+import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardController
+import com.srilakshmikanthanp.clipbirdroid.history.HistoryController
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.LanController
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanController
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.MainScope
