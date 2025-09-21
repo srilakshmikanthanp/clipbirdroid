@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.viewmodel
+package com.srilakshmikanthanp.clipbirdroid.controller
 
 import androidx.lifecycle.ViewModel
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardController

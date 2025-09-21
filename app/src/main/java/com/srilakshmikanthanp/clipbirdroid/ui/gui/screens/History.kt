@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.viewmodel.ControllerViewModel
+import com.srilakshmikanthanp.clipbirdroid.controller.ControllerViewModel
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipHistory
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipSend
 
