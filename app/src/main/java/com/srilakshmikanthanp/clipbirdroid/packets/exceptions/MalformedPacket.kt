@@ -1,6 +1,6 @@
-package com.srilakshmikanthanp.clipbirdroid.common.exceptions
+package com.srilakshmikanthanp.clipbirdroid.packets.exceptions
 
-import com.srilakshmikanthanp.clipbirdroid.common.enums.ErrorCode
+import com.srilakshmikanthanp.clipbirdroid.packets.ErrorCode
 
 /**
  * Exception Type for Malformed packet error

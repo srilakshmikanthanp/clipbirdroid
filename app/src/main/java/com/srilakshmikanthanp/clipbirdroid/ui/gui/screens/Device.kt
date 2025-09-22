@@ -46,13 +46,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.common.types.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.functions.getAllInterfaceAddresses
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.storage.Storage
+import com.srilakshmikanthanp.clipbirdroid.storage.PreferenceStorage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
 import com.srilakshmikanthanp.clipbirdroid.controller.ControllerViewModel
+import com.srilakshmikanthanp.clipbirdroid.storage.StorageViewModel
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import kotlinx.coroutines.flow.map
@@ -252,6 +253,7 @@ private fun ClientGroup(
 private fun ActionsDropDownMenu(
   modifier: Modifier = Modifier,
   controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>(),
+  storageViewModel: StorageViewModel = hiltViewModel<StorageViewModel>(),
   expanded: Boolean = false,
   onDismissRequest: () -> Unit,
 ) {
@@ -263,8 +265,8 @@ private fun ActionsDropDownMenu(
 
   val context = LocalContext.current
 
-  val hubHostDevice by Storage.getInstance(context).hubHostDeviceFlow.collectAsState()
-  val hubAuthToken by Storage.getInstance(context).hubAuthTokenFlow.collectAsState()
+  val hubHostDevice by storageViewModel.storage.hubHostDeviceFlow.collectAsState()
+  val hubAuthToken by storageViewModel.storage.hubAuthTokenFlow.collectAsState()
 
   val makeJson = {
     val interfaces = getAllInterfaceAddresses()
@@ -292,8 +294,8 @@ private fun ActionsDropDownMenu(
   }
 
   val onResetClick = {
-    Storage.getInstance(context).clearAllClientCert()
-    Storage.getInstance(context).clearAllServerCert()
+    storageViewModel.storage.clearAllClientCert()
+    storageViewModel.storage.clearAllServerCert()
     Toast.makeText(context, R.string.reset_done, Toast.LENGTH_SHORT).show()
     onDismissRequest()
   }

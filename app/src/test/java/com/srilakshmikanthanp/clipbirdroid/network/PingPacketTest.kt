@@ -1,7 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.network
 
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
-import com.srilakshmikanthanp.clipbirdroid.common.enums.PingType
+import com.srilakshmikanthanp.clipbirdroid.packets.PingType
 import org.junit.Test
 
 class PingPacketTest {

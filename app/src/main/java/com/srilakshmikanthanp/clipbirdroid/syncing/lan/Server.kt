@@ -2,9 +2,9 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.lan
 
 import android.content.Context
 import android.util.Log
-import com.srilakshmikanthanp.clipbirdroid.common.enums.AuthStatus
-import com.srilakshmikanthanp.clipbirdroid.common.enums.PingType
-import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.packets.AuthStatus
+import com.srilakshmikanthanp.clipbirdroid.packets.PingType
+import com.srilakshmikanthanp.clipbirdroid.common.ssl.ClipbirdAllTrustManager
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constants.appMaxIdleReadTime
@@ -15,9 +15,8 @@ import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
-import com.srilakshmikanthanp.clipbirdroid.storage.Storage
+import com.srilakshmikanthanp.clipbirdroid.storage.PreferenceStorage
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -182,7 +181,7 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
 
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forServer(sslCert?.first, sslCert?.second)
-        .trustManager(ClipbirdTrustManager())
+        .trustManager(ClipbirdAllTrustManager())
         .clientAuth(ClientAuth.REQUIRE)
         .build()
 
@@ -290,57 +289,23 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
    * Handle the SSl Hand shake Complete
    */
   private fun onSSLHandShakeComplete(ctx: ChannelHandlerContext, evt: SslHandshakeCompletionEvent) {
-    // if handshake is not completed
     if (!evt.isSuccess) ctx.close().also { return }
 
-    // get the Handler for SSL from Pipeline
     val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
 
-    // get the Storage Instance
-    val storage = Storage.getInstance(context)
-
-    // check if client has certificate
     if(ssl.engine().session.peerCertificates.isEmpty()) {
       ctx.close().also { return }
     }
 
-    // get the Peer Certificate
     val peerCert = ssl.engine().session.peerCertificates[0] as X509Certificate
-
-    // get name
     val addr = ctx.channel().remoteAddress() as InetSocketAddress
-
-    // get CN name from certificate using bouncy castle
     val x500Name = JcaX509CertificateHolder(peerCert).subject
     val rdns = x500Name.getRDNs(BCStyle.CN)
-
-    // is does not have CN name
     if (rdns.isEmpty()) ctx.close().also { return }
-
-    // get the CN name
     val name = IETFUtils.valueToString(rdns[0].first.value)
-
-    // put name to ctx extra
     ctx.channel().attr(deviceName).set(name)
-
-    // Add to unauthenticated clients
     unauthenticatedClients.add(ctx)
-
-    // if Storage dis not have name
-    if (!storage.hasClientCert(name)) {
-      return this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
-    }
-
-    // get cert for name
-    val cert = storage.getClientCert(name)
-
-    // if matches then connect
-    if (peerCert == cert) {
-      return this.onClientAuthenticated(Device(addr.address, addr.port, name))
-    }
-
-    // Notify Auth Request Handlers
-    this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
+    return this.notifyAuthRequestHandlers(Device(addr.address, addr.port, name))
   }
 
   /**

@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.enums
+package com.srilakshmikanthanp.clipbirdroid.packets
 
 /**
  * Enum Class Used for Authentication packet
