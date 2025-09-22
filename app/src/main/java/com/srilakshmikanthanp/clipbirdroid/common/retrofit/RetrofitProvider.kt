@@ -23,6 +23,7 @@ class RetrofitProvider {
       .connectTimeout(30, TimeUnit.SECONDS)
       .readTimeout(30, TimeUnit.SECONDS)
       .writeTimeout(30, TimeUnit.SECONDS)
+      .addInterceptor(AuthTokenInterceptor(setting))
       .build()
 
     val gson = GsonBuilder().create()
