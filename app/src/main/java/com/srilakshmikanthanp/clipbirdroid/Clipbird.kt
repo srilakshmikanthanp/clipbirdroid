@@ -12,7 +12,6 @@ import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardController
 import com.srilakshmikanthanp.clipbirdroid.history.HistoryController
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.LanController
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanController
-import com.srilakshmikanthanp.clipbirdroid.storage.PreferenceStorage
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.MainScope
@@ -37,13 +36,13 @@ class Clipbird : Application() {
   private fun getNewSslConfig(context: Context): Pair<PrivateKey, X509Certificate> {
     val sslConfig = generateX509Certificate(context)
     storage.setHostKey(sslConfig.first)
-    storage.setHostCert(sslConfig.second)
+    storage.setHostCertificate(sslConfig.second)
     return sslConfig
   }
 
   private fun getOldSslConfig(context: Context): Pair<PrivateKey, X509Certificate> {
     val key = storage.getHostKey()!!
-    val cert = storage.getHostCert()!!
+    val cert = storage.getHostCertificate()!!
     val x500Name = JcaX509CertificateHolder(cert).subject
     val cn = x500Name.getRDNs(BCStyle.CN)[0]
     val name = IETFUtils.valueToString(cn.first.value)
@@ -53,7 +52,7 @@ class Clipbird : Application() {
     if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiryInterval()) {
       val sslConfig = generateX509Certificate(context)
       storage.setHostKey(sslConfig.first)
-      storage.setHostCert(sslConfig.second)
+      storage.setHostCertificate(sslConfig.second)
       return sslConfig
     }
 

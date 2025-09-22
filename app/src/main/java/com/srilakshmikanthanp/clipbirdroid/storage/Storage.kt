@@ -7,37 +7,37 @@ import com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth.AuthToken
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubHostDevice
 
 interface Storage {
-  val hostCertFlow: StateFlow<X509Certificate?>
+  val clientCertificatesFlow: StateFlow<Map<String, X509Certificate>>
+  val serverCertificatesFlow: StateFlow<Map<String, X509Certificate>>
+  val hostCertificateFlow: StateFlow<X509Certificate?>
   val hostKeyFlow: StateFlow<PrivateKey?>
-  val clientCertsFlow: StateFlow<Map<String, X509Certificate>>
-  val serverCertsFlow: StateFlow<Map<String, X509Certificate>>
   val hostStateFlow: StateFlow<Boolean>
   val hubAuthTokenFlow: StateFlow<AuthToken?>
   val hubHostDeviceFlow: StateFlow<HubHostDevice?>
 
-  fun setHostCert(cert: X509Certificate)
+  fun setHostCertificate(cert: X509Certificate)
   fun hasHostCert(): Boolean
-  fun clearHostCert()
-  fun getHostCert(): X509Certificate?
+  fun clearHostCertificate()
+  fun getHostCertificate(): X509Certificate?
 
   fun setHostKey(key: PrivateKey)
   fun hasHostKey(): Boolean
   fun clearHostKey()
   fun getHostKey(): PrivateKey?
 
-  fun setClientCert(name: String, cert: X509Certificate)
-  fun hasClientCert(name: String): Boolean
-  fun clearClientCert(name: String)
-  fun clearAllClientCert()
-  fun getClientCert(name: String): X509Certificate?
-  fun getAllClientCert(): Map<String, X509Certificate>
+  fun setClientCertificate(name: String, cert: X509Certificate)
+  fun hasClientCertificate(name: String): Boolean
+  fun clearClientCertificate(name: String)
+  fun clearAllClientCertificate()
+  fun getClientCertificate(name: String): X509Certificate?
+  fun getAllClientCertificate(): Map<String, X509Certificate>
 
-  fun setServerCert(name: String, cert: X509Certificate)
-  fun hasServerCert(name: String): Boolean
-  fun clearServerCert(name: String)
-  fun clearAllServerCert()
-  fun getServerCert(name: String): X509Certificate?
-  fun getAllServerCert(): Map<String, X509Certificate>
+  fun setServerCertificate(name: String, cert: X509Certificate)
+  fun hasServerCertificate(name: String): Boolean
+  fun clearServerCertificate(name: String)
+  fun clearAllServerCertificate()
+  fun getServerCertificate(name: String): X509Certificate?
+  fun getAllServerCertificate(): Map<String, X509Certificate>
 
   fun setHostIsLastlyServer(isServer: Boolean)
   fun getHostIsLastlyServer(): Boolean

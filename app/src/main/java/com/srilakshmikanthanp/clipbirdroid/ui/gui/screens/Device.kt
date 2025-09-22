@@ -50,7 +50,6 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.functions.getAllInterfaceAddresses
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.storage.PreferenceStorage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
 import com.srilakshmikanthanp.clipbirdroid.controller.ControllerViewModel
 import com.srilakshmikanthanp.clipbirdroid.storage.StorageViewModel
@@ -294,8 +293,8 @@ private fun ActionsDropDownMenu(
   }
 
   val onResetClick = {
-    storageViewModel.storage.clearAllClientCert()
-    storageViewModel.storage.clearAllServerCert()
+    storageViewModel.storage.clearAllClientCertificate()
+    storageViewModel.storage.clearAllServerCertificate()
     Toast.makeText(context, R.string.reset_done, Toast.LENGTH_SHORT).show()
     onDismissRequest()
   }
