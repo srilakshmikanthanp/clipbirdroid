@@ -41,7 +41,7 @@ class ClipbirdExistingServerTrustManager(
     }
 
     val name = IETFUtils.valueToString(rdns[0].first.value)
-    val cert = storage.getServerCert(name)
+    val cert = storage.getServerCertificate(name)
 
     if (cert == null) {
       throw CertificateException("No certificate found in storage for $name")

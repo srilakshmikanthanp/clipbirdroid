@@ -52,7 +52,7 @@ class ClipbirdService : Service() {
       throw RuntimeException("Host is not server")
     }
     val cert = server.getClientCertificate(client)
-    storage.setClientCert(client.name, cert)
+    storage.setClientCertificate(client.name, cert)
   }
 
   private fun handleServerFound(server: Device) {
@@ -61,7 +61,7 @@ class ClipbirdService : Service() {
       throw RuntimeException("Host is not client")
     }
     if (client.getConnectedServer() != null) return
-    if (storage.hasServerCert(server.name)) {
+    if (storage.hasServerCertificate(server.name)) {
       client.connectToServerSecured(server)
     }
   }
@@ -77,14 +77,14 @@ class ClipbirdService : Service() {
       clipboard.addClipboardChangeListener(client::synchronize)
       val cert = client.getConnectedServerCertificate()
       val name = srv.name
-      storage.setServerCert(name, cert)
+      storage.setServerCertificate(name, cert)
       return
     }
 
     clipboard.removeClipboardChangeListener(client::synchronize)
 
     for (s in client.getServerList()) {
-      if (s != srv && storage.hasServerCert(s.name)) {
+      if (s != srv && storage.hasServerCertificate(s.name)) {
         return client.connectToServerSecured(s)
       }
     }
@@ -130,7 +130,7 @@ class ClipbirdService : Service() {
 
   private fun handleAuthRequest(device: Device) {
     val peerCert = clipbird.lanController.getHostAsServerOrThrow().getClientCertificate(device)
-    val cert = storage.getClientCert(device.name)
+    val cert = storage.getClientCertificate(device.name)
     if (cert != null && cert == peerCert) {
       clipbird.lanController.onClientAuthenticated(device)
     }

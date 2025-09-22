@@ -70,17 +70,17 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
   }
 
   // Flows for observing changes
-  private val _hostCertFlow = MutableStateFlow(getHostCert())
-  override val hostCertFlow: StateFlow<X509Certificate?> = _hostCertFlow.asStateFlow()
+  private val _hostCertFlow = MutableStateFlow(getHostCertificate())
+  override val hostCertificateFlow: StateFlow<X509Certificate?> = _hostCertFlow.asStateFlow()
 
   private val _hostKeyFlow = MutableStateFlow(getHostKey())
   override val hostKeyFlow: StateFlow<PrivateKey?> = _hostKeyFlow.asStateFlow()
 
-  private val _clientCertsFlow = MutableStateFlow(getAllClientCert())
-  override val clientCertsFlow: StateFlow<Map<String, X509Certificate>> = _clientCertsFlow.asStateFlow()
+  private val _clientCertsFlow = MutableStateFlow(getAllClientCertificate())
+  override val clientCertificatesFlow: StateFlow<Map<String, X509Certificate>> = _clientCertsFlow.asStateFlow()
 
-  private val _serverCertsFlow = MutableStateFlow(getAllServerCert())
-  override val serverCertsFlow: StateFlow<Map<String, X509Certificate>> = _serverCertsFlow.asStateFlow()
+  private val _serverCertsFlow = MutableStateFlow(getAllServerCertificate())
+  override val serverCertificatesFlow: StateFlow<Map<String, X509Certificate>> = _serverCertsFlow.asStateFlow()
 
   private val _hostStateFlow = MutableStateFlow(getHostIsLastlyServer())
   override val hostStateFlow: StateFlow<Boolean> = _hostStateFlow.asStateFlow()
@@ -99,7 +99,7 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
   /**
    * Set the Host Private key and cert
    */
-  override fun setHostCert(cert: X509Certificate) {
+  override fun setHostCertificate(cert: X509Certificate) {
     generalPref.edit() { putString(HOST_CERT, cert.asString()) }
   }
 
@@ -113,14 +113,14 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
   /**
    * Clear the Host cert
    */
-  override fun clearHostCert() {
+  override fun clearHostCertificate() {
     generalPref.edit() { remove(HOST_CERT) }
   }
 
   /**
    * Get the Host cert
    */
-  override fun getHostCert(): X509Certificate? {
+  override fun getHostCertificate(): X509Certificate? {
     return generalPref.getString(HOST_CERT, null)?.asCertificate()
   }
 
@@ -156,84 +156,84 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
   /**
    * Set the client name and cert
    */
-  override fun setClientCert(name: String, cert: X509Certificate) {
+  override fun setClientCertificate(name: String, cert: X509Certificate) {
     clientPref.edit() { putString(name, cert.asString()) }
   }
 
   /**
    * Check the client cert is available
    */
-  override fun hasClientCert(name: String): Boolean {
+  override fun hasClientCertificate(name: String): Boolean {
     return clientPref.contains(name)
   }
 
   /**
    * Clear the client cert
    */
-  override fun clearClientCert(name: String) {
+  override fun clearClientCertificate(name: String) {
     clientPref.edit() { remove(name) }
   }
 
   /**
    * Clear all client cert
    */
-  override fun clearAllClientCert() {
+  override fun clearAllClientCertificate() {
     clientPref.edit() { clear() }
   }
 
   /**
    * Get the client cert
    */
-  override fun getClientCert(name: String): X509Certificate? {
+  override fun getClientCertificate(name: String): X509Certificate? {
     return clientPref.getString(name, null)?.asCertificate()
   }
 
   /**
    * Get all client cert
    */
-  override fun getAllClientCert(): Map<String, X509Certificate> {
+  override fun getAllClientCertificate(): Map<String, X509Certificate> {
     return clientPref.all.mapValues { (_, value) -> (value as String).asCertificate() }
   }
 
   /**
    * Set the server name and cert
    */
-  override fun setServerCert(name: String, cert: X509Certificate) {
+  override fun setServerCertificate(name: String, cert: X509Certificate) {
     serverPref.edit() { putString(name, cert.asString()) }
   }
 
   /**
    * Check the server cert is available
    */
-  override fun hasServerCert(name: String): Boolean {
+  override fun hasServerCertificate(name: String): Boolean {
     return serverPref.contains(name)
   }
 
   /**
    * Clear the server cert
    */
-  override fun clearServerCert(name: String) {
+  override fun clearServerCertificate(name: String) {
     serverPref.edit() { remove(name) }
   }
 
   /**
    * Clear all server cert
    */
-  override fun clearAllServerCert() {
+  override fun clearAllServerCertificate() {
     serverPref.edit() { clear() }
   }
 
   /**
    * Get the server cert
    */
-  override fun getServerCert(name: String): X509Certificate? {
+  override fun getServerCertificate(name: String): X509Certificate? {
     return serverPref.getString(name, null)?.asCertificate()
   }
 
   /**
    * Get all server cert
    */
-  override fun getAllServerCert(): Map<String, X509Certificate> {
+  override fun getAllServerCertificate(): Map<String, X509Certificate> {
     return serverPref.all.mapValues { (_, value) -> (value as String).asCertificate() }
   }
 
@@ -298,16 +298,16 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
     when (sharedPreferences) {
       generalPref -> {
         when (key) {
-          HOST_CERT -> _hostCertFlow.value = getHostCert()
+          HOST_CERT -> _hostCertFlow.value = getHostCertificate()
           HOST_KEY -> _hostKeyFlow.value = getHostKey()
           HOST_STATE -> _hostStateFlow.value = getHostIsLastlyServer()
         }
       }
       clientPref -> {
-        _clientCertsFlow.value = getAllClientCert()
+        _clientCertsFlow.value = getAllClientCertificate()
       }
       serverPref -> {
-        _serverCertsFlow.value = getAllServerCert()
+        _serverCertsFlow.value = getAllServerCertificate()
       }
       hubPref -> {
         when (key) {
