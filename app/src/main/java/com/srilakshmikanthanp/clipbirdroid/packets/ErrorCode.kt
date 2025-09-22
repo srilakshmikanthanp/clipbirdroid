@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.enums
+package com.srilakshmikanthanp.clipbirdroid.packets
 
 enum class ErrorCode(val value: Int = 0x00) {
   /**

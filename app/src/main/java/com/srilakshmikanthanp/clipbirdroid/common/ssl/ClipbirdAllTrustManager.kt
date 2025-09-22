@@ -1,11 +1,11 @@
-package com.srilakshmikanthanp.clipbirdroid.common.trust
+package com.srilakshmikanthanp.clipbirdroid.common.ssl
 
 import android.annotation.SuppressLint
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 
 @SuppressLint("CustomX509TrustManager")
-class ClipbirdTrustManager : X509TrustManager {
+class ClipbirdAllTrustManager : X509TrustManager {
   @SuppressLint("TrustAllX509TrustManager")
   override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
     // do nothing

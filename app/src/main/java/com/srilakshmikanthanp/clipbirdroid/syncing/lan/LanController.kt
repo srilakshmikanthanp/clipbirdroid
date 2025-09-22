@@ -1,7 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing.lan
 
 import android.content.Context
-import com.srilakshmikanthanp.clipbirdroid.common.enums.HostType
+import com.srilakshmikanthanp.clipbirdroid.common.types.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.controller.Controller

@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.enums
+package com.srilakshmikanthanp.clipbirdroid.common.types
 
 /**
  * Enum for Host Type

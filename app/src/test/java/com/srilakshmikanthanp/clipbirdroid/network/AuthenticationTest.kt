@@ -1,7 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.network
 
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
-import com.srilakshmikanthanp.clipbirdroid.common.enums.AuthStatus
+import com.srilakshmikanthanp.clipbirdroid.packets.AuthStatus
 import org.junit.Test
 
 class AuthenticationTest {

@@ -4,9 +4,9 @@ import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
 import com.srilakshmikanthanp.clipbirdroid.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
-import com.srilakshmikanthanp.clipbirdroid.common.enums.ErrorCode
-import com.srilakshmikanthanp.clipbirdroid.common.exceptions.MalformedPacket
-import com.srilakshmikanthanp.clipbirdroid.common.exceptions.NotThisPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.ErrorCode
+import com.srilakshmikanthanp.clipbirdroid.packets.exceptions.MalformedPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.exceptions.NotThisPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext

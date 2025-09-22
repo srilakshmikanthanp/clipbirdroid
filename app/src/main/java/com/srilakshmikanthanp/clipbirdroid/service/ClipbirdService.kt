@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ClipbirdService : Service() {
@@ -36,6 +37,8 @@ class ClipbirdService : Service() {
   private val notification = StatusNotification(this)
   private val clipbird: Clipbird = this.applicationContext as Clipbird
 
+  @Inject lateinit var storage: Storage
+
   inner class ClipbirdBinder : Binder() {
     fun getService(): ClipbirdService = this@ClipbirdService
   }
@@ -43,7 +46,6 @@ class ClipbirdService : Service() {
   val binder = ClipbirdBinder()
 
   private fun handleClientStateChanged(client: Device, connected: Boolean) {
-    val storage = Storage.getInstance(this)
     val server = clipbird.lanController.getHost() ?: return
     if (!connected) return
     if (server !is Server) {
@@ -54,7 +56,6 @@ class ClipbirdService : Service() {
   }
 
   private fun handleServerFound(server: Device) {
-    val storage = Storage.getInstance(this)
     val client = clipbird.lanController.getHost() ?: return
     if (client !is Client) {
       throw RuntimeException("Host is not client")
@@ -66,7 +67,6 @@ class ClipbirdService : Service() {
   }
 
   private fun handleServerStatusChanged(status: Boolean, srv: Device) {
-    val storage = Storage.getInstance(this)
     val client = clipbird.lanController.getHost() ?: return
     val clipboard = clipbird.clipboardController.getClipboard()
     if (client !is Client) {
@@ -128,8 +128,15 @@ class ClipbirdService : Service() {
     return PendingIntent.getActivity(this, 0, intent, flags)
   }
 
-  private fun onJoinRequest(device: Device) {
-    notification.showJoinRequest(device.name, onAcceptIntent(device), onRejectIntent(device))
+  private fun handleAuthRequest(device: Device) {
+    val peerCert = clipbird.lanController.getHostAsServerOrThrow().getClientCertificate(device)
+    val cert = storage.getClientCert(device.name)
+    if (cert != null && cert == peerCert) {
+      clipbird.lanController.onClientAuthenticated(device)
+    }
+    val onAccept = onAcceptIntent(device)
+    val onReject = onRejectIntent(device)
+    notification.showJoinRequest(device.name, onAccept, onReject)
   }
 
   private fun showNotification(title: String) {
@@ -184,7 +191,7 @@ class ClipbirdService : Service() {
 
     this.serviceCoroutineScope.launch {
       clipbird.lanController.authRequestEvents.collect {
-        onJoinRequest(it)
+        handleAuthRequest(it)
       }
     }
 
@@ -240,7 +247,7 @@ class ClipbirdService : Service() {
       }
     }
 
-    if (Storage.getInstance(this).getHostIsLastlyServer()) {
+    if (storage.getHostIsLastlyServer()) {
       clipbird.lanController.setAsServer()
     } else {
       clipbird.lanController.setAsClient()

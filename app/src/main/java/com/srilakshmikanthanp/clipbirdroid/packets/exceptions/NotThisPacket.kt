@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.exceptions
+package com.srilakshmikanthanp.clipbirdroid.packets.exceptions
 
 /**
  * Exception Type for Not This Packet error

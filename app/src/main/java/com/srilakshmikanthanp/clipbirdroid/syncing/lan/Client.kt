@@ -2,9 +2,10 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.lan
 
 import android.content.Context
 import android.util.Log
-import com.srilakshmikanthanp.clipbirdroid.common.enums.AuthStatus
-import com.srilakshmikanthanp.clipbirdroid.common.enums.PingType
-import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdTrustManager
+import com.srilakshmikanthanp.clipbirdroid.packets.AuthStatus
+import com.srilakshmikanthanp.clipbirdroid.packets.PingType
+import com.srilakshmikanthanp.clipbirdroid.common.ssl.ClipbirdExistingServerTrustManager
+import com.srilakshmikanthanp.clipbirdroid.common.ssl.ClipbirdAllTrustManager
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constants.appMaxIdleReadTime
@@ -16,9 +17,7 @@ import com.srilakshmikanthanp.clipbirdroid.packets.InvalidPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.PingPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.SyncingItem
 import com.srilakshmikanthanp.clipbirdroid.packets.SyncingPacket
-import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
-import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
@@ -212,59 +211,6 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
     const val TAG = "Client"
   }
 
-  // SSL Verifier Secured
-  inner class SSLVerifierSecured : ChannelInboundHandlerAdapter() {
-    override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any) {
-      // check if event is SSL Handshake Completed
-      if (evt !is SslHandshakeCompletionEvent) {
-        return super.userEventTriggered(ctx, evt)
-      }
-
-      // if handshake is not completed
-      if (!evt.isSuccess) ctx.close().also { return }
-
-      // get the Handler for SSL from Pipeline
-      val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
-
-      // get the Storage Instance
-      val storage = Storage.getInstance(context)
-
-      // check if peer has a valid certificate
-      if (ssl.engine().session.peerCertificates.isEmpty()) {
-        ctx.close().also { return }
-      }
-
-      // get the peer certificate
-      val peerCert = ssl.engine().session.peerCertificates[0] as X509Certificate
-
-      // get CN name from certificate using bouncy castle
-      val x500Name = JcaX509CertificateHolder(peerCert).subject
-      val rdns = x500Name.getRDNs(BCStyle.CN)
-
-      // is does not have CN name
-      if (rdns.isEmpty()) {
-        ctx.close().also { return }
-      }
-
-      // get the CN Name
-      val name = IETFUtils.valueToString(rdns[0].first.value)
-
-      // check is storage has certificate for name
-      if (!storage.hasServerCert(name)) {
-        ctx.close().also { return }
-      }
-
-      // get the certificate from storage
-      val cert = storage.getServerCert(name)!!
-
-      // check if two certificates are same
-      if (cert != peerCert) ctx.close().also { return }
-
-      // Next Handler
-      ctx.fireUserEventTriggered(evt)
-    }
-  }
-
   // SSL verifier
   inner class SSLVerifier : ChannelInboundHandlerAdapter() {
     override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any) {
@@ -308,14 +254,14 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forClient()
         .keyManager(sslConfig?.first, sslConfig?.second)
-        .trustManager(ClipbirdTrustManager()).build()
+        .trustManager(ClipbirdExistingServerTrustManager(context)).build()
 
       // Idle State
       ch.pipeline().addLast(IdleStateHandler(r, w, 0))
 
       // SSL
       ch.pipeline().addLast(sslContext.newHandler(ch.alloc()))
-      ch.pipeline().addLast(SSLVerifierSecured())
+      ch.pipeline().addLast(SSLVerifier())
 
       // Encoder
       ch.pipeline().addLast(AuthenticationEncoder())
@@ -340,7 +286,7 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forClient()
         .keyManager(sslConfig?.first, sslConfig?.second)
-        .trustManager(ClipbirdTrustManager()).build()
+        .trustManager(ClipbirdAllTrustManager()).build()
 
       // Idle
       ch.pipeline().addLast(IdleStateHandler(r, w, 0))
@@ -363,23 +309,13 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
     }
   }
 
-  // Device Name Attribute Key
   private val deviceName = AttributeKey.valueOf<String>("DEVICE_NAME")
-
-  // Ssl configuration
   private var sslConfig: SSLConfig? = null
-
-  // List of servers
   private val servers = mutableSetOf<Device>()
-
-  // Channel for communication
   private var channel: Channel? = null
-
-  // lock
   private val lock = ReentrantLock()
-
-  // Browser
   private val mdnsBrowser = MdnsBrowser(context)
+  private val trustedServerCerts = mutableMapOf<String, X509Certificate>()
 
   /**
    * Notify all the listeners for server list changed
