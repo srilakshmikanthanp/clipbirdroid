@@ -34,6 +34,7 @@ import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Account
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
@@ -66,9 +67,9 @@ private fun Clipbird() {
   ) {
     when (selected) {
       DrawerItems.HISTORY -> History(onMenuClick = onMenuClick)
-      DrawerItems.ABOUT -> AboutUs(onMenuClick)
+      DrawerItems.ABOUT -> AboutUs(onMenuClick = onMenuClick)
       DrawerItems.DEVICES -> Devices(onMenuClick = onMenuClick)
-      DrawerItems.ACCOUNT -> {}
+      DrawerItems.ACCOUNT -> Account(onMenuClick = onMenuClick)
     }
   }
 }

@@ -20,24 +20,18 @@ import com.srilakshmikanthanp.clipbirdroid.R
  * another for reject.
  */
 class StatusNotification(private val context: Context) {
-  // Notification Manager instance
   private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-  // Notification channel constants
   private val channelDescription = context.resources.getString(R.string.notification_content)
   private val channelId = context.resources.getString(R.string.status_notification)
   private val channelName = context.resources.getString(R.string.app_name)
   private val importance = NotificationManager.IMPORTANCE_LOW
 
-  // Companion object
   companion object {
     const val SERVICE_ID = 1
     const val REQUEST_ID = 2
   }
 
-  /**
-   * Initializer that creates Channel and Notification
-   */
   init {
     NotificationChannel(channelId, channelName, importance).apply {
       description = channelDescription
@@ -46,16 +40,9 @@ class StatusNotification(private val context: Context) {
     }
   }
 
-  /**
-   * Get the Notification Channel ID
-   */
   fun getChannelID(): String = channelId
 
-  /**
-   * @brief Show the notification to the user
-   */
   fun showJoinRequest(clientName: String, onAccept: PendingIntent, onReject: PendingIntent) {
-    // Create the notification
     NotificationCompat.Builder(context, channelId)
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
       .setContentTitle(context.resources.getString(R.string.connection_request))

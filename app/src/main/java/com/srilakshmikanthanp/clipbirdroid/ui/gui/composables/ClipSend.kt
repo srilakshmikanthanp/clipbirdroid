@@ -17,12 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.srilakshmikanthanp.clipbirdroid.R
 
-/**
- * ClipSend Composable
- */
 @Composable
 fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
-  // Row for the Text and send Button
   Card (modifier = modifier) {
     Row(
       horizontalArrangement = Arrangement.SpaceBetween,
@@ -46,9 +42,6 @@ fun ClipSend(modifier: Modifier = Modifier, onSend: () -> Unit = {}) {
   }
 }
 
-/**
- * Preview of ClipSend
- */
 @Preview(showBackground = true)
 @Composable
 fun ClipSendPreview() {

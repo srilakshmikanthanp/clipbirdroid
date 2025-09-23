@@ -19,25 +19,17 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.clipboard.Clipboard
 
-/**
- * Clipboard data mime type, content
- */
 typealias ClipData = List<Pair<String, ByteArray>>
 
-/**
- * Convert the ByteArray to Bitmap
- */
 private fun ByteArray.toBitmap(): ImageBitmap {
   return BitmapFactory.decodeByteArray(this, 0, this.size).asImageBitmap()
 }
 
-/**
- * Image Tile No preview
- */
 @Composable
 private fun NoPreview(image: Int) {
   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -46,9 +38,6 @@ private fun NoPreview(image: Int) {
   }
 }
 
-/**
- * ClipTile Composable
- */
 @Composable
 fun ClipTile(
   content: ClipData,
@@ -58,17 +47,14 @@ fun ClipTile(
 ) {
   Card(modifier = modifier) {
     Column(modifier = Modifier.padding(5.dp)) {
-      // Modifier for Row that presents content from start and end
       val rowModifierStart = Modifier
         .padding(horizontal = 10.dp, vertical = 15.dp)
         .fillMaxWidth()
         .fillMaxHeight(0.65f)
 
-      // max image size
-      val maxImgSize = 3145728; // 3 MB
-      val maxTxtSize = 200;
+      val maxImgSize = 3145728
+      val maxTxtSize = 200
 
-      // Row that presents content from start
       Row(
         horizontalArrangement = Arrangement.Start,
         modifier = rowModifierStart,
@@ -90,16 +76,13 @@ fun ClipTile(
         }
       }
 
-      // Modifier for Row that presents content from end
       val rowModifierEnd = Modifier.padding(vertical = 6.dp).fillMaxWidth()
 
-      // Row that presents content from end
       Row(
         horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.End),
         modifier = rowModifierEnd,
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        // Show the Copy Action Button
         IconButton(onClick = onCopy) {
           Image(
             painterResource(R.drawable.copy),
@@ -107,7 +90,6 @@ fun ClipTile(
           )
         }
 
-        // Show the Delete Action
         IconButton(onClick = onDelete) {
           Image(
             painterResource(R.drawable.delete),
@@ -117,4 +99,15 @@ fun ClipTile(
       }
     }
   }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ClipTilePreview() {
+  val content = listOf(Clipboard.MIME_TYPE_TEXT to "Hello World".toByteArray())
+
+  ClipTile(
+    modifier = Modifier.fillMaxWidth(),
+    content = content
+  )
 }

@@ -245,9 +245,6 @@ private fun ClientGroup(
   }
 }
 
-/**
- * Drop Down Menu used for more actions
- */
 @Composable
 private fun ActionsDropDownMenu(
   modifier: Modifier = Modifier,

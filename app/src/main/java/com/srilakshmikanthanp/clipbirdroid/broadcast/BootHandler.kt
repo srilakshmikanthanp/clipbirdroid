@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.handlers
+package com.srilakshmikanthanp.clipbirdroid.broadcast
 
 import android.content.BroadcastReceiver
 import android.content.Context

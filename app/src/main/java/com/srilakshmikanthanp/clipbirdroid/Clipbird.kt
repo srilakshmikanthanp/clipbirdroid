@@ -26,10 +26,10 @@ import javax.inject.Inject
 class Clipbird : Application() {
   private val applicationScope = MainScope()
 
-  val clipboardController = ClipboardController(this, applicationScope)
-  val historyController = HistoryController()
-  val lanController = LanController(getSslConfig(this), this, applicationScope)
-  val wanController = WanController(applicationScope)
+  lateinit var clipboardController: ClipboardController
+  lateinit var historyController: HistoryController
+  lateinit var lanController: LanController
+  lateinit var wanController: WanController
 
   @Inject lateinit var storage: Storage
 
@@ -74,5 +74,9 @@ class Clipbird : Application() {
       .addApi(GmsBarcodeScanning.getClient(this))
       .build()
     moduleInstall.installModules(request)
+    clipboardController = ClipboardController(this, applicationScope)
+    historyController = HistoryController()
+    lanController = LanController(getSslConfig(this), this, applicationScope)
+    wanController = WanController(applicationScope)
   }
 }

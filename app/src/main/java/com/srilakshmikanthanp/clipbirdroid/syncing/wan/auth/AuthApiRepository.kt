@@ -2,8 +2,9 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import javax.inject.Inject
 
-class AuthApiRepository(
+class AuthApiRepository @Inject constructor(
   private val authApiClient: AuthApiClient
 ) : AuthRepository {
   override fun signIn(

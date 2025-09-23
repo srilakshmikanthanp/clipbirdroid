@@ -15,15 +15,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.srilakshmikanthanp.clipbirdroid.R
 
-/**
- * Setting Up Screen
- */
 @Composable
 fun Starting() {
   Scaffold {
     Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(it),
+      modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight()
+        .padding(it),
       verticalArrangement = Arrangement.Center,
     ) {
       Image(

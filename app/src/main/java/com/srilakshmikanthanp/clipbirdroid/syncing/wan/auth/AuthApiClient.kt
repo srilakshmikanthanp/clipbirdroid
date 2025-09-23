@@ -5,6 +5,6 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface AuthApiClient {
-  @POST("/auth")
+  @POST("/auth/signin")
   suspend fun signIn(@Body request: BasicAuthRequestDto): Response<AuthToken>
 }

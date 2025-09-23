@@ -1,6 +1,8 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing.wan.device
 
-class DeviceApiRepository(
+import javax.inject.Inject
+
+class DeviceApiRepository @Inject constructor(
   private val deviceApiClient: DeviceApiClient
 ): DeviceRepository {
   override fun createDevice(
