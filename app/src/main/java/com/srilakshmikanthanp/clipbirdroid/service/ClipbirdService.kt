@@ -12,7 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
-import com.srilakshmikanthanp.clipbirdroid.handlers.WifiApStateChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.broadcast.WifiApStateChangeHandler
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Client
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
@@ -34,8 +34,9 @@ class ClipbirdService : Service() {
   private val serviceCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
   private val notificationId = StatusNotification.SERVICE_ID
   private val wifiApStateChangeHandler = WifiApStateChangeHandler()
-  private val notification = StatusNotification(this)
-  private val clipbird: Clipbird = this.applicationContext as Clipbird
+
+  private lateinit var notification: StatusNotification
+  private lateinit var clipbird: Clipbird
 
   @Inject lateinit var storage: Storage
 
@@ -170,7 +171,7 @@ class ClipbirdService : Service() {
     }
   }
 
-  init {
+  fun initialize() {
     this.serviceCoroutineScope.launch {
       clipbird.lanController.serverStatusEvents.collect { (s, d) ->
         this@ClipbirdService.showNotification(
@@ -256,8 +257,11 @@ class ClipbirdService : Service() {
 
   override fun onCreate() {
     super.onCreate()
+    this.notification = StatusNotification(this)
+    this.clipbird = this.applicationContext as Clipbird
     val filter = IntentFilter(WifiApStateChangeHandler.ACTION_WIFI_AP_STATE_CHANGED)
     this.registerReceiver(wifiApStateChangeHandler, filter)
+    this.initialize()
     this.showNotification(this.notificationTitle())
   }
 

@@ -31,9 +31,6 @@ import com.srilakshmikanthanp.clipbirdroid.controller.ControllerViewModel
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipHistory
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipSend
 
-/**
- * History Screen Used To See the History of the Clipboard
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun History(

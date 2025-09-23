@@ -10,6 +10,7 @@
   <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
   <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
 
   <application
     android:allowBackup="true"
@@ -28,13 +29,14 @@
       android:value="barcode_ui"/>
 
     <service
-      android:foregroundServiceType="dataSync"
+      android:foregroundServiceType="connectedDevice"
       android:exported="false"
       android:name=".service.ClipbirdService">
     </service>
 
     <activity
       android:name=".ui.gui.MainActivity"
+      android:windowSoftInputMode="adjustResize"
       android:screenOrientation="sensorPortrait"
       android:theme="@style/Theme.Splash"
       android:exported="true"
@@ -99,7 +101,7 @@
     </provider>
 
     <receiver
-      android:name=".handlers.BootHandler"
+      android:name=".broadcast.BootHandler"
       android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.ACTION_BOOT_COMPLETED" />
@@ -108,7 +110,7 @@
     </receiver>
 
     <receiver
-      android:name=".handlers.WifiApStateChangeHandler"
+      android:name=".broadcast.WifiApStateChangeHandler"
       android:exported="true">
       <intent-filter>
         <action android:name="android.net.wifi.WIFI_AP_STATE_CHANGED" />

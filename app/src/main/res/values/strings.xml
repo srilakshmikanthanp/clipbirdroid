@@ -68,4 +68,5 @@ s
   <string name="available">Available</string>
   <string name="account">Account</string>
   <string name="reset_done">Reset Done</string>
+  <string name="sign_in">Sign In</string>
 </resources>

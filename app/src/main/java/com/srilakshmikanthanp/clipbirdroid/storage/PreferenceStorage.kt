@@ -12,7 +12,10 @@ import java.security.cert.X509Certificate
 import java.security.spec.PKCS8EncodedKeySpec
 import java.util.Base64
 import androidx.core.content.edit
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.srilakshmikanthanp.clipbirdroid.common.functions.jacksonObjectMapperWithTimeModule
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth.AuthToken
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubHostDevice
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,38 +23,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceChangeListener, Storage {
-  // Shared Preference for General Group
   private val generalPref = context.getSharedPreferences("GENERAL", Context.MODE_PRIVATE)
-
-  // Shared Preference for Hub Group
   private val hubPref = context.getSharedPreferences("HUB", Context.MODE_PRIVATE)
-
-  // Shared Preference for Client Group
   private val clientPref = context.getSharedPreferences("CLIENT", Context.MODE_PRIVATE)
-
-  // Shared Preference for Server Group
   private val serverPref = context.getSharedPreferences("SERVER", Context.MODE_PRIVATE)
 
-  // From PrivateKey to string
   private fun PrivateKey.asString(): String {
     Base64.getEncoder().encode(this.encoded).also { return String(it) }
   }
 
-  // From string to PrivateKey
   private fun String.asPrivateKey(): PrivateKey {
     val bytes = Base64.getDecoder().decode(this)
     val kf = KeyFactory.getInstance("RSA")
     return PKCS8EncodedKeySpec(bytes).let { kf.generatePrivate(it) }
   }
 
-  // From string to Certificate
   private fun String.asCertificate(): X509Certificate {
     val certFactory = CertificateFactory.getInstance("X.509")
     val inStream = this.byteInputStream(Charsets.UTF_8)
     return certFactory.generateCertificate(inStream) as X509Certificate
   }
 
-  // From Certificate to string
   private fun X509Certificate.asString(): String {
     val stringWriter = StringWriter()
     PemWriter(stringWriter).use {
@@ -60,7 +52,6 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
     return stringWriter.toString()
   }
 
-  // companion Object
   companion object {
     private const val HOST_STATE = "HOST_STATE"
     private const val HOST_KEY = "HOST_KEY"
@@ -69,7 +60,6 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
     private const val HUB_HOST_DEVICE = "HUB_HOST_DEVICE"
   }
 
-  // Flows for observing changes
   private val _hostCertFlow = MutableStateFlow(getHostCertificate())
   override val hostCertificateFlow: StateFlow<X509Certificate?> = _hostCertFlow.asStateFlow()
 
@@ -96,163 +86,96 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
     hubPref.registerOnSharedPreferenceChangeListener(this)
   }
 
-  /**
-   * Set the Host Private key and cert
-   */
   override fun setHostCertificate(cert: X509Certificate) {
     generalPref.edit() { putString(HOST_CERT, cert.asString()) }
   }
 
-  /**
-   * Check the Host cert is available
-   */
   override fun hasHostCert(): Boolean {
     return generalPref.contains(HOST_CERT)
   }
 
-  /**
-   * Clear the Host cert
-   */
   override fun clearHostCertificate() {
     generalPref.edit() { remove(HOST_CERT) }
   }
 
-  /**
-   * Get the Host cert
-   */
   override fun getHostCertificate(): X509Certificate? {
     return generalPref.getString(HOST_CERT, null)?.asCertificate()
   }
 
-  /**
-   * Set the Host Private key
-   */
   override fun setHostKey(key: PrivateKey) {
     generalPref.edit() { putString(HOST_KEY, key.asString()) }
   }
 
-  /**
-   * Check the Host key is available
-   */
   override fun hasHostKey(): Boolean {
     return generalPref.contains(HOST_KEY)
   }
 
-  /**
-   * Clear the Host key
-   */
   override fun clearHostKey() {
     generalPref.edit() { remove(HOST_KEY) }
   }
 
-  /**
-   * Get the Host key
-   */
   override fun getHostKey(): PrivateKey? {
     return generalPref.getString(HOST_KEY, null)?.asPrivateKey()
   }
 
-
-  /**
-   * Set the client name and cert
-   */
   override fun setClientCertificate(name: String, cert: X509Certificate) {
     clientPref.edit() { putString(name, cert.asString()) }
   }
 
-  /**
-   * Check the client cert is available
-   */
   override fun hasClientCertificate(name: String): Boolean {
     return clientPref.contains(name)
   }
 
-  /**
-   * Clear the client cert
-   */
   override fun clearClientCertificate(name: String) {
     clientPref.edit() { remove(name) }
   }
 
-  /**
-   * Clear all client cert
-   */
   override fun clearAllClientCertificate() {
     clientPref.edit() { clear() }
   }
 
-  /**
-   * Get the client cert
-   */
   override fun getClientCertificate(name: String): X509Certificate? {
     return clientPref.getString(name, null)?.asCertificate()
   }
 
-  /**
-   * Get all client cert
-   */
   override fun getAllClientCertificate(): Map<String, X509Certificate> {
     return clientPref.all.mapValues { (_, value) -> (value as String).asCertificate() }
   }
 
-  /**
-   * Set the server name and cert
-   */
   override fun setServerCertificate(name: String, cert: X509Certificate) {
     serverPref.edit() { putString(name, cert.asString()) }
   }
 
-  /**
-   * Check the server cert is available
-   */
   override fun hasServerCertificate(name: String): Boolean {
     return serverPref.contains(name)
   }
 
-  /**
-   * Clear the server cert
-   */
   override fun clearServerCertificate(name: String) {
     serverPref.edit() { remove(name) }
   }
 
-  /**
-   * Clear all server cert
-   */
   override fun clearAllServerCertificate() {
     serverPref.edit() { clear() }
   }
 
-  /**
-   * Get the server cert
-   */
   override fun getServerCertificate(name: String): X509Certificate? {
     return serverPref.getString(name, null)?.asCertificate()
   }
 
-  /**
-   * Get all server cert
-   */
   override fun getAllServerCertificate(): Map<String, X509Certificate> {
     return serverPref.all.mapValues { (_, value) -> (value as String).asCertificate() }
   }
 
-  /**
-   * Set the host state
-   */
   override fun setHostIsLastlyServer(isServer: Boolean) {
     generalPref.edit() { putBoolean(HOST_STATE, isServer) }
   }
 
-  /**
-   * Get the host state
-   */
   override fun getHostIsLastlyServer(): Boolean {
     return generalPref.getBoolean(HOST_STATE, false)
   }
 
   override fun setHubAuthToken(token: AuthToken) {
-    val objectMapper = jacksonObjectMapper()
+    val objectMapper = jacksonObjectMapperWithTimeModule()
     val json = objectMapper.writeValueAsString(token)
     hubPref.edit() { putString(HUB_AUTH_TOKEN, json) }
   }
@@ -263,7 +186,7 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
 
   override fun getHubAuthToken(): AuthToken? {
     val json = hubPref.getString(HUB_AUTH_TOKEN, null) ?: return null
-    val objectMapper = jacksonObjectMapper()
+    val objectMapper = jacksonObjectMapperWithTimeModule()
     return objectMapper.readValue(json, AuthToken::class.java)
   }
 
@@ -272,7 +195,7 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
   }
 
   override fun setHubHostDevice(device: HubHostDevice) {
-    val objectMapper = jacksonObjectMapper()
+    val objectMapper = jacksonObjectMapperWithTimeModule()
     val json = objectMapper.writeValueAsString(device)
     hubPref.edit() { putString(HUB_HOST_DEVICE, json) }
   }
@@ -283,7 +206,7 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
 
   override fun getHubHostDevice(): HubHostDevice? {
     val json = hubPref.getString(HUB_HOST_DEVICE, null) ?: return null
-    val objectMapper = jacksonObjectMapper()
+    val objectMapper = jacksonObjectMapperWithTimeModule()
     return objectMapper.readValue(json, HubHostDevice::class.java)
   }
 

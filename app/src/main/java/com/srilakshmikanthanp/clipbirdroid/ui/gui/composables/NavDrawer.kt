@@ -25,16 +25,10 @@ import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.constants.appName
 
-/**
- * Enum Class for Drawer Items
- */
 enum class DrawerItems {
   DEVICES, HISTORY, ACCOUNT, ABOUT
 }
 
-/**
- * Drawer Content Composable
- */
 @Composable
 private fun DrawerContent(
   onItemClicked: (DrawerItems) -> Unit,
@@ -43,7 +37,6 @@ private fun DrawerContent(
   ModalDrawerSheet (
     modifier = Modifier.fillMaxWidth(fraction = 0.8f),
   ) {
-    // Header for the Drawer
     Column (modifier = Modifier.padding(10.dp)) {
       Column (
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -54,34 +47,28 @@ private fun DrawerContent(
         Text(text = appMdnsServiceName(LocalContext.current), color = Color.Gray)
       }
 
-      // Divider for Drawer
       HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-      // Item For Device
       NavigationDrawerItem(
         onClick =  { onItemClicked(DrawerItems.DEVICES) },
         label = { Text(text =  stringResource(id = R.string.devices)) },
         selected = selected == DrawerItems.DEVICES,
       )
 
-      // Item For History
       NavigationDrawerItem(
         onClick =  { onItemClicked(DrawerItems.HISTORY) },
         label = { Text(text = stringResource(id = R.string.history)) },
         selected = selected == DrawerItems.HISTORY,
       )
 
-      // Item For Account
       NavigationDrawerItem(
         onClick =  { onItemClicked(DrawerItems.ACCOUNT) },
         label = { Text(text = stringResource(id = R.string.account)) },
         selected = selected == DrawerItems.ACCOUNT,
       )
 
-      // Divider for Drawer
       HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-      // Item For About
       NavigationDrawerItem(
         onClick =  { onItemClicked(DrawerItems.ABOUT) },
         label = { Text(text = stringResource(id = R.string.about)) },
@@ -91,9 +78,6 @@ private fun DrawerContent(
     }
 }
 
-/**
- * Navigation Drawer
- */
 @Composable
 fun NavDrawer(
   onItemClicked: (DrawerItems) -> Unit,
@@ -109,9 +93,6 @@ fun NavDrawer(
   }
 }
 
-/**
- * Preview
- */
 @Preview(showBackground = true)
 @Composable
 private fun NavDrawerPreview() {

@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -26,7 +27,9 @@ class RetrofitProvider {
       .addInterceptor(AuthTokenInterceptor(setting))
       .build()
 
-    val gson = GsonBuilder().create()
+    val gson = GsonBuilder()
+      .registerTypeAdapter(Instant::class.java, InstantTypeAdapter())
+      .create()
 
     return Retrofit.Builder()
       .baseUrl(getClipbirdApiUrl())
