@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.controller
+package com.srilakshmikanthanp.clipbirdroid.syncing.wan
 
 import androidx.lifecycle.ViewModel
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardController
@@ -9,9 +9,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class ControllerViewModel @Inject constructor(
-  val clipboardController: ClipboardController,
-  val historyController: HistoryController,
-  val lanController: LanController,
+class WanViewModel @Inject constructor(
   val wanController: WanController
-) : ViewModel()
+) : ViewModel() {
+
+}
