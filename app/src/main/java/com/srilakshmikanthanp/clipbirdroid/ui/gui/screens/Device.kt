@@ -46,13 +46,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.common.types.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.functions.getAllInterfaceAddresses
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
+import com.srilakshmikanthanp.clipbirdroid.common.types.HostType
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
-import com.srilakshmikanthanp.clipbirdroid.controller.ControllerViewModel
 import com.srilakshmikanthanp.clipbirdroid.storage.StorageViewModel
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.LanViewModel
+import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanViewModel
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Connect
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.modals.Group
 import kotlinx.coroutines.flow.map
@@ -61,17 +62,17 @@ import java.net.InetAddress
 
 @Composable
 private fun ServerGroup(
-  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>()
+  lanViewModel: LanViewModel = hiltViewModel<LanViewModel>()
 ) {
-  val isRegistered by controllerViewModel.lanController.mdnsRegisterStatusEvents.collectAsState(false)
-  val clients by controllerViewModel.lanController.clients.collectAsState()
+  val isRegistered by lanViewModel.lanController.mdnsRegisterStatusEvents.collectAsState(false)
+  val clients by lanViewModel.lanController.clients.collectAsState()
 
   val context = LocalContext.current
 
   if (isRegistered) Toast.makeText(context, "Registered", Toast.LENGTH_SHORT).show()
 
   val onDisconnectClick = { device: Device ->
-    controllerViewModel.lanController.getHostAsServerOrThrow().disconnectClient(device)
+    lanViewModel.lanController.getHostAsServerOrThrow().disconnectClient(device)
   }
 
   if (clients.isNotEmpty()) {
@@ -134,17 +135,17 @@ private fun ServerGroup(
 
 @Composable
 private fun ClientGroup(
-  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>()
+  lanViewModel: LanViewModel = hiltViewModel<LanViewModel>()
 ) {
-  val connectedGroup by controllerViewModel.lanController.serverStatusEvents.map { if (it.first) it.second else null }.collectAsState(null)
-  val servers by controllerViewModel.lanController.servers.map { it.toList() }.collectAsState(emptyList())
+  val connectedGroup by lanViewModel.lanController.serverStatusEvents.map { if (it.first) it.second else null }.collectAsState(null)
+  val servers by lanViewModel.lanController.servers.map { it.toList() }.collectAsState(emptyList())
 
   val onDisconnect = { device: Device ->
-    controllerViewModel.lanController.getHostAsClientOrThrow().disconnectFromServer()
+    lanViewModel.lanController.getHostAsClientOrThrow().disconnectFromServer()
   }
 
   val onConnect = { device: Device ->
-    controllerViewModel.lanController.getHostAsClientOrThrow().connectToServer(device)
+    lanViewModel.lanController.getHostAsClientOrThrow().connectToServer(device)
   }
 
   Column {
@@ -248,13 +249,14 @@ private fun ClientGroup(
 @Composable
 private fun ActionsDropDownMenu(
   modifier: Modifier = Modifier,
-  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>(),
+  lanViewModel: LanViewModel = hiltViewModel<LanViewModel>(),
+  wanViewModel: WanViewModel = hiltViewModel<WanViewModel>(),
   storageViewModel: StorageViewModel = hiltViewModel<StorageViewModel>(),
   expanded: Boolean = false,
   onDismissRequest: () -> Unit,
 ) {
-  val hostType by controllerViewModel.lanController.hostTypeChangeEvent.collectAsState(controllerViewModel.lanController.getHostType())
-  val hubState by controllerViewModel.wanController.hubConnectionStatus.collectAsState(false)
+  val hostType by lanViewModel.lanController.hostTypeChangeEvent.collectAsState(lanViewModel.lanController.getHostType())
+  val hubState by wanViewModel.wanController.hubConnectionStatus.collectAsState(false)
 
   var isConnectDialogOpen by remember { mutableStateOf(false) }
   var isGroupDialogOpen by remember { mutableStateOf(false) }
@@ -266,7 +268,7 @@ private fun ActionsDropDownMenu(
 
   val makeJson = {
     val interfaces = getAllInterfaceAddresses()
-    val port = controllerViewModel.lanController.getHostAsServerOrThrow().getServerInfo().port
+    val port = lanViewModel.lanController.getHostAsServerOrThrow().getServerInfo().port
     val obj = JSONObject()
     obj.put("port", port)
     obj.put("ips", interfaces)
@@ -284,7 +286,7 @@ private fun ActionsDropDownMenu(
   }
 
   val onConnect = { ip: InetAddress, port: Int ->
-    controllerViewModel.lanController.getHostAsClientOrThrow().connectToServer(Device(ip, port, ip.hostName))
+    lanViewModel.lanController.getHostAsClientOrThrow().connectToServer(Device(ip, port, ip.hostName))
     isConnectDialogOpen = false
     onDismissRequest()
   }
@@ -297,12 +299,12 @@ private fun ActionsDropDownMenu(
   }
 
   val onLeaveHubClick = {
-    controllerViewModel.wanController.disconnectFromHub()
+    wanViewModel.wanController.disconnectFromHub()
     onDismissRequest()
   }
 
   val onJoinHubClick = {
-    controllerViewModel.wanController.connectToHub(hubHostDevice!!)
+    wanViewModel.wanController.connectToHub(hubHostDevice!!)
     onDismissRequest()
   }
 
@@ -345,7 +347,7 @@ private fun ActionsDropDownMenu(
     onDismissRequest = { isGroupDialogOpen = false },
     title = appMdnsServiceName(context),
     code = makeJson(),
-    port = controllerViewModel.lanController.getHostAsServerOrThrow().getServerInfo().port,
+    port = lanViewModel.lanController.getHostAsServerOrThrow().getServerInfo().port,
     modifier = Modifier.padding(5.dp, 25.dp, 5.dp, 15.dp)
   )
 
@@ -360,10 +362,10 @@ private fun ActionsDropDownMenu(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Devices(
-  controllerViewModel: ControllerViewModel = hiltViewModel<ControllerViewModel>(),
+  lanViewModel: LanViewModel = hiltViewModel<LanViewModel>(),
   onMenuClick: () -> Unit = {}
 ) {
-  var isServer by remember { mutableStateOf(controllerViewModel.lanController.getHost() is Server) }
+  var isServer by remember { mutableStateOf(lanViewModel.lanController.getHost() is Server) }
   var expanded by remember { mutableStateOf(false) }
 
   val serverTab = Pair(0, stringResource(R.string.create_group))
@@ -371,10 +373,10 @@ fun Devices(
 
   val tabClickHandler = { index: Int ->
     isServer = if (index == serverTab.first && !isServer) {
-      controllerViewModel.lanController.setAsServer()
+      lanViewModel.lanController.setAsServer()
       true
     } else if (index == clintTab.first && isServer) {
-      controllerViewModel.lanController.setAsClient()
+      lanViewModel.lanController.setAsClient()
       false
     } else {
       isServer
@@ -391,7 +393,6 @@ fun Devices(
       }
 
       ActionsDropDownMenu(
-        controllerViewModel = controllerViewModel,
         expanded = expanded,
         onDismissRequest = { expanded = false },
       )
@@ -451,9 +452,9 @@ fun Devices(
   val content = @Composable { padding: PaddingValues ->
     Column(modifier = Modifier.padding(padding)) {
       if (isServer) {
-        ServerGroup(controllerViewModel)
+        ServerGroup()
       } else {
-        ClientGroup(controllerViewModel)
+        ClientGroup()
       }
     }
   }
