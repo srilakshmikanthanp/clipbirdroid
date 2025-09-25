@@ -256,14 +256,13 @@ private fun ActionsDropDownMenu(
   onDismissRequest: () -> Unit,
 ) {
   val hostType by lanViewModel.lanController.hostTypeChangeEvent.collectAsState(lanViewModel.lanController.getHostType())
-  val hubState by wanViewModel.wanController.hubConnectionStatus.collectAsState(false)
+  val connectState by wanViewModel.wanUIState.collectAsState()
 
   var isConnectDialogOpen by remember { mutableStateOf(false) }
   var isGroupDialogOpen by remember { mutableStateOf(false) }
 
   val context = LocalContext.current
 
-  val hubHostDevice by storageViewModel.storage.hubHostDeviceFlow.collectAsState()
   val hubAuthToken by storageViewModel.storage.hubAuthTokenFlow.collectAsState()
 
   val makeJson = {
@@ -304,7 +303,7 @@ private fun ActionsDropDownMenu(
   }
 
   val onJoinHubClick = {
-    wanViewModel.wanController.connectToHub(hubHostDevice!!)
+    wanViewModel.connectToHub()
     onDismissRequest()
   }
 
@@ -323,14 +322,15 @@ private fun ActionsDropDownMenu(
       )
     }
 
-    if (hubAuthToken != null && hubHostDevice != null && !hubState) {
+    if (hubAuthToken != null && !connectState.isConnected) {
       DropdownMenuItem(
         text = { Text(stringResource(id = R.string.join_hub)) },
         onClick = onJoinHubClick,
+        enabled = !connectState.isConnecting
       )
     }
 
-    if (hubState) {
+    if (connectState.isConnected) {
       DropdownMenuItem(
         text = { Text(stringResource(id = R.string.leave_hub)) },
         onClick = onLeaveHubClick,

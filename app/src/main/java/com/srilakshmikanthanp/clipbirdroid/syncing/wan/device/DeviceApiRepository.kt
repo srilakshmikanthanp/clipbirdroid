@@ -5,18 +5,16 @@ import javax.inject.Inject
 class DeviceApiRepository @Inject constructor(
   private val deviceApiClient: DeviceApiClient
 ): DeviceRepository {
-  override fun createDevice(
+  override suspend fun createDevice(
     deviceRequestDto: DeviceRequestDto
-  ): kotlinx.coroutines.flow.Flow<DeviceResponseDto> = kotlinx.coroutines.flow.flow {
-    val response = deviceApiClient.createDevice(deviceRequestDto)
-    emit(response)
+  ): DeviceResponseDto {
+    return deviceApiClient.createDevice(deviceRequestDto)
   }
 
-  override fun updateDevice(
+  override suspend fun updateDevice(
     id: String,
     deviceRequestDto: DeviceRequestDto
-  ): kotlinx.coroutines.flow.Flow<DeviceResponseDto> = kotlinx.coroutines.flow.flow {
-    val response = deviceApiClient.updateDevice(id, deviceRequestDto)
-    emit(response)
+  ): DeviceResponseDto {
+    return deviceApiClient.updateDevice(id, deviceRequestDto)
   }
 }

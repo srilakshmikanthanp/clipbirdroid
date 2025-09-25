@@ -180,7 +180,7 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
       val (r, w) = Pair(appMaxIdleReadTime(), appMaxIdleWriteTime())
 
       // create SSL Context from cert and private key
-      val sslContext = SslContextBuilder.forServer(sslCert?.first, sslCert?.second)
+      val sslContext = SslContextBuilder.forServer(sslCert?.privateKey, sslCert?.certificate)
         .trustManager(ClipbirdAllTrustManager())
         .clientAuth(ClientAuth.REQUIRE)
         .build()
@@ -553,7 +553,7 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
 
     // Get the Required parameters
     val address = sslServer?.localAddress() as InetSocketAddress?
-    val x500Name = JcaX509CertificateHolder(sslCert?.second).subject
+    val x500Name = JcaX509CertificateHolder(sslCert?.certificate).subject
     val cn = x500Name.getRDNs(BCStyle.CN)[0]
     val name = IETFUtils.valueToString(cn.first.value)
 

@@ -187,6 +187,14 @@ class ClipbirdService : Service() {
     this.serviceCoroutineScope.launch {
       clipbird.lanController.syncRequestEvents.collect {
         clipbird.clipboardController.getClipboard().setClipboardContent(it)
+        clipbird.historyController.addHistory(it)
+      }
+    }
+
+    this.serviceCoroutineScope.launch {
+      clipbird.wanController.syncRequestEvents.collect {
+        clipbird.clipboardController.getClipboard().setClipboardContent(it)
+        clipbird.historyController.addHistory(it)
       }
     }
 

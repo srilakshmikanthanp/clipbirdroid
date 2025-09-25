@@ -14,6 +14,7 @@ import com.srilakshmikanthanp.clipbirdroid.syncing.lan.LanController
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanController
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
@@ -24,48 +25,11 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 class Clipbird : Application() {
-  private val applicationScope = MainScope()
-
-  lateinit var clipboardController: ClipboardController
-  lateinit var historyController: HistoryController
-  lateinit var lanController: LanController
-  lateinit var wanController: WanController
-
+  @Inject lateinit var clipboardController: ClipboardController
+  @Inject lateinit var historyController: HistoryController
+  @Inject lateinit var lanController: LanController
+  @Inject lateinit var wanController: WanController
   @Inject lateinit var storage: Storage
-
-  private fun getNewSslConfig(context: Context): Pair<PrivateKey, X509Certificate> {
-    val sslConfig = generateX509Certificate(context)
-    storage.setHostKey(sslConfig.first)
-    storage.setHostCertificate(sslConfig.second)
-    return sslConfig
-  }
-
-  private fun getOldSslConfig(context: Context): Pair<PrivateKey, X509Certificate> {
-    val key = storage.getHostKey()!!
-    val cert = storage.getHostCertificate()!!
-    val x500Name = JcaX509CertificateHolder(cert).subject
-    val cn = x500Name.getRDNs(BCStyle.CN)[0]
-    val name = IETFUtils.valueToString(cn.first.value)
-    val deviceName = appMdnsServiceName(context)
-    if (name != deviceName) return getNewSslConfig(context)
-
-    if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiryInterval()) {
-      val sslConfig = generateX509Certificate(context)
-      storage.setHostKey(sslConfig.first)
-      storage.setHostCertificate(sslConfig.second)
-      return sslConfig
-    }
-
-    return Pair(key, cert)
-  }
-
-  fun getSslConfig(context: Context): Pair<PrivateKey, X509Certificate> {
-    return if (storage.hasHostKey() && storage.hasHostCert()) {
-      getOldSslConfig(context)
-    } else {
-      getNewSslConfig(context)
-    }
-  }
 
   override fun onCreate() {
     super.onCreate()
@@ -74,9 +38,5 @@ class Clipbird : Application() {
       .addApi(GmsBarcodeScanning.getClient(this))
       .build()
     moduleInstall.installModules(request)
-    clipboardController = ClipboardController(this, applicationScope)
-    historyController = HistoryController()
-    lanController = LanController(getSslConfig(this), this, applicationScope)
-    wanController = WanController(applicationScope)
   }
 }

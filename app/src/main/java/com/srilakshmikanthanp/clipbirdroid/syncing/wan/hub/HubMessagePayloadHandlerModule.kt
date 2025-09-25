@@ -8,40 +8,46 @@ import dagger.multibindings.IntoSet
 
 @Module()
 @InstallIn(SingletonComponent::class)
-abstract class HubMessagePayloadModule {
+abstract class HubMessagePayloadHandlerModule {
   @Binds
   @IntoSet
   abstract fun bindHubMessageClipboardDispatchPayloadHandler(
     handler: HubMessageClipboardDispatchPayloadHandler
-  ): HubMessagePayloadHandler<HubMessageClipboardDispatchPayload>
+  ): HubMessagePayloadHandler<*>
 
   @Binds
   @IntoSet
   abstract fun bindHubMessageDeviceAddedPayloadHandler(
     handler: HubMessageDeviceAddedPayloadHandler
-  ): HubMessagePayloadHandler<HubMessageDeviceAddedPayload>
+  ): HubMessagePayloadHandler<*>
 
   @Binds
   @IntoSet
   abstract fun bindHubMessageDeviceRemovedPayloadHandler(
     handler: HubMessageDeviceRemovedPayloadHandler
-  ): HubMessagePayloadHandler<HubMessageDeviceRemovedPayload>
+  ): HubMessagePayloadHandler<*>
+
+  @Binds
+  @IntoSet
+  abstract fun bindHubMessageDevicesPayloadHandler(
+    handler: HubMessageDevicesPayloadHandler
+  ): HubMessagePayloadHandler<*>
 
   @Binds
   @IntoSet
   abstract fun bindHubMessageDeviceUpdatedPayloadHandler(
     handler: HubMessageDeviceUpdatedPayloadHandler
-  ): HubMessagePayloadHandler<HubMessageDeviceUpdatedPayload>
+  ): HubMessagePayloadHandler<*>
 
   @Binds
   @IntoSet
   abstract fun bindHubMessageNonceChallengeCompletedPayloadHandler(
     handler: HubMessageNonceChallengeCompletedPayloadHandler
-  ): HubMessagePayloadHandler<HubMessageNonceChallengeCompletedPayload>
+  ): HubMessagePayloadHandler<*>
 
   @Binds
   @IntoSet
   abstract fun bindHubMessageNonceChallengeRequestPayloadHandler(
     handler: HubMessageNonceChallengeRequestPayloadHandler
-  ): HubMessagePayloadHandler<HubMessageNonceChallengeRequestPayload>
+  ): HubMessagePayloadHandler<*>
 }

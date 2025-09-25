@@ -18,7 +18,7 @@ import java.util.Date
 /**
  * Generate RSA key pair
  */
-private fun generateRSAKeyPair(bits: Int): KeyPair {
+fun generateRSAKeyPair(bits: Int = 2048): KeyPair {
   val kpg = KeyPairGenerator.getInstance("RSA")
   kpg.initialize(bits)
   return kpg.generateKeyPair()
