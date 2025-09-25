@@ -33,9 +33,9 @@ class AuthViewModel @Inject constructor(
     viewModelScope.launch {
       _authUIState.update { it.copy(isLoading = true, error = null) }
       try {
-        authRepository.signIn(req).collect { token ->
-          storage.setHubAuthToken(token).also { _authUIState.update { it.copy(isLoading = false) } }
-        }
+        val token = authRepository.signIn(req)
+        storage.setHubAuthToken(token)
+        _authUIState.update { it.copy(isLoading = false) }
       } catch (e: Exception) {
         _authUIState.update { it.copy(isLoading = false, error = e) }
       }
@@ -43,6 +43,7 @@ class AuthViewModel @Inject constructor(
   }
 
   fun signOut() {
+    storage.clearHubHostDevice()
     storage.clearHubAuthToken()
   }
 }

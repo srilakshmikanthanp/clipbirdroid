@@ -5,6 +5,7 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.HostType
 import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.controller.Controller
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,11 +14,14 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class LanController(
-    private val sslConfig: SSLConfig,
-    private val context: Context,
-    coroutineScope: CoroutineScope
+@Singleton
+class LanController @Inject constructor(
+  private val sslConfig: SSLConfig,
+  @param:ApplicationContext private val context: Context,
+  coroutineScope: CoroutineScope
 ): Controller {
   //----------------------- client Signals -------------------------//
   private val _servers = MutableStateFlow<Set<Device>>(emptySet())

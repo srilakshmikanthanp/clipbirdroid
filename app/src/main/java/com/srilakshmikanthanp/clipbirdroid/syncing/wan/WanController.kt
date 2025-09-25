@@ -4,6 +4,7 @@ import com.srilakshmikanthanp.clipbirdroid.controller.Controller
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubHostDevice
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubListener
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubWebsocket
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubWebsocketFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -11,8 +12,14 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.Optional
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class WanController(coroutineScope: CoroutineScope): HubListener, Controller {
+@Singleton
+class WanController @Inject constructor(
+  private val hubWebsocketFactory: HubWebsocketFactory,
+  coroutineScope: CoroutineScope
+): HubListener, Controller {
   private val _syncRequestEvents = MutableSharedFlow<List<Pair<String, ByteArray>>>()
   val syncRequestEvents: SharedFlow<List<Pair<String, ByteArray>>> = _syncRequestEvents.asSharedFlow()
 
@@ -32,6 +39,7 @@ class WanController(coroutineScope: CoroutineScope): HubListener, Controller {
   }
 
   override fun onErrorOccurred(throwable: Throwable) {
+    this.hub = Optional.empty()
     this.scope.launch {
       this@WanController._hubErrorEvents.emit(throwable)
     }
@@ -44,6 +52,7 @@ class WanController(coroutineScope: CoroutineScope): HubListener, Controller {
   }
 
   override fun onDisconnected() {
+    this.hub = Optional.empty()
     this.scope.launch {
       this@WanController._hubConnectionEvents.emit(false)
     }
@@ -51,10 +60,11 @@ class WanController(coroutineScope: CoroutineScope): HubListener, Controller {
 
   fun connectToHub(device: HubHostDevice) {
     if (hub.isPresent) throw RuntimeException("Hub is already connected")
-    val hubWebsocket = HubWebsocket(device)
+    val hubWebsocket = hubWebsocketFactory.create(device)
     hubWebsocket.addHubListener(this)
     hubWebsocket.addSyncRequestHandler(::notifySyncRequest)
     this.hub = Optional.of(hubWebsocket)
+    hubWebsocket.connect()
   }
 
   fun synchronize(data: List<Pair<String, ByteArray>>) {

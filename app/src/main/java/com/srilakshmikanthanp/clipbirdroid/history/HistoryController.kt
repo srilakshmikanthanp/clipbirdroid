@@ -4,8 +4,11 @@ import com.srilakshmikanthanp.clipbirdroid.constants.appMaxHistory
 import com.srilakshmikanthanp.clipbirdroid.controller.Controller
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class HistoryController: Controller {
+@Singleton
+class HistoryController @Inject constructor() : Controller {
   private val _history = MutableStateFlow(emptyList<List<Pair<String, ByteArray>>>().toMutableList())
   val history = _history.asStateFlow()
 

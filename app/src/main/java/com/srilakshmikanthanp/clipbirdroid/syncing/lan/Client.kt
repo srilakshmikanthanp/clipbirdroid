@@ -253,7 +253,7 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
 
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forClient()
-        .keyManager(sslConfig?.first, sslConfig?.second)
+        .keyManager(sslConfig?.privateKey, sslConfig?.certificate)
         .trustManager(ClipbirdExistingServerTrustManager(context)).build()
 
       // Idle State
@@ -285,7 +285,7 @@ class Client(private val context: Context) : BrowserListener, ChannelInboundHand
 
       // create SSL Context from cert and private key
       val sslContext = SslContextBuilder.forClient()
-        .keyManager(sslConfig?.first, sslConfig?.second)
+        .keyManager(sslConfig?.privateKey, sslConfig?.certificate)
         .trustManager(ClipbirdAllTrustManager()).build()
 
       // Idle

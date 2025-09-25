@@ -5,10 +5,11 @@ import org.bouncycastle.util.io.pem.PemWriter
 import java.io.StringWriter
 import java.security.KeyFactory
 import java.security.PrivateKey
+import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 
-fun PrivateKey.toPem(): String {
-  val pemObject = PemObject("PRIVATE KEY", this.encoded)
+fun PublicKey.toPem(): String {
+  val pemObject = PemObject("PUBLIC KEY", this.encoded)
   val stringWriter = StringWriter()
   PemWriter(stringWriter).use { pemWriter ->
     pemWriter.writeObject(pemObject)

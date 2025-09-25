@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.common.retrofit
 
 import com.google.gson.GsonBuilder
+import com.srilakshmikanthanp.clipbirdroid.common.okhttp.AuthTokenInterceptor
 import com.srilakshmikanthanp.clipbirdroid.constants.getClipbirdApiUrl
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import dagger.Module

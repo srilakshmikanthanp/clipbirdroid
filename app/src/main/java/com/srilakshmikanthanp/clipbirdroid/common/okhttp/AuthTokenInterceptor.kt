@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.retrofit
+package com.srilakshmikanthanp.clipbirdroid.common.okhttp
 
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import okhttp3.Interceptor

@@ -2,6 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.common.functions
 
 import org.bouncycastle.util.io.pem.PemReader
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
@@ -31,12 +32,18 @@ private class BlockReader(private val data: ByteArray) {
   private var offset = 0
 
   fun nextBlock(): ByteArray {
-    if (offset + 4 > data.size) {
+    if (offset + Int.SIZE_BYTES > data.size) {
       throw RuntimeException("Invalid data format (missing size field)")
     }
 
-    val size = ByteBuffer.wrap(data, offset, 4).int
-    offset += 4
+    val size = ByteBuffer.wrap(data, offset, Int.SIZE_BYTES)
+      .order(ByteOrder.BIG_ENDIAN)
+      .int
+    offset += Int.SIZE_BYTES
+
+    if (size < 0) {
+      throw RuntimeException("Invalid block size (negative: $size)")
+    }
 
     if (offset + size > data.size) {
       throw RuntimeException("Invalid data format (block truncated)")
@@ -88,7 +95,7 @@ fun sign(data: ByteArray, key: ByteArray): ByteArray {
   val keyString = with(PemReader(key.inputStream().reader())) { readPemObject().content }
   val rsa = KeyFactory.getInstance("RSA")
   val privateKey = rsa.generatePrivate(PKCS8EncodedKeySpec(keyString))
-  val signature = Signature.getInstance("SHA256withRSA/PSS")
+  val signature = Signature.getInstance("SHA256withRSA")
   signature.initSign(privateKey)
   signature.update(data)
   return signature.sign()
