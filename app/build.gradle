@@ -13,8 +13,8 @@ android {
 
     buildConfigField "String", "APP_ISSUE", "\"https://github.com/srilakshmikanthanp/clipbirdroid/issues\""
     buildConfigField "String", "APP_API_DOMAIN", "\"${APP_API_DOMAIN}\""
-    buildConfigField "String", "APP_API_URL", "\"http://${APP_API_DOMAIN}\""
-    buildConfigField "String", "APP_WEBSOCKET_URL", "\"ws://${APP_API_DOMAIN}\""
+    buildConfigField "String", "APP_API_URL", "\"https://${APP_API_DOMAIN}\""
+    buildConfigField "String", "APP_WEBSOCKET_URL", "\"wss://${APP_API_DOMAIN}\""
     buildConfigField "String", "APP_ORG", "\"srilakshmikanthanp\""
     buildConfigField "String", "APP_NAME", "\"Clipbird\""
     buildConfigField "String", "APP_DONATE", "\"https://srilakshmikanthanp.github.io/donate\""
