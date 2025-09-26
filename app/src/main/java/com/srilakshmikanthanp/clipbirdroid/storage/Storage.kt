@@ -14,6 +14,7 @@ interface Storage {
   val hostStateFlow: StateFlow<Boolean>
   val hubAuthTokenFlow: StateFlow<AuthToken?>
   val hubHostDeviceFlow: StateFlow<HubHostDevice?>
+  val isLastlyConnectedToHubFlow: StateFlow<Boolean>
 
   fun setHostCertificate(cert: X509Certificate)
   fun hasHostCert(): Boolean
@@ -51,4 +52,7 @@ interface Storage {
   fun hasHubHostDevice(): Boolean
   fun getHubHostDevice(): HubHostDevice?
   fun clearHubHostDevice()
+
+  fun setISLastlyConnectedToHub(isConnected: Boolean)
+  fun getIsLastlyConnectedToHub(): Boolean
 }

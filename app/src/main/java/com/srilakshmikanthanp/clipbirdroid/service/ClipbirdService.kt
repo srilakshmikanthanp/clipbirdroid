@@ -261,6 +261,11 @@ class ClipbirdService : Service() {
     } else {
       clipbird.lanController.setAsClient()
     }
+
+    val hostHubDevice = storage.getHubHostDevice()
+    if (hostHubDevice != null && storage.getIsLastlyConnectedToHub()) {
+      clipbird.wanController.connectToHub(hostHubDevice)
+    }
   }
 
   override fun onCreate() {

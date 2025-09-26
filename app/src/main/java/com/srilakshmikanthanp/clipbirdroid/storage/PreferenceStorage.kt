@@ -58,6 +58,7 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
     private const val HOST_CERT = "HOST_CERT"
     private const val HUB_AUTH_TOKEN = "HUB_AUTH_TOKEN"
     private const val HUB_HOST_DEVICE = "HUB_HOST_DEVICE"
+    private const val HUB_STATE = "HUB_STATE"
   }
 
   private val _hostCertFlow = MutableStateFlow(getHostCertificate())
@@ -80,6 +81,9 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
 
   private val _hubHostDeviceFlow = MutableStateFlow(getHubHostDevice())
   override val hubHostDeviceFlow: StateFlow<HubHostDevice?> = _hubHostDeviceFlow.asStateFlow()
+
+  private val _isLastlyConnectedToHubFlow = MutableStateFlow(getIsLastlyConnectedToHub())
+  override val isLastlyConnectedToHubFlow: StateFlow<Boolean> = _isLastlyConnectedToHubFlow.asStateFlow()
 
   init {
     generalPref.registerOnSharedPreferenceChangeListener(this)
@@ -212,6 +216,14 @@ class PreferenceStorage(context: Context): SharedPreferences.OnSharedPreferenceC
 
   override fun clearHubHostDevice() {
     hubPref.edit() { remove(HUB_HOST_DEVICE) }
+  }
+
+  override fun setISLastlyConnectedToHub(isConnected: Boolean) {
+    hubPref.edit() { putBoolean(HUB_STATE, isConnected) }
+  }
+
+  override fun getIsLastlyConnectedToHub(): Boolean {
+    return hubPref.getBoolean(HUB_STATE, false)
   }
 
   override fun onSharedPreferenceChanged(

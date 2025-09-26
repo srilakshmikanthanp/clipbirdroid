@@ -46,6 +46,7 @@ class WanViewModel @Inject constructor(
       try {
         _wanUIState.value = _wanUIState.value.copy(isConnecting = true, error = null)
         val appServiceName = appMdnsServiceName(clipbird)
+        storage.setISLastlyConnectedToHub(true)
         val device = storage.getHubHostDevice()?.let { existing ->
           val dto = DeviceRequestDto(existing.publicKey, appServiceName, existing.type)
           val updated = deviceApiRepository.updateDevice(existing.id, dto)
@@ -62,5 +63,10 @@ class WanViewModel @Inject constructor(
         _wanUIState.value = _wanUIState.value.copy(isConnecting = false, error = e)
       }
     }
+  }
+
+  fun disconnectFromHub() {
+    storage.setISLastlyConnectedToHub(false)
+    wanController.disconnectFromHub()
   }
 }

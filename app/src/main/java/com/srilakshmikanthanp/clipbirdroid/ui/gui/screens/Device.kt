@@ -298,7 +298,7 @@ private fun ActionsDropDownMenu(
   }
 
   val onLeaveHubClick = {
-    wanViewModel.wanController.disconnectFromHub()
+    wanViewModel.disconnectFromHub()
     onDismissRequest()
   }
 
