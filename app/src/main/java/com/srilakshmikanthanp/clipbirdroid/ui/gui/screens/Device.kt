@@ -137,8 +137,8 @@ private fun ServerGroup(
 private fun ClientGroup(
   lanViewModel: LanViewModel = hiltViewModel<LanViewModel>()
 ) {
-  val connectedGroup by lanViewModel.lanController.serverStatusEvents.map { if (it.first) it.second else null }.collectAsState(null)
-  val servers by lanViewModel.lanController.servers.map { it.toList() }.collectAsState(emptyList())
+  val connectedGroup by lanViewModel.lanController.serverStatusEvents.map { if (it.first) it.second else null }.collectAsState(lanViewModel.lanController.getHostAsClientOrThrow().getConnectedServer())
+  val servers by lanViewModel.lanController.servers.map { server -> server.filter { it != connectedGroup }.toList() }.collectAsState(emptyList())
 
   val onDisconnect = { device: Device ->
     lanViewModel.lanController.getHostAsClientOrThrow().disconnectFromServer()
@@ -362,6 +362,7 @@ private fun ActionsDropDownMenu(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Devices(
+  storageViewModel: StorageViewModel = hiltViewModel<StorageViewModel>(),
   lanViewModel: LanViewModel = hiltViewModel<LanViewModel>(),
   onMenuClick: () -> Unit = {}
 ) {
@@ -374,9 +375,11 @@ fun Devices(
   val tabClickHandler = { index: Int ->
     isServer = if (index == serverTab.first && !isServer) {
       lanViewModel.lanController.setAsServer()
+      storageViewModel.storage.setHostIsLastlyServer(true)
       true
     } else if (index == clintTab.first && isServer) {
       lanViewModel.lanController.setAsClient()
+      storageViewModel.storage.setHostIsLastlyServer(false)
       false
     } else {
       isServer
