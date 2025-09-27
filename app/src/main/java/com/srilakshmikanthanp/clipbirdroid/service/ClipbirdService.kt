@@ -130,7 +130,7 @@ class ClipbirdService : Service() {
   }
 
   private fun handleAuthRequest(device: Device) {
-    val peerCert = clipbird.lanController.getHostAsServerOrThrow().getClientCertificate(device)
+    val peerCert = clipbird.lanController.getHostAsServerOrThrow().getUnAuthenticatedClientCertificate(device)
     val cert = storage.getClientCertificate(device.name)
     if (cert != null && cert == peerCert) {
       clipbird.lanController.onClientAuthenticated(device)

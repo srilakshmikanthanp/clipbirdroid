@@ -581,6 +581,21 @@ class Server(private val context: Context) : ChannelInboundHandler, RegisterList
     return cert as X509Certificate
   }
 
+  fun getUnAuthenticatedClientCertificate(client: Device): X509Certificate {
+    // Find the client in unauthenticated clients
+    val ctx = unauthenticatedClients.find {
+      val addr = it.channel().remoteAddress() as InetSocketAddress
+      (addr.address == client.ip) && (addr.port == client.port)
+    } ?: throw RuntimeException("Client not found")
+
+    // get the certificate
+    val sslHandler = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
+    val cert = sslHandler.engine().session.peerCertificates[0]
+
+    // return the certificate
+    return cert as X509Certificate
+  }
+
   /**
    * The function that is called when the client is authenticated
    */
