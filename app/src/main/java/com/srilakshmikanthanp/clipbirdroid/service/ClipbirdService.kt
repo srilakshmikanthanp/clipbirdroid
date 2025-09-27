@@ -163,27 +163,7 @@ class ClipbirdService : Service() {
       }
   }
 
-  private fun notificationTitle(): String {
-    val host = clipbird.lanController.getHost() ?: throw Exception("Host is null")
-    return when (host) {
-      is Client -> host.getConnectedServer()?.name?.let { resources.getString(R.string.notification_title_client, it) } ?: resources.getString(R.string.no_connection)
-      is Server -> resources.getString(R.string.notification_title_server, host.getClients().size)
-    }
-  }
-
   fun initialize() {
-    this.serviceCoroutineScope.launch {
-      clipbird.lanController.serverStatusEvents.collect { (s, d) ->
-        this@ClipbirdService.showNotification(
-          if (s) {
-            resources.getString(R.string.notification_title_client, d.name)
-          } else {
-            resources.getString(R.string.no_connection)
-          }
-        )
-      }
-    }
-
     this.serviceCoroutineScope.launch {
       clipbird.lanController.syncRequestEvents.collect {
         clipbird.historyController.addHistory(it)
@@ -205,25 +185,6 @@ class ClipbirdService : Service() {
     this.serviceCoroutineScope.launch {
       clipbird.lanController.authRequestEvents.collect {
         handleAuthRequest(it)
-      }
-    }
-
-    this.serviceCoroutineScope.launch {
-      clipbird.lanController.clients.collect { clients ->
-        this@ClipbirdService.showNotification(
-          resources.getString(
-            R.string.notification_title_server,
-            clients.size
-          )
-        )
-      }
-    }
-
-    this.serviceCoroutineScope.launch {
-      clipbird.lanController.hostTypeChangeEvent.collect {
-        this@ClipbirdService.showNotification(
-          notificationTitle()
-        )
       }
     }
 
@@ -279,7 +240,7 @@ class ClipbirdService : Service() {
     val filter = IntentFilter(WifiApStateChangeHandler.ACTION_WIFI_AP_STATE_CHANGED)
     this.registerReceiver(wifiApStateChangeHandler, filter)
     this.initialize()
-    this.showNotification(this.notificationTitle())
+    this.showNotification(resources.getString(R.string.notification_title))
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

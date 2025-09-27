@@ -8,8 +8,7 @@
   <string name="no_preview">No Preview</string>
   <string name="open_source_licenses">Open Source Licenses</string>
   <string name="join_to_a_group">Join to a Group</string>
-  <string name="notification_title_client">Connected to %1$s</string>
-  <string name="notification_title_server">%1$d Devices Connected</string>
+  <string name="notification_title">Clipbird is syncing</string>
   <string name="permissions">Permissions</string>
 s
   <string name="required_permissions">Clipbird Requires those permissions to work properly</string>
