@@ -256,7 +256,7 @@ private fun ActionsDropDownMenu(
   onDismissRequest: () -> Unit,
 ) {
   val hostType by lanViewModel.lanController.hostTypeChangeEvent.collectAsState(lanViewModel.lanController.getHostType())
-  val connectState by wanViewModel.wanUIState.collectAsState()
+  val wanState by wanViewModel.wanUIState.collectAsState()
 
   var isConnectDialogOpen by remember { mutableStateOf(false) }
   var isGroupDialogOpen by remember { mutableStateOf(false) }
@@ -307,6 +307,10 @@ private fun ActionsDropDownMenu(
     onDismissRequest()
   }
 
+  if (wanState.error != null) {
+    Toast.makeText(context, wanState.error?.localizedMessage, Toast.LENGTH_SHORT).show()
+  }
+
   DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {
     if (hostType == HostType.SERVER) {
       DropdownMenuItem(
@@ -322,15 +326,15 @@ private fun ActionsDropDownMenu(
       )
     }
 
-    if (hubAuthToken != null && !connectState.isConnected) {
+    if (hubAuthToken != null && !wanState.isConnected) {
       DropdownMenuItem(
         text = { Text(stringResource(id = R.string.join_hub)) },
         onClick = onJoinHubClick,
-        enabled = !connectState.isConnecting
+        enabled = !wanState.isConnecting
       )
     }
 
-    if (connectState.isConnected) {
+    if (wanState.isConnected) {
       DropdownMenuItem(
         text = { Text(stringResource(id = R.string.leave_hub)) },
         onClick = onLeaveHubClick,
