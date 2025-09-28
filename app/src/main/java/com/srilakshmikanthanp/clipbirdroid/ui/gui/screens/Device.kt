@@ -307,8 +307,9 @@ private fun ActionsDropDownMenu(
     onDismissRequest()
   }
 
-  if (wanState.error != null) {
-    Toast.makeText(context, wanState.error?.localizedMessage, Toast.LENGTH_SHORT).show()
+  val message = wanState.error?.localizedMessage
+  if (message != null) {
+    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
   }
 
   DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {
