@@ -23,31 +23,57 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import java.io.FileNotFoundException
 
 class ShareHandler : ComponentActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    val lanController = (this.application as Clipbird).lanController
-    val wanController = (this.application as Clipbird).wanController
-
-    val result = if (intent.type?.startsWith("image/") == true) {
-      val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: return
+  private fun getSendActionData(intent: Intent): Pair<String, ByteArray> {
+    return if (intent.type?.startsWith("image/") == true) {
+      val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: throw RuntimeException("No image data found")
       try {
         this.contentResolver.openInputStream(uri)
       } catch (e: FileNotFoundException) {
-        Log.e("ShareHandler", "File not found Exception", e)
-        return
+        throw RuntimeException("File not found", e)
       } catch (e: SecurityException) {
-        Log.e("ShareHandler", "Security Exception", e)
-        return
+        throw RuntimeException("Permission denied to read the file", e)
       }.use {
         val content = it?.let { toPNG(it.readBytes()) } ?: return@use null
         val mimeType = "image/png"
         return@use Pair(mimeType, content)
-      } ?: return
+      } ?: throw RuntimeException("Failed to read image data")
     } else if (intent.type?.startsWith("text/") == true) {
-      val content = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+      val content = intent.getStringExtra(Intent.EXTRA_TEXT) ?: throw RuntimeException("No text data found")
       val mimeType = "text/plain"
       Pair(mimeType, content.toByteArray())
     } else {
+      throw RuntimeException("Unsupported data type")
+    }
+  }
+
+  private fun getProcessTextData(intent: Intent): Pair<String, ByteArray> {
+    return if (intent.type?.startsWith("text/") == true) {
+      val content = intent.getStringExtra(Intent.EXTRA_PROCESS_TEXT) ?: throw RuntimeException("No text data found")
+      val mimeType = "text/plain"
+      Pair(mimeType, content.toByteArray())
+    } else {
+      throw RuntimeException("Unsupported data type")
+    }
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    val lanController = (this.application as Clipbird).lanController
+    val wanController = (this.application as Clipbird).wanController
+
+    val result = try {
+      if (intent.action == Intent.ACTION_SEND) {
+        getSendActionData(intent)
+      } else if (intent.action == Intent.ACTION_PROCESS_TEXT) {
+        getProcessTextData(intent)
+      } else {
+        throw RuntimeException("Unsupported intent action: ${intent.action}")
+      }
+    } catch (e: Exception) {
+      Log.e("ShareHandler", "Error processing shared data", e)
+      Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
+      this.finish()
       return
     }
 
@@ -55,9 +81,7 @@ class ShareHandler : ComponentActivity() {
     lanController.synchronize(content)
     wanController.synchronize(content)
 
-    runOnUiThread {
-      Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
-      this.finish()
-    }
+    Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
+    this.finish()
   }
 }
