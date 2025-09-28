@@ -2,6 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
@@ -22,30 +23,33 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import java.io.FileNotFoundException
 
 class ShareHandler : ComponentActivity() {
-  @OptIn(DelicateCoroutinesApi::class)
-  override fun onWindowFocusChanged(hasFocus: Boolean) {
-    if (!hasFocus) return
-
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
     val lanController = (this.application as Clipbird).lanController
     val wanController = (this.application as Clipbird).wanController
 
-    if (intent.type?.startsWith("image/") != true) return
-
-    val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: return
-
-    val result = try {
-      this.contentResolver.openInputStream(uri)
-    } catch (e: FileNotFoundException) {
-      Log.e("ShareHandler", "File not found Exception", e)
+    val result = if (intent.type?.startsWith("image/") == true) {
+      val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: return
+      try {
+        this.contentResolver.openInputStream(uri)
+      } catch (e: FileNotFoundException) {
+        Log.e("ShareHandler", "File not found Exception", e)
+        return
+      } catch (e: SecurityException) {
+        Log.e("ShareHandler", "Security Exception", e)
+        return
+      }.use {
+        val content = it?.let { toPNG(it.readBytes()) } ?: return@use null
+        val mimeType = "image/png"
+        return@use Pair(mimeType, content)
+      } ?: return
+    } else if (intent.type?.startsWith("text/") == true) {
+      val content = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+      val mimeType = "text/plain"
+      Pair(mimeType, content.toByteArray())
+    } else {
       return
-    } catch (e: SecurityException) {
-      Log.e("ShareHandler", "Security Exception", e)
-      return
-    }.use {
-      val content = it?.let { toPNG(it.readBytes()) } ?: return@use null
-      val mimeType = "image/png"
-      return@use Pair(mimeType, content)
-    } ?: return
+    }
 
     val content = listOf(Pair(result.first, result.second))
     lanController.synchronize(content)
@@ -54,25 +58,6 @@ class ShareHandler : ComponentActivity() {
     runOnUiThread {
       Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
       this.finish()
-    }
-  }
-
-  @OptIn(ExperimentalMaterial3Api::class)
-  override fun onStart() {
-    super.onStart()
-
-    setContent {
-      Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.Transparent
-      ) {
-        Box(
-          modifier = Modifier.fillMaxSize(),
-          contentAlignment = Alignment.Center,
-        ) {
-          CircularProgressIndicator()
-        }
-      }
     }
   }
 }
