@@ -1,6 +1,6 @@
 package com.srilakshmikanthanp.clipbirdroid.common.okhttp
 
-import com.srilakshmikanthanp.clipbirdroid.storage.Storage
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth.SessionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,13 +14,14 @@ import javax.inject.Singleton
 class OkHttpClientProvider {
   @Provides
   @Singleton
-  fun provideOkHttpClient(setting: Storage): OkHttpClient {
+  fun provideOkHttpClient(sessionManager: SessionManager): OkHttpClient {
     return OkHttpClient.Builder()
       .connectTimeout(30, TimeUnit.SECONDS)
       .readTimeout(30, TimeUnit.SECONDS)
       .writeTimeout(30, TimeUnit.SECONDS)
       .pingInterval(30, TimeUnit.SECONDS)
-      .addInterceptor(AuthTokenInterceptor(setting))
+      .addInterceptor(AuthTokenInterceptor(sessionManager))
+      .addInterceptor(AuthErrorInterceptor(sessionManager))
       .build()
   }
 }

@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing.wan
 
 import com.srilakshmikanthanp.clipbirdroid.controller.Controller
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth.SessionManager
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubHostDevice
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubListener
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.hub.HubWebsocket
@@ -18,7 +19,8 @@ import javax.inject.Singleton
 @Singleton
 class WanController @Inject constructor(
   private val hubWebsocketFactory: HubWebsocketFactory,
-  coroutineScope: CoroutineScope
+  coroutineScope: CoroutineScope,
+  private val sessionManager: SessionManager
 ): HubListener, Controller {
   private val _syncRequestEvents = MutableSharedFlow<List<Pair<String, ByteArray>>>()
   val syncRequestEvents: SharedFlow<List<Pair<String, ByteArray>>> = _syncRequestEvents.asSharedFlow()
@@ -58,6 +60,12 @@ class WanController @Inject constructor(
     }
   }
 
+  init {
+    this.scope.launch {
+      sessionManager.tokenFlow.collect { if (it == null && hub.isPresent) disconnectFromHub() }
+    }
+  }
+
   fun connectToHub(device: HubHostDevice) {
     if (hub.isPresent) throw RuntimeException("Hub is already connected")
     val hubWebsocket = hubWebsocketFactory.create(device)
@@ -78,6 +86,5 @@ class WanController @Inject constructor(
   fun disconnectFromHub() {
     if (hub.isEmpty) throw RuntimeException("Hub is not connected")
     hub.get().disconnect()
-    hub = Optional.empty()
   }
 }

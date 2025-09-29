@@ -15,14 +15,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
+  private val sessionManager: SessionManager,
   private val authRepository: AuthRepository,
-  private val wanController: WanController,
-  private val storage: Storage
 ): ViewModel() {
   private val _authUIState = MutableStateFlow(AuthUIState())
   val authUIState = combine(
     _authUIState,
-    storage.hubAuthTokenFlow
+    sessionManager.tokenFlow
   ) { state, token ->
     state.copy(authToken = token)
   }.stateIn(
@@ -33,10 +32,9 @@ class AuthViewModel @Inject constructor(
 
   fun signIn(req: BasicAuthRequestDto) {
     viewModelScope.launch {
-      _authUIState.update { it.copy(isLoading = true, error = null) }
       try {
-        val token = authRepository.signIn(req)
-        storage.setHubAuthToken(token)
+        _authUIState.update { it.copy(isLoading = true, error = null) }
+        sessionManager.setSession(authRepository.signIn(req))
         _authUIState.update { it.copy(isLoading = false) }
       } catch (e: Exception) {
         _authUIState.update { it.copy(isLoading = false, error = e) }
@@ -45,8 +43,6 @@ class AuthViewModel @Inject constructor(
   }
 
   fun signOut() {
-    wanController.disconnectFromHub()
-    storage.clearHubHostDevice()
-    storage.clearHubAuthToken()
+    sessionManager.signOut()
   }
 }

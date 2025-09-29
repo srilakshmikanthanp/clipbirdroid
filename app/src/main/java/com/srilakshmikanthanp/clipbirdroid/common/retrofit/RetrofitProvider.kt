@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder
 import com.srilakshmikanthanp.clipbirdroid.common.okhttp.AuthTokenInterceptor
 import com.srilakshmikanthanp.clipbirdroid.constants.getClipbirdApiUrl
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth.SessionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,12 +21,12 @@ import javax.inject.Singleton
 class RetrofitProvider {
   @Provides
   @Singleton
-  fun provideRetrofit(setting: Storage): Retrofit {
+  fun provideRetrofit(sessionManager: SessionManager): Retrofit {
     val okHttpClient = OkHttpClient.Builder()
       .connectTimeout(30, TimeUnit.SECONDS)
       .readTimeout(30, TimeUnit.SECONDS)
       .writeTimeout(30, TimeUnit.SECONDS)
-      .addInterceptor(AuthTokenInterceptor(setting))
+      .addInterceptor(AuthTokenInterceptor(sessionManager))
       .build()
 
     val gson = GsonBuilder()
