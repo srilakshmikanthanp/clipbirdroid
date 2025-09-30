@@ -5,14 +5,18 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Binder
 import android.os.IBinder
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.broadcast.WifiApStateChangeHandler
+import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Client
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
@@ -35,9 +39,17 @@ class ClipbirdService : Service() {
   private val notificationId = StatusNotification.SERVICE_ID
   private val wifiApStateChangeHandler = WifiApStateChangeHandler()
 
-  private lateinit var notification: StatusNotification
-  private lateinit var clipbird: Clipbird
+  private val connectivityListener = object : ConnectivityManager.NetworkCallback() {
+    override fun onAvailable(network: Network) {
+      if (!clipbird.wanController.wasAbnormallyDisconnectedLastly()) return
+      val device = storage.getHubHostDevice() ?: return
+      if (!clipbird.wanController.isHubConnected()) clipbird.wanController.connectToHub(device)
+    }
+  }
 
+  private lateinit var connectivityManager: ConnectivityManager
+  private lateinit var notification: StatusNotification
+  @Inject lateinit var clipbird: Clipbird
   @Inject lateinit var storage: Storage
 
   inner class ClipbirdBinder : Binder() {
@@ -235,11 +247,13 @@ class ClipbirdService : Service() {
 
   override fun onCreate() {
     super.onCreate()
+    this.connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     this.notification = StatusNotification(this)
-    this.clipbird = this.applicationContext as Clipbird
     val filter = IntentFilter(WifiApStateChangeHandler.ACTION_WIFI_AP_STATE_CHANGED)
     this.registerReceiver(wifiApStateChangeHandler, filter)
     this.initialize()
+    val request = NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
+    connectivityManager.registerNetworkCallback(request, connectivityListener)
     this.showNotification(resources.getString(R.string.notification_title))
   }
 
@@ -252,6 +266,7 @@ class ClipbirdService : Service() {
 
   override fun onDestroy() {
     super.onDestroy()
+    connectivityManager.unregisterNetworkCallback(connectivityListener)
     this.unregisterReceiver(wifiApStateChangeHandler)
     this.serviceCoroutineScope.cancel()
   }

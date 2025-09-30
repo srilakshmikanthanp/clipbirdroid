@@ -1,7 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing.wan
 
-data class WanUIState(
-  val isConnected: Boolean = false,
+data class WanConnectionState(
   val isConnecting: Boolean = false,
+  val isConnected: Boolean = false,
   val error: Throwable? = null
 )

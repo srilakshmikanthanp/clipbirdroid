@@ -31,6 +31,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -307,9 +308,11 @@ private fun ActionsDropDownMenu(
     onDismissRequest()
   }
 
-  val message = wanState.error?.localizedMessage
-  if (message != null) {
-    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+  LaunchedEffect(wanState) {
+    val message = wanState.error?.localizedMessage
+    if (message != null) {
+      Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
   }
 
   DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest, modifier = modifier) {

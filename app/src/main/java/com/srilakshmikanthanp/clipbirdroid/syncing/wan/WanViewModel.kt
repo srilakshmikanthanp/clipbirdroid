@@ -24,19 +24,27 @@ class WanViewModel @Inject constructor(
   val storage: Storage,
   val clipbird: Clipbird
 ) : ViewModel() {
-  private val _wanUIState = MutableStateFlow(WanUIState(isConnected = wanController.isHubConnected()))
-  val wanUIState = _wanUIState.asStateFlow()
+  private val _wanConnectionState = MutableStateFlow(WanConnectionState(isConnected = wanController.isHubConnected()))
+  val wanUIState = _wanConnectionState.asStateFlow()
 
   init {
     viewModelScope.launch {
       wanController.hubErrorEvents.collect {
-        _wanUIState.value = _wanUIState.value.copy(isConnected = wanController.isHubConnected(), isConnecting = false, error = it)
+        _wanConnectionState.value = _wanConnectionState.value.copy(
+          isConnected = false,
+          isConnecting = false,
+          error = it
+        )
       }
     }
 
     viewModelScope.launch {
       wanController.hubConnectionStatus.collect {
-        _wanUIState.value = _wanUIState.value.copy(isConnected = it, isConnecting = false)
+        _wanConnectionState.value = _wanConnectionState.value.copy(
+          isConnected = it == WanController.ConnectionEvent.CONNECTED,
+          isConnecting = it == WanController.ConnectionEvent.CONNECTING,
+          error = null
+        )
       }
     }
   }
@@ -44,7 +52,7 @@ class WanViewModel @Inject constructor(
   fun connectToHub() {
     viewModelScope.launch {
       try {
-        _wanUIState.value = _wanUIState.value.copy(isConnecting = true, error = null)
+        _wanConnectionState.value = _wanConnectionState.value.copy(isConnecting = true, error = null)
         val appServiceName = appMdnsServiceName(clipbird)
         storage.setISLastlyConnectedToHub(true)
         val device = storage.getHubHostDevice()?.let { existing ->
@@ -60,7 +68,7 @@ class WanViewModel @Inject constructor(
         storage.setHubHostDevice(device)
         wanController.connectToHub(device)
       } catch (e: Exception) {
-        _wanUIState.value = _wanUIState.value.copy(isConnecting = false, error = e)
+        _wanConnectionState.value = _wanConnectionState.value.copy(isConnecting = false, error = e)
       }
     }
   }

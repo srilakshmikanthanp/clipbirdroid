@@ -28,11 +28,13 @@ class WanController @Inject constructor(
   private val _hubErrorEvents = MutableSharedFlow<Throwable>()
   val hubErrorEvents: SharedFlow<Throwable> = _hubErrorEvents.asSharedFlow()
 
-  private val _hubConnectionEvents = MutableSharedFlow<Boolean>()
-  val hubConnectionStatus: SharedFlow<Boolean> = _hubConnectionEvents.asSharedFlow()
+  private val _hubConnectionEvents = MutableSharedFlow<ConnectionEvent>()
+  val hubConnectionStatus: SharedFlow<ConnectionEvent> = _hubConnectionEvents.asSharedFlow()
 
   private val scope = CoroutineScope(coroutineScope.coroutineContext + SupervisorJob())
   private var hub: Optional<HubWebsocket> = Optional.empty()
+
+  private var wasAbnormallyDisconnectedLastly = false
 
   private fun notifySyncRequest(data: List<Pair<String, ByteArray>>) {
     this.scope.launch {
@@ -40,7 +42,14 @@ class WanController @Inject constructor(
     }
   }
 
+  enum class ConnectionEvent {
+    DISCONNECTED,
+    CONNECTED,
+    CONNECTING
+  }
+
   override fun onErrorOccurred(throwable: Throwable) {
+    this.wasAbnormallyDisconnectedLastly = true
     this.hub = Optional.empty()
     this.scope.launch {
       this@WanController._hubErrorEvents.emit(throwable)
@@ -48,15 +57,17 @@ class WanController @Inject constructor(
   }
 
   override fun onConnected() {
+    this.wasAbnormallyDisconnectedLastly = false
     this.scope.launch {
-      this@WanController._hubConnectionEvents.emit(true)
+      this@WanController._hubConnectionEvents.emit(ConnectionEvent.CONNECTED)
     }
   }
 
   override fun onDisconnected() {
+    this.wasAbnormallyDisconnectedLastly = false
     this.hub = Optional.empty()
     this.scope.launch {
-      this@WanController._hubConnectionEvents.emit(false)
+      this@WanController._hubConnectionEvents.emit(ConnectionEvent.DISCONNECTED)
     }
   }
 
@@ -73,6 +84,7 @@ class WanController @Inject constructor(
     hubWebsocket.addSyncRequestHandler(::notifySyncRequest)
     this.hub = Optional.of(hubWebsocket)
     hubWebsocket.connect()
+    this.scope.launch { _hubConnectionEvents.emit(ConnectionEvent.CONNECTING) }
   }
 
   fun synchronize(data: List<Pair<String, ByteArray>>) {
@@ -80,11 +92,15 @@ class WanController @Inject constructor(
   }
 
   fun isHubConnected(): Boolean {
-    return hub.isPresent
+    return hub.map { it.isConnected() }.orElse(false)
   }
 
   fun disconnectFromHub() {
     if (hub.isEmpty) throw RuntimeException("Hub is not connected")
     hub.get().disconnect()
+  }
+
+  fun wasAbnormallyDisconnectedLastly(): Boolean {
+    return wasAbnormallyDisconnectedLastly
   }
 }

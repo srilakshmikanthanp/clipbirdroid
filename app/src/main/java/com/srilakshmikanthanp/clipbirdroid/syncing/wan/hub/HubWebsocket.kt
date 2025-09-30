@@ -9,39 +9,36 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import javax.inject.Inject
-
-class HubWebSocketListener @AssistedInject constructor(
-  @Assisted private val hubWebsocket: HubWebsocket
-): WebSocketListener() {
-  @Inject lateinit var hubMessageHandler: HubMessageHandler
-
-  override fun onMessage(webSocket: WebSocket, text: String) {
-    hubMessageHandler.handle(hubWebsocket, text.toHubMessage())
-  }
-
-  override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-    hubWebsocket.getListeners().forEach { it.onDisconnected() }
-  }
-
-  override fun onFailure(
-    webSocket: WebSocket,
-    t: Throwable,
-    response: Response?
-  ) {
-    hubWebsocket.getListeners().forEach { it.onErrorOccurred(t) }
-  }
-}
 
 class HubWebsocket @AssistedInject constructor(
   @Assisted hubHostDevice: HubHostDevice,
-  hubWebSocketListenerFactory: HubWebSocketListenerFactory,
   private val client: OkHttpClient,
+  private val hubMessageHandler: HubMessageHandler,
 ) : AbstractHub(hubHostDevice) {
-  val listener = hubWebSocketListenerFactory.create(this)
-  var webSocket : WebSocket? = null
+  private val webSocketListener = object : WebSocketListener() {
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+      this@HubWebsocket.webSocket = null
+      getListeners().forEach {
+        it.onErrorOccurred(t)
+      }
+    }
+
+    override fun onMessage(webSocket: WebSocket, text: String) {
+      hubMessageHandler.handle(this@HubWebsocket, text.toHubMessage())
+    }
+
+    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+      this@HubWebsocket.webSocket = null
+      getListeners().forEach {
+        it.onDisconnected()
+      }
+    }
+  }
+
+  private var webSocket : WebSocket? = null
 
   companion object {
+    private const val NORMAL_CLOSURE_STATUS = 1000
     private const val X_DEVICE_ID = "X-Device-ID"
   }
 
@@ -49,14 +46,18 @@ class HubWebsocket @AssistedInject constructor(
     val request = okhttp3.Request.Builder().url("${getClipbirdWebsocketUrl()}/hub")
       .header(X_DEVICE_ID, getHubHostDevice().id)
       .build()
-    webSocket = client.newWebSocket(request, listener)
+    webSocket = client.newWebSocket(request, webSocketListener)
+  }
+
+  fun isConnected(): Boolean {
+    return webSocket != null
   }
 
   fun disconnect() {
     if (webSocket == null) {
       throw IllegalStateException("WebSocket is not connected")
     } else {
-      webSocket?.close(1000, "Client closed connection")
+      webSocket?.close(NORMAL_CLOSURE_STATUS, "Client closed connection")
       webSocket = null
     }
   }
