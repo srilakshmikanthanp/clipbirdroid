@@ -1,7 +1,5 @@
-package com.srilakshmikanthanp.clipbirdroid.network
+package com.srilakshmikanthanp.clipbirdroid.packets
 
-import com.srilakshmikanthanp.clipbirdroid.packets.Authentication
-import com.srilakshmikanthanp.clipbirdroid.packets.AuthStatus
 import org.junit.Test
 
 class AuthenticationTest {

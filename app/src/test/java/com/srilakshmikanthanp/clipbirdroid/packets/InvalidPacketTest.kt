@@ -1,7 +1,5 @@
-package com.srilakshmikanthanp.clipbirdroid.network
+package com.srilakshmikanthanp.clipbirdroid.packets
 
-import com.srilakshmikanthanp.clipbirdroid.packets.InvalidPacket
-import com.srilakshmikanthanp.clipbirdroid.packets.ErrorCode
 import org.junit.Test
 
 class InvalidPacketTest {
