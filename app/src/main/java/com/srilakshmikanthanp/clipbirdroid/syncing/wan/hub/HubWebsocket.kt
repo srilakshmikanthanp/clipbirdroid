@@ -30,7 +30,7 @@ class HubWebsocket @AssistedInject constructor(
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
       this@HubWebsocket.webSocket = null
       getListeners().forEach {
-        it.onDisconnected()
+        it.onDisconnected(code, reason)
       }
     }
   }

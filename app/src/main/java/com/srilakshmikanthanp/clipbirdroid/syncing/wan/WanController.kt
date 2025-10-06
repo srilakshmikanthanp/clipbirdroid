@@ -34,8 +34,6 @@ class WanController @Inject constructor(
   private val scope = CoroutineScope(coroutineScope.coroutineContext + SupervisorJob())
   private var hub: Optional<HubWebsocket> = Optional.empty()
 
-  private var wasAbnormallyDisconnectedLastly = false
-
   private fun notifySyncRequest(data: List<Pair<String, ByteArray>>) {
     this.scope.launch {
       this@WanController._syncRequestEvents.emit(data)
@@ -49,7 +47,6 @@ class WanController @Inject constructor(
   }
 
   override fun onErrorOccurred(throwable: Throwable) {
-    this.wasAbnormallyDisconnectedLastly = true
     this.hub = Optional.empty()
     this.scope.launch {
       this@WanController._hubErrorEvents.emit(throwable)
@@ -57,14 +54,12 @@ class WanController @Inject constructor(
   }
 
   override fun onConnected() {
-    this.wasAbnormallyDisconnectedLastly = false
     this.scope.launch {
       this@WanController._hubConnectionEvents.emit(ConnectionEvent.CONNECTED)
     }
   }
 
-  override fun onDisconnected() {
-    this.wasAbnormallyDisconnectedLastly = false
+  override fun onDisconnected(code: Int, reason: String) {
     this.hub = Optional.empty()
     this.scope.launch {
       this@WanController._hubConnectionEvents.emit(ConnectionEvent.DISCONNECTED)
@@ -98,9 +93,5 @@ class WanController @Inject constructor(
   fun disconnectFromHub() {
     if (hub.isEmpty) throw RuntimeException("Hub is not connected")
     hub.get().disconnect()
-  }
-
-  fun wasAbnormallyDisconnectedLastly(): Boolean {
-    return wasAbnormallyDisconnectedLastly
   }
 }
