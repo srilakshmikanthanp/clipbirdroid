@@ -5,22 +5,34 @@ import com.srilakshmikanthanp.clipbirdroid.common.extensions.toJson
 import com.srilakshmikanthanp.clipbirdroid.constants.getClipbirdWebsocketUrl
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import java.util.concurrent.TimeUnit
+import kotlin.math.pow
 
 class HubWebsocket @AssistedInject constructor(
   @Assisted hubHostDevice: HubHostDevice,
+  @Assisted coroutineScope: CoroutineScope,
   private val client: OkHttpClient,
   private val hubMessageHandler: HubMessageHandler,
 ) : AbstractHub(hubHostDevice) {
-  private val webSocketListener = object : WebSocketListener() {
+  private inner class Listener: WebSocketListener() {
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
       this@HubWebsocket.webSocket = null
-      getListeners().forEach {
-        it.onErrorOccurred(t)
-      }
+      getListeners().forEach { it.onErrorOccurred(t) }
+      reconnector.schedule()
+    }
+
+    override fun onOpen(webSocket: WebSocket, response: Response) {
+      reconnector.reset()
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -29,12 +41,36 @@ class HubWebsocket @AssistedInject constructor(
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
       this@HubWebsocket.webSocket = null
-      getListeners().forEach {
-        it.onDisconnected(code, reason)
-      }
+      getListeners().forEach { it.onDisconnected(code, reason) }
+      if (code != NORMAL_CLOSURE_STATUS) reconnector.schedule()
     }
   }
 
+  private inner class Reconnector {
+    private val baseDelay = TimeUnit.SECONDS.toMillis(2)
+    private val maxDelay = TimeUnit.MINUTES.toMillis(1)
+    private val backOffFactor = 2.0
+    private var attempts = 0
+    private var job: Job? = null
+
+    fun schedule() {
+      if (job?.isActive == true || isConnected()) return
+      val delay = (baseDelay * backOffFactor.pow(attempts.toDouble())).toLong().coerceAtMost(maxDelay)
+      attempts++
+      job = scope.launch { delay(delay).also { makeConnection() } }
+    }
+
+    fun reset() {
+      job?.cancel()
+      job = null
+      attempts = 0
+    }
+  }
+
+  private val hubUrl = "${getClipbirdWebsocketUrl()}/hub"
+  private val reconnector = Reconnector()
+  private val listener = Listener()
+  private val scope = CoroutineScope(coroutineScope.coroutineContext + SupervisorJob())
   private var webSocket : WebSocket? = null
 
   companion object {
@@ -42,11 +78,17 @@ class HubWebsocket @AssistedInject constructor(
     private const val X_DEVICE_ID = "X-Device-ID"
   }
 
+  private fun makeConnection() {
+    val deviceId = getHubHostDevice().id
+    val request = Request.Builder().url(hubUrl).header(X_DEVICE_ID, deviceId).build()
+    getListeners().forEach { it.onConnecting() }
+    webSocket = client.newWebSocket(request, listener)
+  }
+
   fun connect() {
-    val request = okhttp3.Request.Builder().url("${getClipbirdWebsocketUrl()}/hub")
-      .header(X_DEVICE_ID, getHubHostDevice().id)
-      .build()
-    webSocket = client.newWebSocket(request, webSocketListener)
+    if (isConnected()) throw RuntimeException("WebSocket is already connected")
+    this.reconnector.reset()
+    this.makeConnection()
   }
 
   fun isConnected(): Boolean {
@@ -54,19 +96,14 @@ class HubWebsocket @AssistedInject constructor(
   }
 
   fun disconnect() {
-    if (webSocket == null) {
-      throw IllegalStateException("WebSocket is not connected")
-    } else {
-      webSocket?.close(NORMAL_CLOSURE_STATUS, "Client closed connection")
-      webSocket = null
-    }
+    reconnector.reset()
+    val ws = requireNotNull(webSocket) { "WebSocket is not connected" }
+    ws.close(NORMAL_CLOSURE_STATUS, "Client closed connection")
+    webSocket = null
   }
 
   override fun sendMessage(message: HubMessage<*>) {
-    if (webSocket == null) {
-      throw IllegalStateException("WebSocket is not connected")
-    } else {
-      webSocket?.send(message.toJson())
-    }
+    val ws = requireNotNull(webSocket) { "WebSocket is not connected" }
+    ws.send(message.toJson())
   }
 }

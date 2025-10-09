@@ -47,7 +47,6 @@ class WanController @Inject constructor(
   }
 
   override fun onErrorOccurred(throwable: Throwable) {
-    this.hub = Optional.empty()
     this.scope.launch {
       this@WanController._hubErrorEvents.emit(throwable)
     }
@@ -59,8 +58,13 @@ class WanController @Inject constructor(
     }
   }
 
+  override fun onConnecting() {
+    this.scope.launch {
+      this@WanController._hubConnectionEvents.emit(ConnectionEvent.CONNECTING)
+    }
+  }
+
   override fun onDisconnected(code: Int, reason: String) {
-    this.hub = Optional.empty()
     this.scope.launch {
       this@WanController._hubConnectionEvents.emit(ConnectionEvent.DISCONNECTED)
     }
@@ -73,17 +77,12 @@ class WanController @Inject constructor(
   }
 
   fun connectToHub(device: HubHostDevice) {
-    if (hub.isPresent) throw RuntimeException("Hub is already connected")
-    val hubWebsocket = hubWebsocketFactory.create(device)
+    if (hub.isPresent && hub.get().isConnected()) throw RuntimeException("Hub is already connected")
+    val hubWebsocket = hubWebsocketFactory.create(device, this.scope)
     hubWebsocket.addHubListener(this)
     hubWebsocket.addSyncRequestHandler(::notifySyncRequest)
     this.hub = Optional.of(hubWebsocket)
     hubWebsocket.connect()
-    this.scope.launch { _hubConnectionEvents.emit(ConnectionEvent.CONNECTING) }
-  }
-
-  fun synchronize(data: List<Pair<String, ByteArray>>) {
-    hub.ifPresent { it.synchronize(data) }
   }
 
   fun isHubConnected(): Boolean {
@@ -93,5 +92,19 @@ class WanController @Inject constructor(
   fun disconnectFromHub() {
     if (hub.isEmpty) throw RuntimeException("Hub is not connected")
     hub.get().disconnect()
+  }
+
+  fun isHubAvailable(): Boolean {
+    return hub.isPresent
+  }
+
+  fun reconnectToHub() {
+    if (hub.isEmpty) throw RuntimeException("Hub is not connected before")
+    if (hub.get().isConnected()) throw RuntimeException("Hub is already connected")
+    hub.get().connect()
+  }
+
+  fun synchronize(data: List<Pair<String, ByteArray>>) {
+    hub.ifPresent { it.synchronize(data) }
   }
 }
