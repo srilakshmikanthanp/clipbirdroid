@@ -257,7 +257,7 @@ private fun ActionsDropDownMenu(
   onDismissRequest: () -> Unit,
 ) {
   val hostType by lanViewModel.lanController.hostTypeChangeEvent.collectAsState(lanViewModel.lanController.getHostType())
-  val wanState by wanViewModel.wanUIState.collectAsState()
+  val wanState by wanViewModel.wanConnectionState.collectAsState()
 
   var isConnectDialogOpen by remember { mutableStateOf(false) }
   var isGroupDialogOpen by remember { mutableStateOf(false) }

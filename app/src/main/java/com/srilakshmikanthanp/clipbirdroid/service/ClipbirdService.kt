@@ -20,6 +20,7 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.Device
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Client
 import com.srilakshmikanthanp.clipbirdroid.syncing.lan.Server
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.AcceptHandler
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.RejectHandler
@@ -41,7 +42,12 @@ class ClipbirdService : Service() {
 
   private val connectivityListener = object : ConnectivityManager.NetworkCallback() {
     override fun onAvailable(network: Network) {
-      if (!clipbird.wanController.isHubConnected() && clipbird.wanController.isHubAvailable()) clipbird.wanController.reconnectToHub()
+      if (clipbird.wanController.isHubConnected()) return
+      if (clipbird.wanController.isHubAvailable()) {
+        clipbird.wanController.reconnectToHub()
+      } else if (storage.getIsLastlyConnectedToHub()) {
+        wanService.connectToHub()
+      }
     }
   }
 
@@ -49,6 +55,7 @@ class ClipbirdService : Service() {
   private lateinit var notification: StatusNotification
   @Inject lateinit var clipbird: Clipbird
   @Inject lateinit var storage: Storage
+  @Inject lateinit var wanService: WanService
 
   inner class ClipbirdBinder : Binder() {
     fun getService(): ClipbirdService = this@ClipbirdService

@@ -23,13 +23,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class ClipbirdModule {
-  private fun getNewSslConfig(storage: Storage, context: Context): Pair<PrivateKey, X509Certificate> {
-    val sslConfig = generateX509Certificate(context)
-    storage.setHostKey(sslConfig.first)
-    storage.setHostCertificate(sslConfig.second)
-    return sslConfig
-  }
-
   private fun getOldSslConfig(storage: Storage, context: Context): Pair<PrivateKey, X509Certificate> {
     val key = storage.getHostKey()!!
     val cert = storage.getHostCertificate()!!
@@ -38,15 +31,21 @@ class ClipbirdModule {
     val name = IETFUtils.valueToString(cn.first.value)
     val deviceName = appMdnsServiceName(context)
     if (name != deviceName) return getNewSslConfig(storage, context)
-
-    if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiryInterval()) {
+    return if (cert.notAfter.time - System.currentTimeMillis() < appCertExpiryInterval()) {
       val sslConfig = generateX509Certificate(context)
       storage.setHostKey(sslConfig.first)
       storage.setHostCertificate(sslConfig.second)
-      return sslConfig
+      sslConfig
+    } else {
+      Pair(key, cert)
     }
+  }
 
-    return Pair(key, cert)
+  private fun getNewSslConfig(storage: Storage, context: Context): Pair<PrivateKey, X509Certificate> {
+    val sslConfig = generateX509Certificate(context)
+    storage.setHostKey(sslConfig.first)
+    storage.setHostCertificate(sslConfig.second)
+    return sslConfig
   }
 
   private fun getSslConfig(storage: Storage, context: Context): Pair<PrivateKey, X509Certificate> {
@@ -58,6 +57,12 @@ class ClipbirdModule {
   }
 
   @Provides
+  fun provideSslConfig(storage: Storage, @ApplicationContext context: Context): SSLConfig {
+    val pair = getSslConfig(storage, context)
+    return SSLConfig(pair.first, pair.second)
+  }
+
+  @Provides
   fun provideClipbird(@ApplicationContext context: Context): Clipbird {
     return context.applicationContext as Clipbird
   }
@@ -65,10 +70,4 @@ class ClipbirdModule {
   @Provides
   @Singleton
   fun provideApplicationScope(): CoroutineScope = MainScope()
-
-  @Provides
-  fun provideSslConfig(storage: Storage, @ApplicationContext context: Context): SSLConfig {
-    val pair = getSslConfig(storage, context)
-    return SSLConfig(pair.first, pair.second)
-  }
 }
