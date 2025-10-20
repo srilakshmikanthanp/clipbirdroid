@@ -150,30 +150,7 @@ class ClipbirdService : Service() {
     notification.showJoinRequest(device.name, onAccept, onReject)
   }
 
-  private fun showNotification(title: String) {
-    val notificationLayout = RemoteViews(packageName, R.layout.notification)
-
-    notificationLayout.setTextViewText(R.id.notify_title, title)
-    notificationLayout.setOnClickPendingIntent(R.id.notify_send, onSendIntent())
-
-    NotificationCompat.Builder(this, notification.getChannelID())
-      .setSmallIcon(R.mipmap.ic_launcher_foreground)
-      .setPriority(NotificationCompat.PRIORITY_HIGH)
-      .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-      .setCustomContentView(notificationLayout)
-      .setContentIntent(onTapIntent())
-      .addAction(
-        R.mipmap.ic_launcher_foreground,
-        resources.getString(R.string.quit),
-        onQuitIntent()
-      )
-      .setOngoing(true)
-      .build().also {
-        startForeground(notificationId, it)
-      }
-  }
-
-  fun initialize() {
+  private fun initialize() {
     this.serviceCoroutineScope.launch {
       clipbird.lanController.syncRequestEvents.collect {
         clipbird.historyController.addHistory(it)
@@ -243,6 +220,29 @@ class ClipbirdService : Service() {
     }
   }
 
+  fun showStatusNotification() {
+    val notificationLayout = RemoteViews(packageName, R.layout.notification)
+
+    notificationLayout.setTextViewText(R.id.notify_title, resources.getString(R.string.notification_title))
+    notificationLayout.setOnClickPendingIntent(R.id.notify_send, onSendIntent())
+
+    NotificationCompat.Builder(this, notification.getChannelID())
+      .setSmallIcon(R.mipmap.ic_launcher_foreground)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
+      .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+      .setCustomContentView(notificationLayout)
+      .setContentIntent(onTapIntent())
+      .addAction(
+        R.mipmap.ic_launcher_foreground,
+        resources.getString(R.string.quit),
+        onQuitIntent()
+      )
+      .setOngoing(true)
+      .build().also {
+        startForeground(notificationId, it)
+      }
+  }
+
   override fun onCreate() {
     super.onCreate()
     this.connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -252,7 +252,7 @@ class ClipbirdService : Service() {
     this.initialize()
     val request = NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
     connectivityManager.registerNetworkCallback(request, connectivityListener)
-    this.showNotification(resources.getString(R.string.notification_title))
+    this.showStatusNotification()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

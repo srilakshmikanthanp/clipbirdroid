@@ -96,6 +96,8 @@ class MainActivity : ComponentActivity() {
         checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
       }
 
+      clipbirdBinder.getService().showStatusNotification()
+
       setContent {
         ClipbirdTheme {
           Clipbird().also { RequestPermissionsAndStartService(permissions) }
@@ -197,8 +199,8 @@ class MainActivity : ComponentActivity() {
     super.onStart().also { handleIntent(intent) }
   }
 
-  override fun onDestroy() {
-    super.onDestroy()
+  override fun onStop() {
+    super.onStop()
     if (clipbirdBinder != null) {
       unbindService(connection)
       clipbirdBinder = null
