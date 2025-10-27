@@ -42,10 +42,7 @@ class ClipbirdService : Service() {
 
   private val connectivityListener = object : ConnectivityManager.NetworkCallback() {
     override fun onAvailable(network: Network) {
-      if (clipbird.wanController.isHubConnected()) return
-      if (clipbird.wanController.isHubAvailable()) {
-        clipbird.wanController.reconnectToHub()
-      } else if (storage.getIsLastlyConnectedToHub()) {
+      if (!clipbird.wanController.isHubConnected() && storage.getIsLastlyConnectedToHub()) {
         wanService.connectToHub()
       }
     }

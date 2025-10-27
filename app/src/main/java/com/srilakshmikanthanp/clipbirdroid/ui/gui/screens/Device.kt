@@ -309,7 +309,7 @@ private fun ActionsDropDownMenu(
   }
 
   LaunchedEffect(wanState) {
-    val message = wanState.error?.localizedMessage
+    val message = wanState.error
     if (message != null) {
       Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }

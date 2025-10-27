@@ -28,11 +28,10 @@ class HubWebsocket @AssistedInject constructor(
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
       this@HubWebsocket.webSocket = null
       getListeners().forEach { it.onErrorOccurred(t) }
-      reconnector.schedule()
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-      reconnector.reset()
+      getListeners().forEach { it.onOpened() }
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -42,33 +41,10 @@ class HubWebsocket @AssistedInject constructor(
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
       this@HubWebsocket.webSocket = null
       getListeners().forEach { it.onDisconnected(code, reason) }
-      if (code != NORMAL_CLOSURE_STATUS) reconnector.schedule()
-    }
-  }
-
-  private inner class Reconnector {
-    private val baseDelay = TimeUnit.SECONDS.toMillis(2)
-    private val maxDelay = TimeUnit.MINUTES.toMillis(1)
-    private val backOffFactor = 2.0
-    private var attempts = 0
-    private var job: Job? = null
-
-    fun schedule() {
-      if (job?.isActive == true || isConnected()) return
-      val delay = (baseDelay * backOffFactor.pow(attempts.toDouble())).toLong().coerceAtMost(maxDelay)
-      attempts++
-      job = scope.launch { delay(delay).also { makeConnection() } }
-    }
-
-    fun reset() {
-      job?.cancel()
-      job = null
-      attempts = 0
     }
   }
 
   private val hubUrl = "${getClipbirdWebsocketUrl()}/hub"
-  private val reconnector = Reconnector()
   private val listener = Listener()
   private val scope = CoroutineScope(coroutineScope.coroutineContext + SupervisorJob())
   private var webSocket : WebSocket? = null
@@ -87,7 +63,6 @@ class HubWebsocket @AssistedInject constructor(
 
   fun connect() {
     if (isConnected()) throw RuntimeException("WebSocket is already connected")
-    this.reconnector.reset()
     this.makeConnection()
   }
 
@@ -96,7 +71,6 @@ class HubWebsocket @AssistedInject constructor(
   }
 
   fun disconnect() {
-    reconnector.reset()
     val ws = requireNotNull(webSocket) { "WebSocket is not connected" }
     ws.close(NORMAL_CLOSURE_STATUS, "Client closed connection")
     webSocket = null

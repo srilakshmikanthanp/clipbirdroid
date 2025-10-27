@@ -40,10 +40,11 @@ class WanController @Inject constructor(
     }
   }
 
-  enum class ConnectionEvent {
-    DISCONNECTED,
-    CONNECTED,
-    CONNECTING
+  sealed class ConnectionEvent {
+    data class DISCONNECTED(val code: Int, val reason: String) : ConnectionEvent()
+    data object CONNECTED : ConnectionEvent()
+    data object OPENED : ConnectionEvent()
+    data object CONNECTING : ConnectionEvent()
   }
 
   override fun onErrorOccurred(throwable: Throwable) {
@@ -58,6 +59,12 @@ class WanController @Inject constructor(
     }
   }
 
+  override fun onOpened() {
+    this.scope.launch {
+      this@WanController._hubConnectionEvents.emit(ConnectionEvent.OPENED)
+    }
+  }
+
   override fun onConnecting() {
     this.scope.launch {
       this@WanController._hubConnectionEvents.emit(ConnectionEvent.CONNECTING)
@@ -66,7 +73,7 @@ class WanController @Inject constructor(
 
   override fun onDisconnected(code: Int, reason: String) {
     this.scope.launch {
-      this@WanController._hubConnectionEvents.emit(ConnectionEvent.DISCONNECTED)
+      this@WanController._hubConnectionEvents.emit(ConnectionEvent.DISCONNECTED(code, reason))
     }
   }
 
@@ -92,16 +99,6 @@ class WanController @Inject constructor(
   fun disconnectFromHub() {
     if (hub.isEmpty) throw RuntimeException("Hub is not connected")
     hub.get().disconnect()
-  }
-
-  fun isHubAvailable(): Boolean {
-    return hub.isPresent
-  }
-
-  fun reconnectToHub() {
-    if (hub.isEmpty) throw RuntimeException("Hub is not connected before")
-    if (hub.get().isConnected()) throw RuntimeException("Hub is already connected")
-    hub.get().connect()
   }
 
   fun synchronize(data: List<Pair<String, ByteArray>>) {
