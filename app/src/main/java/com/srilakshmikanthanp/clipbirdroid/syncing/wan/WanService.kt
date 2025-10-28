@@ -1,6 +1,5 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing.wan
 
-import androidx.lifecycle.viewModelScope
 import com.srilakshmikanthanp.clipbirdroid.Clipbird
 import com.srilakshmikanthanp.clipbirdroid.common.extensions.toPem
 import com.srilakshmikanthanp.clipbirdroid.common.functions.generateRSAKeyPair
@@ -89,8 +88,8 @@ class WanService @Inject constructor(
     scope.launch {
       try {
         _wanConnectionState.value = _wanConnectionState.value.copy(isConnecting = true, error = null)
-        reconnector.reset()
         val appServiceName = appMdnsServiceName(clipbird)
+        reconnector.reset()
         storage.setISLastlyConnectedToHub(true)
         val device = storage.getHubHostDevice()?.let { existing ->
           val dto = DeviceRequestDto(existing.publicKey, appServiceName, existing.type)
@@ -106,6 +105,7 @@ class WanService @Inject constructor(
         wanController.connectToHub(device)
       } catch (e: Exception) {
         _wanConnectionState.value = _wanConnectionState.value.copy(isConnecting = false, error = e.localizedMessage)
+        reconnector.schedule()
       }
     }
   }
