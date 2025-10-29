@@ -49,7 +49,7 @@ fun History(
     lanViewModel.lanController.synchronize(
       clipboardViewModel.clipboardController.getClipboard().getClipboardContent()
     )
-    wanViewModel.wanController.synchronize(
+    wanViewModel.wanService.getController().synchronize(
       clipboardViewModel.clipboardController.getClipboard().getClipboardContent()
     )
   }

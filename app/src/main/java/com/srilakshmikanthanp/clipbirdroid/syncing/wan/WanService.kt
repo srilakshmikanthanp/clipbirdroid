@@ -5,6 +5,7 @@ import com.srilakshmikanthanp.clipbirdroid.common.extensions.toPem
 import com.srilakshmikanthanp.clipbirdroid.common.functions.generateRSAKeyPair
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
 import com.srilakshmikanthanp.clipbirdroid.storage.Storage
+import com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth.AuthException
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.device.DeviceApiRepository
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.device.DeviceRequestDto
 import com.srilakshmikanthanp.clipbirdroid.syncing.wan.device.DeviceType
@@ -29,10 +30,10 @@ class WanService @Inject constructor(
   private val storage: Storage,
   private val clipbird: Clipbird,
 ) {
-  private val scope = CoroutineScope(coroutineScope.coroutineContext + SupervisorJob())
-
   private val _wanConnectionState = MutableStateFlow(WanConnectionState(isConnected = wanController.isHubConnected()))
   val wanConnectionState = _wanConnectionState.asStateFlow()
+  private val scope = CoroutineScope(coroutineScope.coroutineContext + SupervisorJob())
+
   private val reconnector = Reconnector()
 
   private inner class Reconnector {
@@ -103,12 +104,16 @@ class WanService @Inject constructor(
         }
         storage.setHubHostDevice(device)
         wanController.connectToHub(device)
+      } catch (e: AuthException) {
+        _wanConnectionState.value = _wanConnectionState.value.copy(isConnecting = false, error = e.localizedMessage)
       } catch (e: Exception) {
         _wanConnectionState.value = _wanConnectionState.value.copy(isConnecting = false, error = e.localizedMessage)
         reconnector.schedule()
       }
     }
   }
+
+  fun getController(): WanController = wanController
 
   fun disconnectFromHub() {
     storage.setISLastlyConnectedToHub(false)

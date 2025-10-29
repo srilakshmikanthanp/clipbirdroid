@@ -9,7 +9,6 @@ import javax.inject.Inject
 @HiltViewModel
 class WanViewModel @Inject constructor(
   val wanService: WanService,
-  val wanController: WanController,
   val storage: Storage,
   val clipbird: Clipbird
 ) : ViewModel() {

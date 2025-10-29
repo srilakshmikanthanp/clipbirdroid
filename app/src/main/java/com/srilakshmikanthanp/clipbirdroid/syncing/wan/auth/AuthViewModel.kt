@@ -2,8 +2,6 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.wan.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.srilakshmikanthanp.clipbirdroid.storage.Storage
-import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
