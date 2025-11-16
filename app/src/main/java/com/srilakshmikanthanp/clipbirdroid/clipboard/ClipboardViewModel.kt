@@ -6,5 +6,5 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ClipboardViewModel @Inject constructor(
-  val clipboardController: ClipboardController,
+  val clipboardManager: ClipboardManager,
 ) : ViewModel()

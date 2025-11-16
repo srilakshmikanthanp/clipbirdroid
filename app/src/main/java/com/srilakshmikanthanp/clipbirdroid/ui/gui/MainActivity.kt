@@ -32,11 +32,12 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavDrawer
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavigationDrawer
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Account
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.SettingsScreen
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.TrustedDevices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.theme.ClipbirdTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -60,16 +61,17 @@ private fun Clipbird() {
     }
   }
 
-  NavDrawer(
+  NavigationDrawer(
     onItemClicked = onItemClicked,
     selected = selected,
     drawerState = drawerState,
   ) {
     when (selected) {
       DrawerItems.HISTORY -> History(onMenuClick = onMenuClick)
+      DrawerItems.SETTING -> SettingsScreen(onMenuClick = onMenuClick)
+      DrawerItems.TRUSTED_DEVICES -> TrustedDevices(onMenuClick = onMenuClick)
       DrawerItems.ABOUT -> AboutUs(onMenuClick = onMenuClick)
       DrawerItems.DEVICES -> Devices(onMenuClick = onMenuClick)
-      DrawerItems.ACCOUNT -> Account(onMenuClick = onMenuClick)
     }
   }
 }
@@ -95,8 +97,6 @@ class MainActivity : ComponentActivity() {
       permissions.removeIf {
         checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
       }
-
-      clipbirdBinder.getService().showStatusNotification()
 
       setContent {
         ClipbirdTheme {

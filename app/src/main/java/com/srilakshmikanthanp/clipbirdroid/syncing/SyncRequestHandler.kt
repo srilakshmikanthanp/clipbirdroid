@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing
 
-// Sync Request Handler
+import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardContent
+
 fun interface SyncRequestHandler {
-  fun onSyncRequest(items: List<Pair<String, ByteArray>>)
+  fun onSyncRequest(items: List<ClipboardContent>)
 }

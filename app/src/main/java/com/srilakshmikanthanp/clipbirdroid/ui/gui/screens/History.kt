@@ -29,37 +29,30 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardViewModel
 import com.srilakshmikanthanp.clipbirdroid.history.HistoryViewModel
-import com.srilakshmikanthanp.clipbirdroid.syncing.lan.LanViewModel
-import com.srilakshmikanthanp.clipbirdroid.syncing.wan.WanViewModel
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipHistory
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipSend
+import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingViewModel
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipboardContentItem
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.ClipboardContentSend
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun History(
   historyViewModel: HistoryViewModel = hiltViewModel<HistoryViewModel>(),
-  lanViewModel: LanViewModel = hiltViewModel<LanViewModel>(),
-  wanViewModel: WanViewModel = hiltViewModel<WanViewModel>(),
+  syncingViewModel: SyncingViewModel = hiltViewModel<SyncingViewModel>(),
   clipboardViewModel: ClipboardViewModel = hiltViewModel<ClipboardViewModel>(),
   onMenuClick: () -> Unit = {},
 ) {
-  val history by historyViewModel.historyController.history.collectAsState()
+  val history by historyViewModel.clipboardHistory.history.collectAsState()
 
   val sendHandler: () -> Unit = {
-    lanViewModel.lanController.synchronize(
-      clipboardViewModel.clipboardController.getClipboard().getClipboardContent()
-    )
-    wanViewModel.wanService.getController().synchronize(
-      clipboardViewModel.clipboardController.getClipboard().getClipboardContent()
-    )
+    syncingViewModel.synchronize(clipboardViewModel.clipboardManager.getClipboard().getClipboardContent())
   }
 
   val onCopy = { idx: Int ->
-    clipboardViewModel.clipboardController.getClipboard().setClipboardContent(history[idx])
+    clipboardViewModel.clipboardManager.getClipboard().setClipboardContent(history[idx])
   }
 
   val onDelete = { idx: Int ->
-    historyViewModel.historyController.deleteHistoryAt(idx)
+    historyViewModel.clipboardHistory.deleteHistoryAt(idx)
   }
 
   val menuIcon = @Composable {
@@ -94,7 +87,7 @@ fun History(
       ) {
         Spacer(modifier = Modifier.padding(5.dp))
 
-        ClipSend(
+        ClipboardContentSend(
           modifier = Modifier.fillMaxWidth(),
           onSend = sendHandler,
         )
@@ -122,7 +115,7 @@ fun History(
         } else {
           Spacer(modifier = Modifier.padding(15.dp))
 
-          ClipHistory(
+          ClipboardContentItem(
             clipHistory = history,
             onCopy = onCopy,
             onDelete = onDelete,

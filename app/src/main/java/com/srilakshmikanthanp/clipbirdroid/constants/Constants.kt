@@ -128,11 +128,3 @@ fun appMaxIdleReadTime(): Int {
 fun appMaxIdleWriteTime(): Int {
   return 10
 }
-
-fun getClipbirdApiUrl(): String {
-  return BuildConfig.APP_API_URL
-}
-
-fun getClipbirdWebsocketUrl(): String {
-  return BuildConfig.APP_WEBSOCKET_URL
-}

@@ -2,10 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools">
 
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+  <uses-permission android:name="android.permission.BLUETOOTH" />
+  <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" tools:targetApi="31" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.INTERNET" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:ignore="ForegroundServicesPolicy" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
   <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
@@ -38,7 +44,6 @@
     <activity
       android:name=".ui.gui.MainActivity"
       android:windowSoftInputMode="adjustResize"
-      android:screenOrientation="sensorPortrait"
       android:theme="@style/Theme.Splash"
       android:exported="true"
       android:launchMode="singleTop">
@@ -50,7 +55,6 @@
 
     <activity
       android:name=".ui.gui.handlers.ShareHandler"
-      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
       android:noHistory="true"
@@ -73,7 +77,6 @@
 
     <activity
       android:name=".ui.gui.handlers.SendHandler"
-      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:excludeFromRecents="true"
       android:noHistory="true"
@@ -81,15 +84,13 @@
 
     <activity
       android:name=".ui.gui.handlers.AcceptHandler"
-      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
       android:parentActivityName=".ui.gui.MainActivity"/>
 
     <activity
       android:name=".ui.gui.handlers.RejectHandler"
-      android:screenOrientation="sensorPortrait"
       android:theme="@android:style/Theme.Translucent.NoTitleBar"
-      android:parentActivityName=".ui.gui.MainActivity"/>
+      android:parentActivityName=".ui.gui.MainActivity" />
 
     <activity
       android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
@@ -115,14 +116,6 @@
       <intent-filter>
         <action android:name="android.intent.action.ACTION_BOOT_COMPLETED" />
         <action android:name="android.intent.action.BOOT_COMPLETED" />
-      </intent-filter>
-    </receiver>
-
-    <receiver
-      android:name=".broadcast.WifiApStateChangeHandler"
-      android:exported="true">
-      <intent-filter>
-        <action android:name="android.net.wifi.WIFI_AP_STATE_CHANGED" />
       </intent-filter>
     </receiver>
   </application>

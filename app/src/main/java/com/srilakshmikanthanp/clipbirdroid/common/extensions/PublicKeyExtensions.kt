@@ -11,8 +11,6 @@ import java.security.spec.PKCS8EncodedKeySpec
 fun PublicKey.toPem(): String {
   val pemObject = PemObject("PUBLIC KEY", this.encoded)
   val stringWriter = StringWriter()
-  PemWriter(stringWriter).use { pemWriter ->
-    pemWriter.writeObject(pemObject)
-  }
+  PemWriter(stringWriter).use { it.writeObject(pemObject) }
   return stringWriter.toString()
 }

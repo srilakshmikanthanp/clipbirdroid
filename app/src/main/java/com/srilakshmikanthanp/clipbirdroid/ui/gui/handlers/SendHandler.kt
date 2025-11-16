@@ -11,21 +11,26 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.srilakshmikanthanp.clipbirdroid.Clipbird
+import androidx.lifecycle.lifecycleScope
 import com.srilakshmikanthanp.clipbirdroid.R
+import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardManager
+import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SendHandler : ComponentActivity() {
+  @Inject lateinit var clipboardManager: ClipboardManager
+  @Inject lateinit var syncingManager: SyncingManager
+
   @OptIn(DelicateCoroutinesApi::class)
   override fun onWindowFocusChanged(hasFocus: Boolean) {
     if (!hasFocus) return
 
-    val clipboardController = (this.application as Clipbird).clipboardController
-    val lanController = (this.application as Clipbird).lanController
-    val wanController = (this.application as Clipbird).wanController
-    val content = clipboardController.getClipboard().getClipboardContent()
-    lanController.synchronize(content)
-    wanController.synchronize(content)
+    val content = clipboardManager.getClipboard().getClipboardContent()
+    lifecycleScope.launch { syncingManager.synchronize(content) }
 
     runOnUiThread {
       Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()

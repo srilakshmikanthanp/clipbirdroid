@@ -1,7 +1,10 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing
 
+import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardContent
+import java.util.concurrent.Future
+
 interface Synchronizer {
-  fun addSyncRequestHandler(handler: SyncRequestHandler)
   fun removeSyncRequestHandler(handler: SyncRequestHandler)
-  fun synchronize(items: List<Pair<String, ByteArray>>)
+  fun addSyncRequestHandler(handler: SyncRequestHandler)
+  suspend fun synchronize(items: List<ClipboardContent>)
 }

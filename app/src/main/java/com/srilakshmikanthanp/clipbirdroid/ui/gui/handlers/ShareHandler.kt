@@ -7,22 +7,20 @@ import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import com.srilakshmikanthanp.clipbirdroid.Clipbird
+import androidx.lifecycle.lifecycleScope
 import com.srilakshmikanthanp.clipbirdroid.R
-import com.srilakshmikanthanp.clipbirdroid.common.functions.toPNG
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardContent
+import com.srilakshmikanthanp.clipbirdroid.common.utility.toPNG
+import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ShareHandler : ComponentActivity() {
+  @Inject lateinit var syncingManager: SyncingManager
+
   private fun getSendActionData(intent: Intent): Pair<String, ByteArray> {
     return if (intent.type?.startsWith("image/") == true) {
       val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri ?: throw RuntimeException("No image data found")
@@ -33,7 +31,7 @@ class ShareHandler : ComponentActivity() {
       } catch (e: SecurityException) {
         throw RuntimeException("Permission denied to read the file", e)
       }.use {
-        val content = it?.let { toPNG(it.readBytes()) } ?: return@use null
+        val content = it?.readBytes()?.toPNG() ?: return@use null
         val mimeType = "image/png"
         return@use Pair(mimeType, content)
       } ?: throw RuntimeException("Failed to read image data")
@@ -59,16 +57,11 @@ class ShareHandler : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val lanController = (this.application as Clipbird).lanController
-    val wanController = (this.application as Clipbird).wanController
-
     val result = try {
-      if (intent.action == Intent.ACTION_SEND) {
-        getSendActionData(intent)
-      } else if (intent.action == Intent.ACTION_PROCESS_TEXT) {
-        getProcessTextData(intent)
-      } else {
-        throw RuntimeException("Unsupported intent action: ${intent.action}")
+      when (intent.action) {
+        Intent.ACTION_PROCESS_TEXT -> getProcessTextData(intent)
+        Intent.ACTION_SEND-> getSendActionData(intent)
+        else -> throw RuntimeException("Unsupported intent action: ${intent.action}")
       }
     } catch (e: Exception) {
       Log.e("ShareHandler", "Error processing shared data", e)
@@ -77,9 +70,8 @@ class ShareHandler : ComponentActivity() {
       return
     }
 
-    val content = listOf(Pair(result.first, result.second))
-    lanController.synchronize(content)
-    wanController.synchronize(content)
+    val content = listOf(ClipboardContent(result.first, result.second))
+    lifecycleScope.launch { syncingManager.synchronize(content) }
 
     Toast.makeText(this, R.string.synced, Toast.LENGTH_SHORT).show()
     this.finish()

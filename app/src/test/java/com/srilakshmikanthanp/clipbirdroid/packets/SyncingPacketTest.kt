@@ -3,24 +3,21 @@ package com.srilakshmikanthanp.clipbirdroid.packets
 import org.junit.Test
 
 class SyncingPacketTest {
-  @Test fun syncingPacketTest() {
-    val (mimeType, payload) = Pair("text/plain", "Hello")
-    val syncingItem = SyncingItem(
-        mimeType.toByteArray(),
-        payload.toByteArray()
-    )
-    val items = Array<SyncingItem>(5) { syncingItem }
-    val packSend = SyncingPacket(items)
-    val array = packSend.toByteArray()
-    val packRecv = SyncingPacket.fromByteArray(array)
+  @Test
+  fun syncingPacketTest() {
+    val syncingItem = SyncingItem("text/plain".toByteArray(), "Hello".toByteArray())
+    val items = Array(5) { syncingItem }
+    val lhs = SyncingPacket(items)
+    val array = lhs.toByteArray()
+    val rhs = array.toSyncingPacket()
 
-    assert(packRecv.getPacketType() == SyncingPacket.PacketType.SyncPacket)
-    assert(packRecv.getPacketLength() == packSend.size())
-    assert(packRecv.getItemCount() == 5)
+    assert(rhs.getPacketType() == PacketType.SyncingPacket)
+    assert(rhs.getPacketLength() == lhs.getPacketLength())
+    assert(rhs.getItemCount() == 5)
 
-    for (item in packRecv.getItems()) {
-      assert(item.getMimeType().contentEquals(mimeType.toByteArray()))
-      assert(item.getPayload().contentEquals(payload.toByteArray()))
+    for (item in rhs.getItems()) {
+      assert(item.getMimeType().contentEquals(syncingItem.getMimeType()))
+      assert(item.getPayload().contentEquals(syncingItem.getPayload()))
     }
   }
 }

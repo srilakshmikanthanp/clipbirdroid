@@ -3,22 +3,15 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
+import android.content.Intent
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.srilakshmikanthanp.clipbirdroid.R
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.MainActivity
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers.SendHandler
 
-/**
- * A Notification Channel that has the following Notifications:
- *
- * 1) -> present all the time when the app is running.
- * When user clicks the Notification, the latest clipboard content
- * will be send to other devices in the group. Finally it has an
- * button to quit the app.
- *
- * 2) -> when a device wants to connect to the group, this notification
- * will be shown to the user. it has two buttons, one for accept and
- * another for reject.
- */
 class StatusNotification(private val context: Context) {
   private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -29,38 +22,56 @@ class StatusNotification(private val context: Context) {
 
   companion object {
     const val SERVICE_ID = 1
-    const val REQUEST_ID = 2
+  }
+
+  private fun onQuitIntent(): PendingIntent {
+    val intent = Intent(context, MainActivity::class.java)
+    val flags = PendingIntent.FLAG_IMMUTABLE
+    intent.action = MainActivity.QUIT_ACTION
+    intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+    return PendingIntent.getActivity(context, 0, intent, flags)
+  }
+
+  private fun onSendIntent(): PendingIntent {
+    Intent(context, SendHandler::class.java).also {
+      return PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_IMMUTABLE)
+    }
+  }
+
+  private fun onTapIntent(): PendingIntent {
+    Intent(context, MainActivity::class.java).also {
+      return PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_IMMUTABLE)
+    }
   }
 
   init {
-    NotificationChannel(channelId, channelName, importance).apply {
-      description = channelDescription
-    }.also {
+    NotificationChannel(channelId, channelName, importance).apply { description = channelDescription }.also {
       notificationManager.createNotificationChannel(it)
     }
   }
 
-  fun getChannelID(): String = channelId
+  fun showStatusNotification(service: Service) {
+    val notificationLayout = RemoteViews(context.packageName, R.layout.notification)
 
-  fun showJoinRequest(clientName: String, onAccept: PendingIntent, onReject: PendingIntent) {
+    notificationLayout.setTextViewText(R.id.notify_title, context.resources.getString(R.string.notification_title))
+    notificationLayout.setOnClickPendingIntent(R.id.notify_send, onSendIntent())
+
     NotificationCompat.Builder(context, channelId)
       .setSmallIcon(R.mipmap.ic_launcher_foreground)
-      .setContentTitle(context.resources.getString(R.string.connection_request))
-      .setContentText("$clientName " + context.resources.getString(R.string.join_request_content))
-      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-      .setAutoCancel(true)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
+      .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+      .setCustomContentView(notificationLayout)
+      .setContentIntent(onTapIntent())
       .addAction(
         R.mipmap.ic_launcher_foreground,
-        context.resources.getString(R.string.accept),
-        onAccept
+        context.resources.getString(R.string.quit),
+        onQuitIntent()
       )
-      .addAction(
-        R.mipmap.ic_launcher_foreground,
-        context.resources.getString(R.string.reject),
-        onReject
-      )
+      .setOngoing(true)
       .build().also {
-        notificationManager.notify(REQUEST_ID, it)
+        service.startForeground(SERVICE_ID, it)
       }
   }
 }

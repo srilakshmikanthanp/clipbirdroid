@@ -14,6 +14,13 @@ s
   <string name="required_permissions">Clipbird Requires those permissions to work properly</string>
   <string name="about_us">A Bird that helps you to sync clipboard between devices</string>
 
+  <string name="use_bluetooth">Use Bluetooth</string>
+  <string name="bluetooth_desc">Use Bluetooth to connect with devices.</string>
+  <string name="bluetooth_permission_denied">Permission denied. Bluetooth cannot be enabled.</string>
+
+  <string name="connection_request">Connection Request</string>
+  <string name="connection_request_channel_description">Channel for device connection requests</string>
+  <string name="settings">Settings</string>
   <string name="allow">Allow</string>
   <string name="deny">Deny</string>
   <string name="app_name">Clipbird</string>
@@ -55,12 +62,11 @@ s
   <string name="reset_devices">Reset Devices</string>
   <string name="create_group">Create Group</string>
   <string name="more">More</string>
-  <string name="clipbird_devices">Clipbird Devices</string>
-  <string name="clipbird_history">Clipbird History</string>
+  <string name="clipbird_devices">Devices</string>
+  <string name="clipbird_history">History</string>
   <string name="version">Version</string>
   <string name="quit">Quit</string>
   <string name="status_notification">Status Notification</string>
-  <string name="connection_request">Connection Request</string>
   <string name="joined">Joined</string>
   <string name="disconnect">Disconnect</string>
   <string name="connected">Connected</string>
@@ -68,4 +74,11 @@ s
   <string name="account">Account</string>
   <string name="reset_done">Reset Done</string>
   <string name="sign_in">Sign In</string>
+  <string name="remove">remove</string>
+  <string name="no_trusted_servers">No Trusted Servers</string>
+  <string name="no_trusted_clients">No Trusted Clients</string>
+  <string name="trusted_servers">Trusted Hosts</string>
+  <string name="trusted_clients">Trusted Members</string>
+  <string name="trusted_devices">Trust</string>
+  <string name="add_to_trust_device">Add To Trusted Groups</string>
 </resources>
