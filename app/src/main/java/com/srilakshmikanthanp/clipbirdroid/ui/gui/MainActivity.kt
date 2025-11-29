@@ -81,6 +81,7 @@ class MainActivity : ComponentActivity() {
   private val connection = object : ServiceConnection {
     override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
       val clipbirdBinder = binder as? ClipbirdService.ClipbirdBinder ?: return
+      val service = clipbirdBinder.getService()
       this@MainActivity.clipbirdBinder = clipbirdBinder
       val permissions = mutableListOf<String>()
 
@@ -97,6 +98,8 @@ class MainActivity : ComponentActivity() {
       permissions.removeIf {
         checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
       }
+
+      service.showStatusNotification()
 
       setContent {
         ClipbirdTheme {

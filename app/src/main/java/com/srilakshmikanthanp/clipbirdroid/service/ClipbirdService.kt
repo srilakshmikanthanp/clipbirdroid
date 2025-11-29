@@ -113,7 +113,7 @@ class ClipbirdService : Service() {
     this.connectionRequestNotification = ConnectionRequestNotification(this)
     this.notification = StatusNotification(this)
     this.initialize()
-    notification.showStatusNotification(this)
+    this.showStatusNotification()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -126,6 +126,10 @@ class ClipbirdService : Service() {
   }
 
   override fun onBind(intent: Intent?): IBinder = binder
+
+  fun showStatusNotification() {
+    notification.showStatusNotification(this)
+  }
 
   companion object {
     fun start(context: Context) {
