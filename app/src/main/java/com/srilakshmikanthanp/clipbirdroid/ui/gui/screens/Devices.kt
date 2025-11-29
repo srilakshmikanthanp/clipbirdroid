@@ -43,10 +43,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.ApplicationStateViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedDevicesViewModel
-import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServer
-import com.srilakshmikanthanp.clipbirdroid.syncing.Session
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingViewModel
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
 @Composable

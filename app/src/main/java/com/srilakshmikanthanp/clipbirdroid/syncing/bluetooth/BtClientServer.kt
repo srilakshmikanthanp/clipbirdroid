@@ -17,4 +17,14 @@ class BtClientServer(
   override suspend fun connect(listener: ClientServerSessionEventListener) {
     BtClientServerSession(btResolvedDevice, sslConfig, trustedServers, context, listener, coroutineScope).connect()
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is BtClientServer) return false
+    return btResolvedDevice == other.btResolvedDevice
+  }
+
+  override fun hashCode(): Int {
+    return btResolvedDevice.hashCode()
+  }
 }

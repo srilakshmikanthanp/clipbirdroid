@@ -15,4 +15,14 @@ class NetClientServer(
   override suspend fun connect(listener: ClientServerSessionEventListener) {
     NetClientServerSession(netResolvedDevice, sslConfig, trustedServers, listener, coroutineScope).connect()
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is NetClientServer) return false
+    return netResolvedDevice == other.netResolvedDevice
+  }
+
+  override fun hashCode(): Int {
+    return netResolvedDevice.hashCode()
+  }
 }
