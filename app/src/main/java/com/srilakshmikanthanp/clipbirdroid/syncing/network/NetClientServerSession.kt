@@ -79,6 +79,7 @@ class NetClientServerSession(
 
   private val deviceName = AttributeKey.valueOf<String>("DEVICE_NAME")
   private var channel: Channel? = null
+  private var certificate: X509Certificate? = null
 
   init {
     coroutineScope.launch {
@@ -99,6 +100,8 @@ class NetClientServerSession(
     val rdns = x500Name.getRDNs(BCStyle.CN)
     if (rdns.isEmpty()) ctx.close().also { return }
     val name = IETFUtils.valueToString(rdns[0].first.value)
+    if (name != netResolvedDevice.name) ctx.close().also { return }
+    this.certificate = peerCert
     ctx.channel().attr(deviceName).set(name)
     listener.onConnected(this)
     this._isTrusted.value = trustedServers.isTrustedServer(name, peerCert)
@@ -127,9 +130,7 @@ class NetClientServerSession(
   override val isTrusted = _isTrusted.asStateFlow()
 
   override fun getCertificate(): X509Certificate {
-    val channel = this.channel ?: throw IllegalStateException("Channel is not connected")
-    val ssl = channel.pipeline().get(SslHandler::class.java) as SslHandler
-    return ssl.engine().session.peerCertificates[0] as X509Certificate
+    return certificate ?: throw IllegalStateException("Certificate is not yet available")
   }
 
   override fun channelRegistered(ctx: ChannelHandlerContext?) {}
