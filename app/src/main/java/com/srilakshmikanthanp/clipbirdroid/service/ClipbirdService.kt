@@ -39,8 +39,6 @@ class ClipbirdService : Service() {
   @Inject lateinit var trustedClients: TrustedClients
   @Inject lateinit var trustedServers: TrustedServers
 
-  private val servers: MutableList<ClientServer> = mutableListOf()
-
   inner class ClipbirdBinder : Binder() {
     fun getService(): ClipbirdService = this@ClipbirdService
   }
@@ -50,7 +48,7 @@ class ClipbirdService : Service() {
   private fun initialize() {
     this.serviceCoroutineScope.launch {
       syncingManager.disconnectedEvents.collect { server ->
-        servers.firstOrNull { trustedServers.hasTrustedServer(it.name) && it.name != server.name }?.let {
+        syncingManager.availableServers.value.firstOrNull { trustedServers.hasTrustedServer(it.name) && it.name != server.name }?.let {
           syncingManager.connectToServer(it)
         }
       }
@@ -69,13 +67,6 @@ class ClipbirdService : Service() {
     this.serviceCoroutineScope.launch {
       syncingManager.serverFoundEvents.collect {
         if (trustedServers.hasTrustedServer(it.name) && !syncingManager.isConnectedToServer()) syncingManager.connectToServer(it)
-        servers.add(it)
-      }
-    }
-
-    this.serviceCoroutineScope.launch {
-      syncingManager.serverGoneEvents.collect {
-        servers.remove(it)
       }
     }
 
