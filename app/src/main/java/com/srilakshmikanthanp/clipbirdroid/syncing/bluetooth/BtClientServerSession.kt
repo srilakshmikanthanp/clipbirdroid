@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okio.IOException
 import java.security.cert.X509Certificate
 
 @SuppressLint("MissingPermission")
@@ -47,7 +48,7 @@ class BtClientServerSession(
       socket.connect()
       this@BtClientServerSession.btSession = BtSession(this@BtClientServerSession, coroutineScope, socket, sslConfig)
       this@BtClientServerSession.btSession!!.start()
-    } catch (e: Exception) {
+    } catch (e: IOException) {
       listener.onError(this@BtClientServerSession, e)
     }
   }
