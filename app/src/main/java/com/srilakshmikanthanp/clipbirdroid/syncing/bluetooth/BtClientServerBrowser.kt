@@ -1,22 +1,23 @@
 package com.srilakshmikanthanp.clipbirdroid.syncing.bluetooth
 
 import android.content.Context
-import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServerBrowser
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 
 class BtClientServerBrowser @Inject constructor(
   @ApplicationContext context: Context,
   sslConfig: SSLConfig,
   private val trustedServers: TrustedServers,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ) : ClientServerBrowser(context, sslConfig), BtBrowserListener {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
+
   private val clientServers: MutableMap<BtResolvedDevice, BtClientServer> = mutableMapOf()
   private var browser: BtSdpBrowser? = null
 

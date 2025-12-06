@@ -19,6 +19,8 @@ import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.bluetooth.BtClientServerBrowser
 import com.srilakshmikanthanp.clipbirdroid.syncing.network.NetClientServerBrowser
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,8 +29,9 @@ import javax.inject.Singleton
 class ClientManager @Inject constructor(
   private val netClientServerBrowser: NetClientServerBrowser,
   private val btClientServerBrowser: BtClientServerBrowser,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ) : HostManager, ClientServerBrowserEventListener, ClientServerSessionEventListener {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val clientManagerEventListeners = mutableListOf<ClientManagerEventListener>()
   private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
   private var clientServerBrowser: ClientServerBrowser? = null

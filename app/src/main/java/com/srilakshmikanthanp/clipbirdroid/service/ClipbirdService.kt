@@ -87,8 +87,8 @@ class ClipbirdService : Service() {
     }
 
     this.serviceCoroutineScope.launch {
-      combine(applicationState.shouldUseBluetoothFlow, applicationState.isServerFlow) { useBluetooth, isServer ->
-        isServer to useBluetooth
+      combine(applicationState.shouldUseBluetoothFlow, applicationState.isServerFlow) {
+        useBluetooth, isServer -> isServer to useBluetooth
       }.collect { (isServer, useBluetooth) ->
         if (isServer) {
           syncingManager.setHostAsServer(useBluetooth)

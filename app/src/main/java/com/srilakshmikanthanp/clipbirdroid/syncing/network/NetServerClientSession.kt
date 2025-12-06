@@ -6,6 +6,8 @@ import com.srilakshmikanthanp.clipbirdroid.packets.NetworkPacket
 import com.srilakshmikanthanp.clipbirdroid.syncing.Session
 import io.netty.channel.ChannelHandlerContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.net.InetAddress
@@ -16,8 +18,10 @@ class NetServerClientSession(
   private val certificate: X509Certificate,
   val trustedClients: TrustedClients,
   val context: ChannelHandlerContext,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ): Session(name) {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
+
   override suspend fun sendPacket(packet: NetworkPacket) {
     context.writeAndFlush(packet).awaitSuspend()
   }

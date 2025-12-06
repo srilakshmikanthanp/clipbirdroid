@@ -7,14 +7,17 @@ import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServerBrowser
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 
 class NetClientServerBrowser @Inject constructor(
   @ApplicationContext context: Context,
   sslConfig: SSLConfig,
   private val trustedServers: TrustedServers,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ) : NetBrowserListener, ClientServerBrowser(context, sslConfig) {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val clientServers: MutableMap<NetResolvedDevice, NetClientServer> = mutableMapOf()
   private val mdnsBrowser = MdnsNetBrowser(context)
 

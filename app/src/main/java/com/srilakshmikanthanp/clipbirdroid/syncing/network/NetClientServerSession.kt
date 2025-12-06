@@ -28,6 +28,8 @@ import io.netty.handler.timeout.IdleStateEvent
 import io.netty.handler.timeout.IdleStateHandler
 import io.netty.util.AttributeKey
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -41,8 +43,10 @@ class NetClientServerSession(
   private val sslConfig: SSLConfig,
   private val trustedServers: TrustedServers,
   private val listener: ClientServerSessionEventListener,
-  private val coroutineScope: CoroutineScope
+  private val parentScope: CoroutineScope
 ): Session(netResolvedDevice.name), ChannelInboundHandler {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
+
   inner class Initializer : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
       val sslContext = SslContextBuilder.forClient()

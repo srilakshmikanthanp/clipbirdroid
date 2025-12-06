@@ -31,6 +31,8 @@ import io.netty.handler.timeout.IdleStateEvent
 import io.netty.handler.timeout.IdleStateHandler
 import io.netty.util.AttributeKey
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import org.bouncycastle.asn1.x500.style.BCStyle
 import org.bouncycastle.asn1.x500.style.IETFUtils
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
@@ -43,8 +45,10 @@ class NetServer @Inject constructor(
   @ApplicationContext context: Context,
   sslConfig: SSLConfig,
   private val trustedClients: TrustedClients,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ) : NetRegisterListener, Server(context, sslConfig), ChannelInboundHandler {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
+
   inner class NewChannelInitializer : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
       val sslContext = SslContextBuilder.forServer(sslConfig.privateKey, sslConfig.certificate)

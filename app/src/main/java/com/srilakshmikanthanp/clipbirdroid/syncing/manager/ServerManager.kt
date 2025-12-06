@@ -17,6 +17,8 @@ import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.bluetooth.BtServer
 import com.srilakshmikanthanp.clipbirdroid.syncing.network.NetServer
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,9 +27,10 @@ import javax.inject.Singleton
 class ServerManager @Inject constructor(
   private val netServer: NetServer,
   private val btServer: BtServer,
-  private val coroutineScope: CoroutineScope,
+  parentScope: CoroutineScope,
   private val trustedClients: TrustedClients
 ) : HostManager, ServerEventListener {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val serverManagerEventListeners: MutableList<ServerManagerEventListener> = mutableListOf()
   private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
   private val clients: MutableList<Session> = mutableListOf()

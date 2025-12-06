@@ -6,6 +6,8 @@ import com.srilakshmikanthanp.clipbirdroid.syncing.Session
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncRequestHandler
 import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +22,9 @@ import javax.inject.Singleton
 class SyncingManager @Inject constructor(
   private val clientManager: ClientManager,
   private val serverManager: ServerManager,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ): ClientManagerEventListener, ServerManagerEventListener, Synchronizer, SyncRequestHandler {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val syncRequestHandlers = mutableListOf<SyncRequestHandler>()
 
   private val _hostManagerFlow = MutableStateFlow<HostManager?>(null)

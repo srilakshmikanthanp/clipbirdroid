@@ -4,6 +4,8 @@ import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.packets.NetworkPacket
 import com.srilakshmikanthanp.clipbirdroid.syncing.Session
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.security.cert.X509Certificate
@@ -13,14 +15,16 @@ class BtServerClientSession(
   private val certificate: X509Certificate,
   val btConnection: BtConnection,
   private val trustedClients: TrustedClients,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ): Session(name) {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
+
   override suspend fun sendPacket(packet: NetworkPacket) {
     btConnection.sendPacket(packet)
   }
 
   override suspend fun disconnect() {
-    btConnection.close()
+    btConnection.stop()
   }
 
   override val isTrusted = trustedClients.trustedClients.map {

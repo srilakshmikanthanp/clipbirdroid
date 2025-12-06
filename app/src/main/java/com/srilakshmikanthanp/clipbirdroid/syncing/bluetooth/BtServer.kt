@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothServerSocket
 import android.content.Context
+import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
@@ -13,9 +14,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okio.IOException
 import javax.inject.Inject
 
 @SuppressLint("MissingPermission")
@@ -23,18 +26,28 @@ class BtServer @Inject constructor(
   @ApplicationContext context: Context,
   sslConfig: SSLConfig,
   private val trustedClients: TrustedClients,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ): Server(context, sslConfig), BtConnectionListener {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
   private val clients = mutableMapOf<String, BtConnection>()
   private var acceptJob: Job? = null
   private var serverSocket: BluetoothServerSocket? = null
 
+  companion object {
+    const val TAG = "BtServer"
+  }
+
   private suspend fun acceptConnections() = withContext(Dispatchers.IO) {
-    while (!Thread.currentThread().isInterrupted && serverSocket != null) {
-      val connection = BtConnection(this@BtServer, coroutineScope, serverSocket!!.accept(), sslConfig)
-      clients[connection.getRemoteDeviceName()] = connection
-      connection.open()
+    val serverSocket = this@BtServer.serverSocket ?: return@withContext
+    while (this@BtServer.acceptJob?.isActive == true) {
+      try {
+        val connection = BtConnection(this@BtServer, coroutineScope, serverSocket.accept(), sslConfig)
+        clients[connection.getRemoteDeviceName()] = connection
+        connection.start()
+      } catch (e: IOException) {
+        Log.e(TAG, e.message, e)
+      }
     }
   }
 
@@ -45,12 +58,12 @@ class BtServer @Inject constructor(
   }
 
   override suspend fun stop() {
-    acceptJob?.cancelAndJoin()
-    acceptJob = null
-    clients.values.forEach { it.close() }
-    clients.clear()
     serverSocket?.close()
     serverSocket = null
+    acceptJob?.cancelAndJoin()
+    acceptJob = null
+    clients.values.forEach { it.stop() }
+    clients.clear()
   }
 
   override fun onHandShakeCompleted(btConnection: BtConnection) {

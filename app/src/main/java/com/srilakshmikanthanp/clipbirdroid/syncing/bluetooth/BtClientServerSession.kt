@@ -11,10 +11,10 @@ import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServerSessionEventListe
 import com.srilakshmikanthanp.clipbirdroid.syncing.Session
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.security.cert.X509Certificate
@@ -26,8 +26,9 @@ class BtClientServerSession(
   private val trustedServers: TrustedServers,
   private val context: Context,
   private val listener: ClientServerSessionEventListener,
-  private val coroutineScope: CoroutineScope
+  parentScope: CoroutineScope
 ): Session(btResolvedDevice.name), BtConnectionListener {
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
   private var btConnection: BtConnection? = null
 
@@ -45,7 +46,7 @@ class BtClientServerSession(
     try {
       socket.connect()
       this@BtClientServerSession.btConnection = BtConnection(this@BtClientServerSession, coroutineScope, socket, sslConfig)
-      this@BtClientServerSession.btConnection!!.open()
+      this@BtClientServerSession.btConnection!!.start()
     } catch (e: Exception) {
       listener.onError(this@BtClientServerSession, e)
     }
@@ -56,7 +57,7 @@ class BtClientServerSession(
   }
 
   override suspend fun disconnect() {
-    btConnection?.close()
+    btConnection?.stop()
     btConnection = null
   }
 

@@ -3,13 +3,19 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.bluetooth
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothSocket
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
+import com.srilakshmikanthanp.clipbirdroid.constants.appMaxIdleReadTime
+import com.srilakshmikanthanp.clipbirdroid.constants.appMaxIdleWriteTime
 import com.srilakshmikanthanp.clipbirdroid.packets.CertificateExchangePacket
 import com.srilakshmikanthanp.clipbirdroid.packets.NetworkPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.PingPongPacket
+import com.srilakshmikanthanp.clipbirdroid.packets.PingPongType
 import com.srilakshmikanthanp.clipbirdroid.packets.toNetworkPacket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -25,16 +31,20 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 @SuppressLint("MissingPermission")
 class BtConnection(
   private val listener: BtConnectionListener,
-  private val coroutineScope: CoroutineScope,
+  parentScope: CoroutineScope,
   private val socket: BluetoothSocket,
   private val sslConfig: SSLConfig,
 ) {
-  private val inputStream = DataInputStream(socket.inputStream)
+  private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
+  private val dataInputStream = DataInputStream(socket.inputStream)
   private val writeMutex = Mutex()
   private val closed = AtomicBoolean(false)
   private val attributes: MutableMap<String, Any> = mutableMapOf()
   private var certificate: X509Certificate? = null
   private var socketJob: Job? = null
+  private var watchJob: Job? = null
+  private var lastReadTime: Long = 0
+  private var lastWriteTime: Long = 0
 
   private suspend fun notifyHandShakeCompleted() {
     withContext(Dispatchers.Main) { listener.onHandShakeCompleted(this@BtConnection) }
@@ -48,13 +58,28 @@ class BtConnection(
     withContext(Dispatchers.Main) { listener.onDisconnected(this@BtConnection) }
   }
 
+  private suspend fun watch() = withContext(Dispatchers.IO) {
+    while (isConnected()) {
+      val currentTime = System.currentTimeMillis()
+      if (currentTime - lastReadTime > appMaxIdleReadTime()) {
+        this@BtConnection.sendPacket(PingPongPacket(PingPongType.Ping))
+      }
+      if (currentTime - lastWriteTime > appMaxIdleWriteTime()) {
+        this@BtConnection.stop()
+      }
+      delay(10000L)
+    }
+  }
+
   private suspend fun nextPacket(): NetworkPacket = withContext((Dispatchers.IO)) {
-    val length = inputStream.readInt()
+    val length = dataInputStream.readInt()
     val bytes = ByteArray(length - Int.SIZE_BYTES)
-    inputStream.readFully(bytes)
+    dataInputStream.readFully(bytes)
     val buffer = ByteBuffer.allocate(length)
     buffer.putInt(length).put(bytes).flip()
-    return@withContext buffer.toNetworkPacket()
+    val networkPacket = buffer.toNetworkPacket()
+    this@BtConnection.lastReadTime = System.currentTimeMillis()
+    return@withContext networkPacket
   }
 
   private suspend fun handshake() {
@@ -72,7 +97,7 @@ class BtConnection(
     }
   }
 
-  fun open() {
+  fun start() {
     socketJob = coroutineScope.launch(Dispatchers.IO) {
       try {
         closed.store(false)
@@ -81,21 +106,25 @@ class BtConnection(
       } catch (e: Exception) {
         notifyError(e)
         socketJob = null
-        close()
+        stop()
       }
+    }
+    watchJob = coroutineScope.launch(Dispatchers.Default) {
+      watch()
     }
   }
 
   suspend fun sendPacket(packet: NetworkPacket): Unit = withContext(Dispatchers.IO) {
     try {
+      this@BtConnection.lastWriteTime = System.currentTimeMillis()
       writeMutex.withLock { socket.outputStream.apply { write(packet.toByteArray()) }.apply { flush() } }
     } catch (e: Exception) {
       notifyError(e)
-      close()
+      stop()
     }
   }
 
-  suspend fun close() {
+  suspend fun stop() {
     if (!closed.compareAndSet(expectedValue = false, newValue = true)) return
     socket.close()
     socketJob?.cancelAndJoin()
