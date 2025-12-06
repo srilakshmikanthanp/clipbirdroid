@@ -13,18 +13,18 @@ import java.security.cert.X509Certificate
 class BtServerClientSession(
   name: String,
   private val certificate: X509Certificate,
-  val btConnection: BtConnection,
+  val btSession: BtSession,
   private val trustedClients: TrustedClients,
   parentScope: CoroutineScope
 ): Session(name) {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
 
   override suspend fun sendPacket(packet: NetworkPacket) {
-    btConnection.sendPacket(packet)
+    btSession.sendPacket(packet)
   }
 
   override suspend fun disconnect() {
-    btConnection.stop()
+    btSession.stop()
   }
 
   override val isTrusted = trustedClients.trustedClients.map {

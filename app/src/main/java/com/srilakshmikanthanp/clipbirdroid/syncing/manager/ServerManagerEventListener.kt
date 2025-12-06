@@ -10,4 +10,5 @@ interface ServerManagerEventListener {
   fun onServiceRegisteringFailed(e: Throwable)
   fun onServiceUnregisteringFailed(e: Throwable)
   fun onError(session: Session, e: Throwable)
+  fun onServerError(e: Throwable)
 }

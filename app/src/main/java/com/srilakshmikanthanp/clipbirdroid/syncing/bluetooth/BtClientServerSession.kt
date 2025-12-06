@@ -30,12 +30,12 @@ class BtClientServerSession(
 ): Session(btResolvedDevice.name), BtConnectionListener {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
-  private var btConnection: BtConnection? = null
+  private var btSession: BtSession? = null
 
   init {
     coroutineScope.launch {
       trustedServers.trustedServers.collect {
-        if (btConnection?.isHandshakeCompleted() == true) {
+        if (btSession?.isHandshakeCompleted() == true) {
           _isTrusted.value = trustedServers.isTrustedServer(name, getCertificate())
         }
       }
@@ -45,27 +45,27 @@ class BtClientServerSession(
   private suspend fun connect(socket: BluetoothSocket) = withContext(Dispatchers.IO) {
     try {
       socket.connect()
-      this@BtClientServerSession.btConnection = BtConnection(this@BtClientServerSession, coroutineScope, socket, sslConfig)
-      this@BtClientServerSession.btConnection!!.start()
+      this@BtClientServerSession.btSession = BtSession(this@BtClientServerSession, coroutineScope, socket, sslConfig)
+      this@BtClientServerSession.btSession!!.start()
     } catch (e: Exception) {
       listener.onError(this@BtClientServerSession, e)
     }
   }
 
   override suspend fun sendPacket(packet: NetworkPacket) {
-    btConnection?.sendPacket(packet)
+    btSession?.sendPacket(packet)
   }
 
   override suspend fun disconnect() {
-    btConnection?.stop()
-    btConnection = null
+    btSession?.stop()
+    btSession = null
   }
 
   private val _isTrusted = MutableStateFlow(false)
   override val isTrusted = _isTrusted.asStateFlow()
 
   override fun getCertificate(): X509Certificate {
-    return btConnection!!.getPeerCertificate()
+    return btSession!!.getPeerCertificate()
   }
 
   suspend fun connect() = withContext(Dispatchers.IO) {
@@ -76,20 +76,20 @@ class BtClientServerSession(
     this@BtClientServerSession.connect(socket)
   }
 
-  override fun onHandShakeCompleted(btConnection: BtConnection) {
+  override fun onHandShakeCompleted(btSession: BtSession) {
     _isTrusted.value = trustedServers.isTrustedServer(name, getCertificate())
     listener.onConnected(this)
   }
 
-  override fun onDisconnected(btConnection: BtConnection) {
+  override fun onDisconnected(btSession: BtSession) {
     listener.onDisconnected(this)
   }
 
-  override fun onError(btConnection: BtConnection, cause: Throwable) {
+  override fun onError(btSession: BtSession, cause: Throwable) {
     listener.onError(this, cause)
   }
 
-  override fun onNetworkPacket(btConnection: BtConnection, packet: NetworkPacket) {
+  override fun onNetworkPacket(btSession: BtSession, packet: NetworkPacket) {
     listener.onNetworkPacket(this, packet)
   }
 }

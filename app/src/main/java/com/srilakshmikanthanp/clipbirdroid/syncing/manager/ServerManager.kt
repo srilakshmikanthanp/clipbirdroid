@@ -85,6 +85,10 @@ class ServerManager @Inject constructor(
     serverManagerEventListeners.forEach { it.onError(client, e) }
   }
 
+  override fun onServerError(e: Throwable) {
+    serverManagerEventListeners.forEach { it.onServerError(e) }
+  }
+
   override fun onServiceRegistered() {
     serverManagerEventListeners.forEach { it.onServiceRegistered() }
   }

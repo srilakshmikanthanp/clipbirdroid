@@ -29,7 +29,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @OptIn(ExperimentalAtomicApi::class)
 @SuppressLint("MissingPermission")
-class BtConnection(
+class BtSession(
   private val listener: BtConnectionListener,
   parentScope: CoroutineScope,
   private val socket: BluetoothSocket,
@@ -47,25 +47,25 @@ class BtConnection(
   private var lastWriteTime: Long = 0
 
   private suspend fun notifyHandShakeCompleted() {
-    withContext(Dispatchers.Main) { listener.onHandShakeCompleted(this@BtConnection) }
+    withContext(Dispatchers.Main) { listener.onHandShakeCompleted(this@BtSession) }
   }
 
   private suspend fun notifyError(e: Exception) {
-    withContext(Dispatchers.Main) { listener.onError(this@BtConnection, e) }
+    withContext(Dispatchers.Main) { listener.onError(this@BtSession, e) }
   }
 
   private suspend fun notifyDisconnected() {
-    withContext(Dispatchers.Main) { listener.onDisconnected(this@BtConnection) }
+    withContext(Dispatchers.Main) { listener.onDisconnected(this@BtSession) }
   }
 
   private suspend fun watch() = withContext(Dispatchers.IO) {
     while (isConnected()) {
       val currentTime = System.currentTimeMillis()
       if (currentTime - lastReadTime > appMaxIdleReadTime()) {
-        this@BtConnection.sendPacket(PingPongPacket(PingPongType.Ping))
+        this@BtSession.sendPacket(PingPongPacket(PingPongType.Ping))
       }
       if (currentTime - lastWriteTime > appMaxIdleWriteTime()) {
-        this@BtConnection.stop()
+        this@BtSession.stop()
       }
       delay(10000L)
     }
@@ -78,7 +78,7 @@ class BtConnection(
     val buffer = ByteBuffer.allocate(length)
     buffer.putInt(length).put(bytes).flip()
     val networkPacket = buffer.toNetworkPacket()
-    this@BtConnection.lastReadTime = System.currentTimeMillis()
+    this@BtSession.lastReadTime = System.currentTimeMillis()
     return@withContext networkPacket
   }
 
@@ -93,7 +93,7 @@ class BtConnection(
 
   private suspend fun readLoop() {
     while (isConnected()) {
-      nextPacket().also { withContext(Dispatchers.Main) { listener.onNetworkPacket(this@BtConnection, it) } }
+      nextPacket().also { withContext(Dispatchers.Main) { listener.onNetworkPacket(this@BtSession, it) } }
     }
   }
 
@@ -116,7 +116,7 @@ class BtConnection(
 
   suspend fun sendPacket(packet: NetworkPacket): Unit = withContext(Dispatchers.IO) {
     try {
-      this@BtConnection.lastWriteTime = System.currentTimeMillis()
+      this@BtSession.lastWriteTime = System.currentTimeMillis()
       writeMutex.withLock { socket.outputStream.apply { write(packet.toByteArray()) }.apply { flush() } }
     } catch (e: Exception) {
       notifyError(e)

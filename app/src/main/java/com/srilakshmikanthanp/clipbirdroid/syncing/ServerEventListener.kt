@@ -7,6 +7,7 @@ interface ServerEventListener {
   fun onClientConnected(client: Session)
   fun onNetworkPacket(client: Session, networkPacket: NetworkPacket)
   fun onClientError(client: Session, e: Throwable)
+  fun onServerError(e: Throwable)
   fun onServiceRegistered()
   fun onServiceUnregistered()
   fun onServiceRegistrationFailed(e: Throwable)

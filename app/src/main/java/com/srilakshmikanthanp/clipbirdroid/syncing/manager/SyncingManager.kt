@@ -103,6 +103,13 @@ class SyncingManager @Inject constructor(
     coroutineScope.launch { _errorEvents.emit(Pair(session, e)) }
   }
 
+  private val _serverErrorEvents = MutableSharedFlow<Throwable>()
+  val serverErrorEvents = _serverErrorEvents.asSharedFlow()
+
+  override fun onServerError(e: Throwable) {
+    coroutineScope.launch { _serverErrorEvents.emit(e) }
+  }
+
   private val _clientDisconnectedEvents = MutableSharedFlow<Session>()
   val clientDisconnectedEvents = _clientDisconnectedEvents.asSharedFlow()
 
