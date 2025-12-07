@@ -19,7 +19,7 @@ class BtClientServerBrowser @Inject constructor(
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
 
   private val clientServers: MutableMap<BtResolvedDevice, BtClientServer> = mutableMapOf()
-  private var browser: BtSdpBrowser? = null
+  private var browser: BtDeviceConnectionBrowser? = null
 
   override fun onServiceRemoved(device: BtResolvedDevice) {
     super.clientEventListeners.forEach { it.onServerGone(clientServers[device]!!) }
@@ -40,7 +40,7 @@ class BtClientServerBrowser @Inject constructor(
   }
 
   override suspend fun start() {
-    this.browser = BtSdpBrowser(context, coroutineScope)
+    this.browser = BtDeviceConnectionBrowser(context, coroutineScope)
     browser?.addListener(this)
     browser?.start()
   }

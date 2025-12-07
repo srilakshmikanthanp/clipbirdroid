@@ -139,4 +139,8 @@ class ClientManager @Inject constructor(
     clientServerBrowser?.removeClientServerBrowserEventListener(this@ClientManager)
     clientServerBrowser = null
   }
+
+  suspend fun connectToServer(server: ClientServer) {
+    server.connect(this)
+  }
 }

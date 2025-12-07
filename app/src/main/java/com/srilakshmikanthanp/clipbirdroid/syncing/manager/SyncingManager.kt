@@ -178,27 +178,28 @@ class SyncingManager @Inject constructor(
   }
 
   suspend fun setHostAsServer(useBluetooth: Boolean = false) {
-    _connectedClients.value.forEach { it.disconnect() }
-    _connectedClients.value = emptyList()
-    _availableServers.value = emptyList()
-    _connectedServer.value?.disconnect()
-    if (_hostManagerFlow.value != null) _hostManagerFlow.value?.stop()
+    this.stop()
     _hostManagerFlow.value = serverManager
     _hostManagerFlow.value?.start(useBluetooth)
   }
 
   suspend fun setHostAsClient(useBluetooth: Boolean = false) {
-    _connectedClients.value.forEach { it.disconnect() }
-    _connectedClients.value = emptyList()
-    _connectedServer.value?.disconnect()
-    _availableServers.value = emptyList()
-    if (_hostManagerFlow.value != null) _hostManagerFlow.value?.stop()
+    this.stop()
     _hostManagerFlow.value  = clientManager
     _hostManagerFlow.value?.start(useBluetooth)
   }
 
+  suspend fun stop() {
+    _connectedClients.value.forEach { it.disconnect() }
+    _connectedClients.value = emptyList()
+    _availableServers.value = emptyList()
+    _connectedServer.value?.disconnect()
+    if (_hostManagerFlow.value != null) _hostManagerFlow.value?.stop()
+    _hostManagerFlow.value = null
+  }
+
   suspend fun connectToServer(server: ClientServer) {
-    server.connect(clientManager)
+    clientManager.connectToServer(server)
   }
 
   fun isConnectedToServer(): Boolean {
