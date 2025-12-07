@@ -14,7 +14,8 @@ class BtClientServerBrowser @Inject constructor(
   @ApplicationContext context: Context,
   sslConfig: SSLConfig,
   private val trustedServers: TrustedServers,
-  parentScope: CoroutineScope
+  parentScope: CoroutineScope,
+  private val btDeviceConnectionReceiver: BtDeviceConnectionReceiver
 ) : ClientServerBrowser(context, sslConfig), BtBrowserListener {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
 
@@ -40,7 +41,7 @@ class BtClientServerBrowser @Inject constructor(
   }
 
   override suspend fun start() {
-    this.browser = BtDeviceConnectionBrowser(context, coroutineScope)
+    this.browser = BtDeviceConnectionBrowser(btDeviceConnectionReceiver)
     browser?.addListener(this)
     browser?.start()
   }
