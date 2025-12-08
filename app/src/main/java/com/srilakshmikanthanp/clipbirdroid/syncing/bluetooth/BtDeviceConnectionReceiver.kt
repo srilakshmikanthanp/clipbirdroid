@@ -2,12 +2,12 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.bluetooth
 
 import android.Manifest
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.ParcelUuid
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -17,20 +17,28 @@ import javax.inject.Singleton
 
 @Singleton
 class BtDeviceConnectionReceiver @Inject constructor(@param:ApplicationContext private val context: Context) : BroadcastReceiver() {
-  private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
   private val devices: MutableSet<BtResolvedDevice> = mutableSetOf()
   private val listeners = mutableSetOf<BtDeviceConnectionListener>()
 
   @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
   private fun handleDeviceConnected(device: BluetoothDevice) {
-    if (bluetoothAdapter?.bondedDevices?.contains(device) != true) return
-    if (!device.uuids.any { it.uuid == BtConstants.serviceUuid }) return
-    this.handleDeviceFound(BtResolvedDevice(device.name ?: device.address, device.address))
+    if (device.uuids?.any { it.uuid == BtConstants.serviceUuid } == true) {
+      this.handleDeviceFound(BtResolvedDevice(device.name ?: device.address, device.address))
+    } else {
+      device.fetchUuidsWithSdp()
+    }
   }
 
   @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
   private fun handleDeviceDisconnected(device: BluetoothDevice) {
     this.handleDeviceRemoved(BtResolvedDevice(device.name ?: device.address, device.address))
+  }
+
+  @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+  private fun handleSdpUuids(device: BluetoothDevice, uuids: Array<ParcelUuid>) {
+    if (uuids.any { it.uuid == BtConstants.serviceUuid }) {
+      this.handleDeviceFound(BtResolvedDevice(device.name ?: device.address, device.address))
+    }
   }
 
   private fun handleDeviceFound(device: BtResolvedDevice) {
@@ -43,11 +51,15 @@ class BtDeviceConnectionReceiver @Inject constructor(@param:ApplicationContext p
 
   @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
   private fun handleIntent(intent: Intent) {
-    intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)?.let {
-      when (intent.action) {
-        BluetoothDevice.ACTION_ACL_CONNECTED -> this.handleDeviceConnected(it)
-        BluetoothDevice.ACTION_ACL_DISCONNECTED -> this.handleDeviceDisconnected(it)
-      }
+    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
+    if (intent.action == BluetoothDevice.ACTION_ACL_DISCONNECTED) {
+      this.handleDeviceDisconnected(device)
+    }
+    if (intent.action == BluetoothDevice.ACTION_UUID) {
+      intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID)?.mapNotNull { it as? ParcelUuid }?.toTypedArray()?.let { this.handleSdpUuids(device, it) }
+    }
+    if (intent.action == BluetoothDevice.ACTION_ACL_CONNECTED) {
+      this.handleDeviceConnected(device)
     }
   }
 
@@ -63,6 +75,7 @@ class BtDeviceConnectionReceiver @Inject constructor(@param:ApplicationContext p
     IntentFilter().apply {
       addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
       addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
+      addAction(BluetoothDevice.ACTION_UUID)
     }.also {
       ContextCompat.registerReceiver(context, this, it, ContextCompat.RECEIVER_EXPORTED)
     }
