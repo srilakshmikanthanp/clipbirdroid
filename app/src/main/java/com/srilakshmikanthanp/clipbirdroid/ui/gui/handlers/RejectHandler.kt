@@ -23,9 +23,8 @@ class RejectHandler : ComponentActivity() {
   override fun onStart() {
     super.onStart()
     val notify = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    val name = intent.getSerializableExtra(ACCEPT_EXTRA) as String
+    val name = intent.getSerializableExtra(REJECT_EXTRA) as String
     val session = syncingManager.getServerClientSessionByName(name).orElseThrow()
-    trustedClients.addTrustedClient(session.name, session.getCertificate())
     coroutineScope.launch { session.sendPacket(AuthenticationPacket(AuthenticationStatus.AuthFail)) }
     notify.cancel(ConnectionRequestNotification.REQUEST_ID)
     this.finish()
