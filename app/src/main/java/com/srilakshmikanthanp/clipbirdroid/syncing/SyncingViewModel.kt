@@ -6,6 +6,8 @@ import com.srilakshmikanthanp.clipbirdroid.ApplicationState
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardContent
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +24,16 @@ class SyncingViewModel @Inject constructor(
     viewModelScope.launch { session.disconnect() }
   }
 
+  private val _errorEvents = MutableSharedFlow<String>()
+  val errorEvents = _errorEvents.asSharedFlow()
+
   fun connectToServer(server: ClientServer) {
-    viewModelScope.launch { syncingManager.connectToServer(server) }
+    viewModelScope.launch {
+      try {
+        syncingManager.connectToServer(server)
+      } catch (e: Exception) {
+        _errorEvents.emit("Failed to connect to server ${server.name}: ${e.message}")
+      }
+    }
   }
 }

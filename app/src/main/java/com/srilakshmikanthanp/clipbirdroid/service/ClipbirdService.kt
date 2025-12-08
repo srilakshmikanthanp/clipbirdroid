@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.ApplicationState
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardManager
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
@@ -23,6 +24,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import okio.IOException
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -49,7 +51,11 @@ class ClipbirdService : Service() {
     this.serviceCoroutineScope.launch {
       syncingManager.disconnectedEvents.collect { server ->
         syncingManager.availableServers.value.firstOrNull { trustedServers.hasTrustedServer(it.name) && it.name != server.name }?.let {
-          syncingManager.connectToServer(it)
+          try {
+            syncingManager.connectToServer(it)
+          } catch (e: IOException) {
+            Log.e(TAG, "Failed to connect to trusted server ${it.name}", e)
+          }
         }
       }
     }
@@ -66,7 +72,13 @@ class ClipbirdService : Service() {
 
     this.serviceCoroutineScope.launch {
       syncingManager.serverFoundEvents.collect {
-        if (trustedServers.hasTrustedServer(it.name) && !syncingManager.isConnectedToServer()) syncingManager.connectToServer(it)
+        if (trustedServers.hasTrustedServer(it.name) && !syncingManager.isConnectedToServer()) {
+          try {
+            syncingManager.connectToServer(it)
+          } catch (e: IOException) {
+            Log.e(TAG, "Failed to connect to trusted server ${it.name}", e)
+          }
+        }
       }
     }
 
@@ -134,5 +146,7 @@ class ClipbirdService : Service() {
         context.stopService(it)
       }
     }
+
+    const val TAG = "ClipbirdService"
   }
 }
