@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import com.srilakshmikanthanp.clipbirdroid.ApplicationState
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardManager
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
@@ -13,7 +14,6 @@ import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.history.ClipboardHistory
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationStatus
-import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServer
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.ConnectionRequestNotification
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.StatusNotification
@@ -54,7 +54,7 @@ class ClipbirdService : Service() {
           try {
             syncingManager.connectToServer(it)
           } catch (e: IOException) {
-            Log.e(TAG, "Failed to connect to trusted server ${it.name}", e)
+            Toast.makeText(this@ClipbirdService, "Failed to connect to trusted server ${it.name}", Toast.LENGTH_SHORT).show()
           }
         }
       }
@@ -76,7 +76,7 @@ class ClipbirdService : Service() {
           try {
             syncingManager.connectToServer(it)
           } catch (e: IOException) {
-            Log.e(TAG, "Failed to connect to trusted server ${it.name}", e)
+            Toast.makeText(this@ClipbirdService, "Failed to connect to trusted server ${it.name}", Toast.LENGTH_SHORT).show()
           }
         }
       }
