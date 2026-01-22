@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServer
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.packets.NetworkPacket
@@ -37,7 +38,7 @@ class BtClientServerSession(
     coroutineScope.launch {
       trustedServers.trustedServers.collect {
         if (btSession?.isHandshakeCompleted() == true) {
-          _isTrusted.value = trustedServers.isTrustedServer(name, getCertificate())
+          _isTrusted.value = trustedServers.isTrustedServer(TrustedServer(name, getCertificate()))
         }
       }
     }
@@ -78,8 +79,10 @@ class BtClientServerSession(
   }
 
   override fun onHandShakeCompleted(btSession: BtSession) {
-    _isTrusted.value = trustedServers.isTrustedServer(name, getCertificate())
-    listener.onConnected(this)
+    coroutineScope.launch {
+      _isTrusted.value = trustedServers.isTrustedServer(TrustedServer(name, getCertificate()))
+      listener.onConnected(this@BtClientServerSession)
+    }
   }
 
   override fun onDisconnected(btSession: BtSession) {

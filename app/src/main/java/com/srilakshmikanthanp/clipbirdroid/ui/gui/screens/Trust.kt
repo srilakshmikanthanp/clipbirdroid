@@ -19,7 +19,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
+import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClient
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedDevicesViewModel
+import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServer
 import com.srilakshmikanthanp.clipbirdroid.syncing.Session
 import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingViewModel
 import java.security.MessageDigest
@@ -124,7 +126,7 @@ fun TrustedDeviceRow(
 
 @Composable
 private fun TrustedServerList(
-  servers: Map<String, X509Certificate>,
+  servers: List<TrustedServer>,
   remove: (String) -> Unit,
 ) {
   Column(
@@ -143,11 +145,11 @@ private fun TrustedServerList(
       verticalArrangement = Arrangement.spacedBy(12.dp),
       contentPadding = PaddingValues(bottom = 10.dp)
     ) {
-      items(servers.toList(), key = { it.first }) { (name, cert) ->
+      items(servers.toList(), key = { it.name }) {
         TrustedDeviceRow(
-          name = name,
-          cert = cert,
-          remove = { remove(name) }
+          name = it.name,
+          cert = it.certificate,
+          remove = { remove(it.name) }
         )
       }
     }
@@ -156,7 +158,7 @@ private fun TrustedServerList(
 
 @Composable
 private fun TrustedClientList(
-  clients: Map<String, X509Certificate>,
+  clients: List<TrustedClient>,
   remove: (String) -> Unit
 ) {
   if (clients.isEmpty()) {
@@ -169,8 +171,8 @@ private fun TrustedClientList(
     contentPadding = PaddingValues(10.dp),
     verticalArrangement = Arrangement.spacedBy(12.dp)
   ) {
-    items(clients.toList()) { (name, cert) ->
-      TrustedDeviceRow(name = name, cert = cert, remove = { remove(name) })
+    items(clients.toList()) {
+      TrustedDeviceRow(name = it.name, cert = it.certificate, remove = { remove(it.name) })
     }
   }
 }
@@ -181,8 +183,8 @@ fun TrustedDevices(
   trustedDevicesViewModel: TrustedDevicesViewModel = hiltViewModel(),
   onMenuClick: () -> Unit = {}
 ) {
-  val trustedServers by trustedDevicesViewModel.trustedServersFlow.collectAsState()
-  val trustedClients by trustedDevicesViewModel.trustedClientsFlow.collectAsState()
+  val trustedServers by trustedDevicesViewModel.trustedServersFlow.collectAsState(emptyList())
+  val trustedClients by trustedDevicesViewModel.trustedClientsFlow.collectAsState(emptyList())
 
   var tabIndex by remember { mutableIntStateOf(0) }
 

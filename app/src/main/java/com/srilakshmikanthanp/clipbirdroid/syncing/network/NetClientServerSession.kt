@@ -2,6 +2,7 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.network
 
 import com.srilakshmikanthanp.clipbirdroid.common.extensions.awaitSuspend
 import com.srilakshmikanthanp.clipbirdroid.common.trust.ClipbirdAllTrustManager
+import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServer
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constants.appMaxIdleReadTime
@@ -89,13 +90,13 @@ class NetClientServerSession(
     coroutineScope.launch {
       trustedServers.trustedServers.collect {
         if (channel != null) {
-          _isTrusted.value = trustedServers.isTrustedServer(name, getCertificate())
+          _isTrusted.value = trustedServers.isTrustedServer(TrustedServer(name, getCertificate()))
         }
       }
     }
   }
 
-  private fun onSSLHandShakeComplete(ctx: ChannelHandlerContext, evt: SslHandshakeCompletionEvent) {
+  private suspend fun onSSLHandShakeComplete(ctx: ChannelHandlerContext, evt: SslHandshakeCompletionEvent) {
     if (!evt.isSuccess) ctx.close().also { return }
     val ssl = ctx.channel().pipeline().get(SslHandler::class.java) as SslHandler
     if (ssl.engine().session.peerCertificates.isEmpty()) ctx.close().also { return }
@@ -108,7 +109,7 @@ class NetClientServerSession(
     this.certificate = peerCert
     ctx.channel().attr(deviceName).set(name)
     listener.onConnected(this)
-    this._isTrusted.value = trustedServers.isTrustedServer(name, peerCert)
+    this._isTrusted.value = trustedServers.isTrustedServer(TrustedServer(name, peerCert))
   }
 
   private fun onIdleStateEvent(ctx: ChannelHandlerContext, evt: IdleStateEvent) {
@@ -157,7 +158,7 @@ class NetClientServerSession(
 
   override fun userEventTriggered(ctx: ChannelHandlerContext, evt: Any?) {
     if (evt is SslHandshakeCompletionEvent) {
-      this.onSSLHandShakeComplete(ctx, evt)
+      coroutineScope.launch { this@NetClientServerSession.onSSLHandShakeComplete(ctx, evt) }
     }
 
     if (evt is IdleStateEvent) {

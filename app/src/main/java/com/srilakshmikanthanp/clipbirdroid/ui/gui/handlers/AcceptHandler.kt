@@ -2,6 +2,8 @@ package com.srilakshmikanthanp.clipbirdroid.ui.gui.handlers
 
 import android.app.NotificationManager
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClient
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationStatus
@@ -18,14 +20,18 @@ class AcceptHandler : ComponentActivity() {
   @Inject lateinit var trustedClients: TrustedClients
   @Inject lateinit var coroutineScope: CoroutineScope
 
+  private suspend fun handle(name: String) {
+    val session = syncingManager.getServerClientSessionByName(name).orElseThrow()
+    trustedClients.addTrustedClient(TrustedClient(session.name, session.getCertificate()))
+    session.sendPacket(AuthenticationPacket(AuthenticationStatus.AuthOkay))
+    val notify = this.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    notify.cancel(ConnectionRequestNotification.REQUEST_ID)
+  }
+
   override fun onStart() {
     super.onStart()
-    val notify = this.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     val name = intent.getSerializableExtra(ACCEPT_EXTRA) as String
-    val session = syncingManager.getServerClientSessionByName(name).orElseThrow()
-    trustedClients.addTrustedClient(session.name, session.getCertificate())
-    coroutineScope.launch { session.sendPacket(AuthenticationPacket(AuthenticationStatus.AuthOkay)) }
-    notify.cancel(ConnectionRequestNotification.REQUEST_ID)
+    coroutineScope.launch { handle(name) }
     this.finish()
   }
 

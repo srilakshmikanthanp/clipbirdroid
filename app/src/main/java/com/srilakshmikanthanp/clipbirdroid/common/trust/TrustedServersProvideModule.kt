@@ -1,6 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid.common.trust
 
 import android.content.Context
+import com.srilakshmikanthanp.clipbirdroid.common.database.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,7 +12,7 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 class TrustedServersProvideModule {
   @Provides
-  fun provideTrustedServers(@ApplicationContext context: Context): TrustedServers {
-    return TrustedServersPreference(context)
+  fun provideTrustedServers(appDatabase: AppDatabase): TrustedServers {
+    return TrustedServersRoom(appDatabase.trustedServerDao())
   }
 }
