@@ -17,8 +17,4 @@ interface ApplicationState {
 
   fun setIsServer(isServer: Boolean)
   fun getIsServer(): Boolean
-
-  fun setPrimaryServer(name: String)
-  fun getPrimaryServer(): String?
-  val primaryServerFlow: StateFlow<String?>
 }
