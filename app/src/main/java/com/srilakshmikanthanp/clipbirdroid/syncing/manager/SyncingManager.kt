@@ -204,8 +204,13 @@ class SyncingManager @Inject constructor(
   }
 
   suspend fun connectToServer(server: ClientServer) {
-    _serverState.value = ClientServerConnectionState.Connecting(server)
-    clientManager.connectToServer(server)
+    try {
+      _serverState.value = ClientServerConnectionState.Connecting(server)
+      clientManager.connectToServer(server)
+    } catch (e: Exception) {
+      _serverState.value = ClientServerConnectionState.Idle
+      throw e
+    }
   }
 
   fun isConnectedToServer(): Boolean {

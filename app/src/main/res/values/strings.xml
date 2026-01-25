@@ -81,4 +81,5 @@ s
   <string name="trusted_clients">Trusted Members</string>
   <string name="trusted_devices">Trust</string>
   <string name="add_to_trust_device">Add To Trusted Groups</string>
+    <string name="mark_as_primary_server">Mark as Primary Server</string>
 </resources>

@@ -3,17 +3,20 @@ package com.srilakshmikanthanp.clipbirdroid.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import com.srilakshmikanthanp.clipbirdroid.ApplicationState
+import com.srilakshmikanthanp.clipbirdroid.broadcast.DeviceUnlockedHandler
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardManager
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.history.ClipboardHistory
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationStatus
+import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServer
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.ClientServerConnectionState
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.ConnectionRequestNotification
@@ -31,6 +34,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ClipbirdService : Service() {
   private val serviceCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+  private val deviceUnlockedReceiver = DeviceUnlockedHandler()
 
   private lateinit var connectionRequestNotification: ConnectionRequestNotification
   private lateinit var notification: StatusNotification
@@ -48,15 +52,25 @@ class ClipbirdService : Service() {
 
   val binder = ClipbirdBinder()
 
+  private suspend fun connect(server: ClientServer) {
+    try {
+      syncingManager.connectToServer(server)
+    } catch (e: IOException) {
+      Toast.makeText(this@ClipbirdService, "Failed to connect to trusted server ${server.name}", Toast.LENGTH_SHORT).show()
+    }
+  }
+
   private fun initialize() {
+    this.connectionRequestNotification = ConnectionRequestNotification(this)
+    this.notification = StatusNotification(this)
+
     this.serviceCoroutineScope.launch {
       syncingManager.serverFoundEvents.collect {
-        if (syncingManager.serverState.value == ClientServerConnectionState.Idle && trustedServers.hasTrustedServer(it.name)) {
-          try {
-            syncingManager.connectToServer(it)
-          } catch (e: IOException) {
-            Toast.makeText(this@ClipbirdService, "Failed to connect to trusted server ${it.name}", Toast.LENGTH_SHORT).show()
-          }
+        if (
+          syncingManager.serverState.value == ClientServerConnectionState.Idle &&
+          trustedServers.hasTrustedServer(it.name)
+        ) {
+          connect(it)
         }
       }
     }
@@ -88,7 +102,10 @@ class ClipbirdService : Service() {
     }
 
     this.serviceCoroutineScope.launch {
-      combine(applicationState.shouldUseBluetoothFlow, applicationState.isServerFlow) {
+      combine(
+        applicationState.shouldUseBluetoothFlow,
+        applicationState.isServerFlow
+      ) {
         useBluetooth, isServer -> isServer to useBluetooth
       }.collect { (isServer, useBluetooth) ->
         if (isServer) {
@@ -98,22 +115,42 @@ class ClipbirdService : Service() {
         }
       }
     }
+
+    registerReceiver(
+      deviceUnlockedReceiver,
+      IntentFilter(Intent.ACTION_USER_PRESENT)
+    )
+
+    this.showStatusNotification()
   }
 
   override fun onCreate() {
     super.onCreate()
-    this.connectionRequestNotification = ConnectionRequestNotification(this)
-    this.notification = StatusNotification(this)
     this.initialize()
-    this.showStatusNotification()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    if (intent?.action == ACTION_DEVICE_UNLOCKED) {
+      this.serviceCoroutineScope.launch {
+        syncingManager.availableServers.collect { servers ->
+          servers.forEach {
+            if (
+              syncingManager.serverState.value == ClientServerConnectionState.Idle &&
+              trustedServers.hasTrustedServer(it.name) &&
+              applicationState.getPrimaryServer() == it.name
+            ) {
+              connect(it)
+            }
+          }
+        }
+      }
+    }
     return START_STICKY
   }
 
   override fun onDestroy() {
     super.onDestroy()
+    unregisterReceiver(deviceUnlockedReceiver)
     this.serviceCoroutineScope.cancel()
   }
 
@@ -136,6 +173,6 @@ class ClipbirdService : Service() {
       }
     }
 
-    const val TAG = "ClipbirdService"
+    const val ACTION_DEVICE_UNLOCKED = "com.srilakshmikanthanp.clipbirdroid.DEVICE_UNLOCKED"
   }
 }

@@ -7,6 +7,7 @@ interface ApplicationState {
   val hostSslConfigFlow: StateFlow<SSLConfig?>
   val shouldUseBluetoothFlow: StateFlow<Boolean>
   val isServerFlow: StateFlow<Boolean>
+  val primaryServerFlow: StateFlow<String?>
 
   fun setHostSslConfig(sslConfig: SSLConfig)
   fun removeSslConfig()
@@ -17,4 +18,8 @@ interface ApplicationState {
 
   fun setIsServer(isServer: Boolean)
   fun getIsServer(): Boolean
+
+  fun setPrimaryServer(name: String)
+  fun removePrimaryServer()
+  fun getPrimaryServer(): String?
 }

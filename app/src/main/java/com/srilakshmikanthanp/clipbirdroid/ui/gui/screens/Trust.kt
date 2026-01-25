@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,12 +18,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.srilakshmikanthanp.clipbirdroid.ApplicationStateViewModel
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClient
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedDevicesViewModel
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServer
-import com.srilakshmikanthanp.clipbirdroid.syncing.Session
-import com.srilakshmikanthanp.clipbirdroid.syncing.SyncingViewModel
 import java.security.MessageDigest
 import java.security.cert.X509Certificate
 import kotlin.collections.toList
@@ -56,7 +55,8 @@ private fun EmptyTrustedState(message: String) {
 private fun DeviceRow(
   name: String,
   cert: X509Certificate,
-  trailing: @Composable () -> Unit
+  leading: @Composable () -> Unit = {},
+  trailing: @Composable () -> Unit = {}
 ) {
   val fingerprint = remember(cert) { sha256Fingerprint(cert) }
   var showDialog by remember { mutableStateOf(false) }
@@ -80,6 +80,7 @@ private fun DeviceRow(
   }
 
   ListItem(
+    leadingContent = leading,
     headlineContent = {
       Text(
         text = name,
@@ -104,29 +105,11 @@ private fun DeviceRow(
 }
 
 @Composable
-fun TrustedDeviceRow(
-  name: String,
-  cert: X509Certificate,
-  remove: () -> Unit
-) {
-  DeviceRow(
-    name = name,
-    cert = cert,
-    trailing = {
-      IconButton(onClick = remove) {
-        Icon(
-          Icons.Default.Delete,
-          contentDescription = stringResource(R.string.remove),
-          tint = MaterialTheme.colorScheme.error
-        )
-      }
-    }
-  )
-}
-
-@Composable
 private fun TrustedServerList(
   servers: List<TrustedServer>,
+  primaryServer: String?,
+  onPrimaryServer: (String) -> Unit,
+  removePrimaryServer: () -> Unit,
   remove: (String) -> Unit,
 ) {
   Column(
@@ -145,11 +128,28 @@ private fun TrustedServerList(
       verticalArrangement = Arrangement.spacedBy(12.dp),
       contentPadding = PaddingValues(bottom = 10.dp)
     ) {
-      items(servers.toList(), key = { it.name }) {
-        TrustedDeviceRow(
+      items(servers.toList()) {
+        DeviceRow(
           name = it.name,
           cert = it.certificate,
-          remove = { remove(it.name) }
+          leading = {
+            IconButton(onClick = { if (it.name == primaryServer) removePrimaryServer() else onPrimaryServer(it.name) }) {
+              Icon(
+                imageVector = Icons.Default.Bolt,
+                contentDescription = "Set as primary",
+                tint = if (primaryServer == it.name) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            }
+          },
+          trailing = {
+            IconButton(onClick = { remove(it.name) }) {
+              Icon(
+                Icons.Default.Delete,
+                contentDescription = stringResource(R.string.remove),
+                tint = MaterialTheme.colorScheme.error
+              )
+            }
+          }
         )
       }
     }
@@ -171,8 +171,20 @@ private fun TrustedClientList(
     contentPadding = PaddingValues(10.dp),
     verticalArrangement = Arrangement.spacedBy(12.dp)
   ) {
-    items(clients.toList()) {
-      TrustedDeviceRow(name = it.name, cert = it.certificate, remove = { remove(it.name) })
+    items(clients.toList(), key = { it.name }) {
+      DeviceRow(
+        name = it.name,
+        cert = it.certificate,
+        trailing = {
+          IconButton(onClick = { remove(it.name) }) {
+            Icon(
+              Icons.Default.Delete,
+              contentDescription = stringResource(R.string.remove),
+              tint = MaterialTheme.colorScheme.error
+            )
+          }
+        }
+      )
     }
   }
 }
@@ -180,11 +192,14 @@ private fun TrustedClientList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrustedDevices(
+  applicationStateViewModel: ApplicationStateViewModel = hiltViewModel(),
   trustedDevicesViewModel: TrustedDevicesViewModel = hiltViewModel(),
   onMenuClick: () -> Unit = {}
 ) {
   val trustedServers by trustedDevicesViewModel.trustedServersFlow.collectAsState(emptyList())
   val trustedClients by trustedDevicesViewModel.trustedClientsFlow.collectAsState(emptyList())
+
+  val primaryServer by applicationStateViewModel.applicationState.primaryServerFlow.collectAsState()
 
   var tabIndex by remember { mutableIntStateOf(0) }
 
@@ -244,6 +259,9 @@ fun TrustedDevices(
       when (tabIndex) {
         0 -> TrustedServerList(
           servers = trustedServers,
+          primaryServer = primaryServer,
+          onPrimaryServer = { applicationStateViewModel.applicationState.setPrimaryServer(it) },
+          removePrimaryServer = { applicationStateViewModel.applicationState.removePrimaryServer() },
           remove = { trustedDevicesViewModel.removeTrustedServer(it) },
         )
 

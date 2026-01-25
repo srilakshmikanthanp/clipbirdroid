@@ -30,6 +30,9 @@ class ApplicationStatePreference(context: Context): SharedPreferences.OnSharedPr
   private val _isServerFlow = MutableStateFlow(getIsServer())
   override val isServerFlow: StateFlow<Boolean> = _isServerFlow.asStateFlow()
 
+  private val _primaryServerFlow = MutableStateFlow(storagePreference.getString(PRIMARY_SERVER, null))
+  override val primaryServerFlow: StateFlow<String?> = _primaryServerFlow.asStateFlow()
+
   companion object {
     private const val IS_SERVER = "IS_SERVER"
     private const val SHOULD_USE_BLUETOOTH = "SHOULD_USE_BLUETOOTH"
@@ -83,11 +86,24 @@ class ApplicationStatePreference(context: Context): SharedPreferences.OnSharedPr
     return storagePreference.getBoolean(IS_SERVER, false)
   }
 
+  override fun setPrimaryServer(name: String) {
+    storagePreference.edit() { putString(PRIMARY_SERVER, name) }
+  }
+
+  override fun getPrimaryServer(): String? {
+    return storagePreference.getString(PRIMARY_SERVER, null)
+  }
+
+  override fun removePrimaryServer() {
+    storagePreference.edit() { remove(PRIMARY_SERVER) }
+  }
+
   override fun onSharedPreferenceChanged(preference: SharedPreferences?, key: String?) {
     when (key) {
       HOST_SSL -> _hostSslConfigFlow.value = getHostSslConfig()
       SHOULD_USE_BLUETOOTH -> _shouldUseBluetoothFlow.value = shouldUseBluetooth()
       IS_SERVER -> _isServerFlow.value = getIsServer()
+      PRIMARY_SERVER -> _primaryServerFlow.value = getPrimaryServer()
     }
   }
 }
