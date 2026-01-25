@@ -129,21 +129,23 @@ class ClipbirdService : Service() {
     this.initialize()
   }
 
-  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    if (intent?.action == ACTION_DEVICE_UNLOCKED) {
-      this.serviceCoroutineScope.launch {
-        syncingManager.availableServers.collect { servers ->
-          servers.forEach {
-            if (
-              syncingManager.serverState.value == ClientServerConnectionState.Idle &&
-              trustedServers.hasTrustedServer(it.name) &&
-              applicationState.getPrimaryServer() == it.name
-            ) {
-              connect(it)
-            }
-          }
+  private suspend fun handleDeviceUnlocked() {
+    syncingManager.availableServers.collect { servers ->
+      servers.forEach {
+        if (
+          syncingManager.serverState.value == ClientServerConnectionState.Idle &&
+          trustedServers.hasTrustedServer(it.name) &&
+          applicationState.getPrimaryServer() == it.name
+        ) {
+          connect(it)
         }
       }
+    }
+  }
+
+  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    if (intent?.action == ACTION_DEVICE_UNLOCKED) {
+      this.serviceCoroutineScope.launch { handleDeviceUnlocked() }
     }
     return START_STICKY
   }
