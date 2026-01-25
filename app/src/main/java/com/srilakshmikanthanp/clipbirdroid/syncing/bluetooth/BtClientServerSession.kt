@@ -29,7 +29,7 @@ class BtClientServerSession(
   private val context: Context,
   private val listener: ClientServerSessionEventListener,
   parentScope: CoroutineScope
-): Session(btResolvedDevice.name), BtConnectionListener {
+): Session(btResolvedDevice.name), BtSessionListener {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
   private var btSession: BtSession? = null
@@ -45,13 +45,9 @@ class BtClientServerSession(
   }
 
   private suspend fun connect(socket: BluetoothSocket) = withContext(Dispatchers.IO) {
-    try {
-      socket.connect()
-      this@BtClientServerSession.btSession = BtSession(this@BtClientServerSession, coroutineScope, socket, sslConfig)
-      this@BtClientServerSession.btSession!!.start()
-    } catch (e: IOException) {
-      listener.onError(this@BtClientServerSession, e)
-    }
+    socket.connect()
+    this@BtClientServerSession.btSession = BtSession(this@BtClientServerSession, coroutineScope, socket, sslConfig)
+    this@BtClientServerSession.btSession!!.start()
   }
 
   override suspend fun sendPacket(packet: NetworkPacket) {

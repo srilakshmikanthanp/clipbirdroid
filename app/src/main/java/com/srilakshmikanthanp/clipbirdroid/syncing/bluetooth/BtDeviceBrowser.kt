@@ -3,12 +3,16 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.bluetooth
 import android.annotation.SuppressLint
 
 @SuppressLint("MissingPermission")
-class BtDeviceConnectionBrowser(private val btDeviceConnectionReceiver: BtDeviceConnectionReceiver) : BtBrowser, BtDeviceConnectionListener {
+class BtDeviceBrowser(private val btDeviceBrowserReceiver: BtDeviceBrowserReceiver) : BtBrowser, BtDeviceBrowserListener {
   private val listeners = mutableSetOf<BtBrowserListener>()
   private val servers: MutableSet<BtResolvedDevice> = mutableSetOf()
 
   private fun handleDeviceFound(device: BtResolvedDevice) {
     if (servers.add(device)) listeners.forEach { it.onServiceAdded(device) }
+  }
+
+  init {
+    btDeviceBrowserReceiver.addListener(this)
   }
 
   private fun handleDeviceRemoved(device: BtResolvedDevice) {
@@ -24,21 +28,22 @@ class BtDeviceConnectionBrowser(private val btDeviceConnectionReceiver: BtDevice
   }
 
   override fun start() {
-    this.btDeviceConnectionReceiver.addListener(this)
+    this.btDeviceBrowserReceiver.start()
+    servers.clear()
     listeners.forEach { it.onBrowsingStarted() }
   }
 
   override fun stop() {
-    this.btDeviceConnectionReceiver.removeListener(this)
+    this.btDeviceBrowserReceiver.stop()
     servers.clear()
     listeners.forEach { it.onBrowsingStopped() }
   }
 
-  override fun onDeviceConnected(device: BtResolvedDevice) {
+  override fun onDeviceFound(device: BtResolvedDevice) {
     this.handleDeviceFound(device)
   }
 
-  override fun onDeviceDisconnected(device: BtResolvedDevice) {
+  override fun onDeviceGone(device: BtResolvedDevice) {
     this.handleDeviceRemoved(device)
   }
 }

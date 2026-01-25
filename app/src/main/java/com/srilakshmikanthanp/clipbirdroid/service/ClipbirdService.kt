@@ -14,6 +14,7 @@ import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.history.ClipboardHistory
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationStatus
+import com.srilakshmikanthanp.clipbirdroid.syncing.manager.ClientServerConnectionState
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.ConnectionRequestNotification
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.StatusNotification
@@ -49,30 +50,8 @@ class ClipbirdService : Service() {
 
   private fun initialize() {
     this.serviceCoroutineScope.launch {
-      syncingManager.disconnectedEvents.collect { server ->
-        syncingManager.availableServers.value.firstOrNull { trustedServers.hasTrustedServer(it.name) && it.name != server.name }?.let {
-          try {
-            syncingManager.connectToServer(it)
-          } catch (e: IOException) {
-            Toast.makeText(this@ClipbirdService, "Failed to connect to trusted server ${it.name}", Toast.LENGTH_SHORT).show()
-          }
-        }
-      }
-    }
-
-    syncingManager.addSyncRequestHandler {
-      clipboardHistory.addHistory(it)
-    }
-
-    this.serviceCoroutineScope.launch {
-      clipboardHistory.clipboard.collect {
-        clipboardManager.getClipboard().setClipboardContent(it)
-      }
-    }
-
-    this.serviceCoroutineScope.launch {
       syncingManager.serverFoundEvents.collect {
-        if (trustedServers.hasTrustedServer(it.name) && !syncingManager.isConnectedToServer()) {
+        if (syncingManager.serverState.value == ClientServerConnectionState.Idle && trustedServers.hasTrustedServer(it.name)) {
           try {
             syncingManager.connectToServer(it)
           } catch (e: IOException) {
@@ -89,6 +68,16 @@ class ClipbirdService : Service() {
         } else {
           connectionRequestNotification.showJoinRequest(it)
         }
+      }
+    }
+
+    syncingManager.addSyncRequestHandler {
+      clipboardHistory.addHistory(it)
+    }
+
+    this.serviceCoroutineScope.launch {
+      clipboardHistory.clipboard.collect {
+        clipboardManager.getClipboard().setClipboardContent(it)
       }
     }
 

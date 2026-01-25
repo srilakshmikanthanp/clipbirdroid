@@ -30,7 +30,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 @OptIn(ExperimentalAtomicApi::class)
 @SuppressLint("MissingPermission")
 class BtSession(
-  private val listener: BtConnectionListener,
+  private val listener: BtSessionListener,
   parentScope: CoroutineScope,
   private val socket: BluetoothSocket,
   private val sslConfig: SSLConfig,

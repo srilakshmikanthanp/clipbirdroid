@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothServerSocket
 import android.content.Context
-import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName
@@ -27,7 +26,7 @@ class BtServer @Inject constructor(
   sslConfig: SSLConfig,
   private val trustedClients: TrustedClients,
   parentScope: CoroutineScope
-): Server(context, sslConfig), BtConnectionListener {
+): Server(context, sslConfig), BtSessionListener {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
   private val clients = mutableMapOf<String, BtSession>()

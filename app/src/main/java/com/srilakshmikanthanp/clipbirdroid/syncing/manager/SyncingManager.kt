@@ -8,11 +8,13 @@ import com.srilakshmikanthanp.clipbirdroid.syncing.Synchronizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.Optional
 import javax.inject.Inject
@@ -30,20 +32,22 @@ class SyncingManager @Inject constructor(
   private val _hostManagerFlow = MutableStateFlow<HostManager?>(null)
   val hostManager: StateFlow<HostManager?> = _hostManagerFlow.asStateFlow()
 
-  private val _availableServers: MutableStateFlow<List<ClientServer>> = MutableStateFlow(emptyList())
+  private val _availableServers: MutableStateFlow<Set<ClientServer>> = MutableStateFlow(emptySet())
   val availableServers = _availableServers.asStateFlow()
 
   private val _connectedClients: MutableStateFlow<List<Session>> = MutableStateFlow(emptyList())
   val connectedClients = _connectedClients.asStateFlow()
 
-  private val _connectedServer: MutableStateFlow<Session?> = MutableStateFlow(null)
-  val connectedServer: StateFlow<Session?> = _connectedServer.asStateFlow()
+  private val _serverState: MutableStateFlow<ClientServerConnectionState> = MutableStateFlow(ClientServerConnectionState.Idle)
+  val serverState: StateFlow<ClientServerConnectionState> = _serverState.asStateFlow()
+
+  val connectedServer: Flow<Session?> = _serverState.map { if (it is ClientServerConnectionState.Connected) it.session else null }
 
   private val _serverFoundEvents = MutableSharedFlow<ClientServer>()
   var serverFoundEvents = _serverFoundEvents.asSharedFlow()
 
   override fun onServerFound(server: ClientServer) {
-    _availableServers.value = _availableServers.value + server
+    _availableServers.value += server
     coroutineScope.launch { _serverFoundEvents.emit(server) }
   }
 
@@ -51,7 +55,7 @@ class SyncingManager @Inject constructor(
   var serverGoneEvents = _serverGoneEvents.asSharedFlow()
 
   override fun onServerGone(server: ClientServer) {
-    _availableServers.value = _availableServers.value - server
+    _availableServers.value -= server
     coroutineScope.launch { _serverGoneEvents.emit(server) }
   }
 
@@ -84,7 +88,7 @@ class SyncingManager @Inject constructor(
   val connectedEvents = _connectedEvents.asSharedFlow()
 
   override fun onConnected(session: Session) {
-    this._connectedServer.value = session
+    this._serverState.value = ClientServerConnectionState.Connected(session)
     coroutineScope.launch { _connectedEvents.emit(session) }
   }
 
@@ -92,7 +96,7 @@ class SyncingManager @Inject constructor(
   val disconnectedEvents = _disconnectedEvents.asSharedFlow()
 
   override fun onDisconnected(session: Session) {
-    this._connectedServer.value = null
+    this._serverState.value = ClientServerConnectionState.Idle
     coroutineScope.launch { _disconnectedEvents.emit(session) }
   }
 
@@ -114,7 +118,7 @@ class SyncingManager @Inject constructor(
   val clientDisconnectedEvents = _clientDisconnectedEvents.asSharedFlow()
 
   override fun onClientDisConnected(session: Session) {
-    _connectedClients.value = _connectedClients.value - session
+    _connectedClients.value -= session
     coroutineScope.launch { _clientDisconnectedEvents.emit(session) }
   }
 
@@ -122,7 +126,7 @@ class SyncingManager @Inject constructor(
   val clientConnectedEvents = _clientConnectedEvents.asSharedFlow()
 
   override fun onClientConnected(session: Session) {
-    _connectedClients.value = _connectedClients.value + session
+    _connectedClients.value += session
     coroutineScope.launch { _clientConnectedEvents.emit(session) }
   }
 
@@ -190,20 +194,22 @@ class SyncingManager @Inject constructor(
   }
 
   suspend fun stop() {
+    val serverStateValue = _serverState.value
     _connectedClients.value.forEach { it.disconnect() }
     _connectedClients.value = emptyList()
-    _availableServers.value = emptyList()
-    _connectedServer.value?.disconnect()
+    _availableServers.value = emptySet()
+    if (serverStateValue is ClientServerConnectionState.Connected) serverStateValue.session.disconnect()
     if (_hostManagerFlow.value != null) _hostManagerFlow.value?.stop()
     _hostManagerFlow.value = null
   }
 
   suspend fun connectToServer(server: ClientServer) {
+    _serverState.value = ClientServerConnectionState.Connecting(server)
     clientManager.connectToServer(server)
   }
 
   fun isConnectedToServer(): Boolean {
-    return _connectedServer.value != null
+    return _serverState.value is ClientServerConnectionState.Connected
   }
 
   fun getClientServerByName(name: String): Optional<ClientServer> {

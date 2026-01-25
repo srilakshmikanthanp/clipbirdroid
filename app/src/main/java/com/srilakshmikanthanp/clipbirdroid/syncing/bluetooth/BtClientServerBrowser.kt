@@ -15,12 +15,15 @@ class BtClientServerBrowser @Inject constructor(
   sslConfig: SSLConfig,
   private val trustedServers: TrustedServers,
   parentScope: CoroutineScope,
-  private val btDeviceConnectionReceiver: BtDeviceConnectionReceiver
+  private val btDeviceBrowserReceiver: BtDeviceBrowserReceiver
 ) : ClientServerBrowser(context, sslConfig), BtBrowserListener {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
-
   private val clientServers: MutableMap<BtResolvedDevice, BtClientServer> = mutableMapOf()
-  private var browser: BtDeviceConnectionBrowser? = null
+  private var browser: BtDeviceBrowser = BtDeviceBrowser(btDeviceBrowserReceiver)
+
+  init {
+    browser.addListener(this)
+  }
 
   override fun onServiceRemoved(device: BtResolvedDevice) {
     super.clientEventListeners.forEach { it.onServerGone(clientServers[device]!!) }
@@ -41,12 +44,10 @@ class BtClientServerBrowser @Inject constructor(
   }
 
   override suspend fun start() {
-    this.browser = BtDeviceConnectionBrowser(btDeviceConnectionReceiver)
-    browser?.addListener(this)
-    browser?.start()
+    browser.start()
   }
 
   override suspend fun stop() {
-    browser?.stop()
+    browser.stop()
   }
 }
