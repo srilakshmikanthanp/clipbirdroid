@@ -6,17 +6,16 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import android.widget.Toast
 import com.srilakshmikanthanp.clipbirdroid.ApplicationState
 import com.srilakshmikanthanp.clipbirdroid.broadcast.DeviceUnlockedHandler
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardManager
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
+import com.srilakshmikanthanp.clipbirdroid.common.utility.Connector
 import com.srilakshmikanthanp.clipbirdroid.history.ClipboardHistory
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationStatus
-import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServer
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.ClientServerConnectionState
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.notification.ConnectionRequestNotification
@@ -32,7 +31,7 @@ import okio.IOException
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class ClipbirdService : Service() {
+class ClipbirdService @Inject constructor() : Service() {
   private val serviceCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
   private val deviceUnlockedReceiver = DeviceUnlockedHandler()
 
@@ -45,6 +44,7 @@ class ClipbirdService : Service() {
   @Inject lateinit var applicationState: ApplicationState
   @Inject lateinit var trustedClients: TrustedClients
   @Inject lateinit var trustedServers: TrustedServers
+  @Inject lateinit var connector: Connector
 
   inner class ClipbirdBinder : Binder() {
     fun getService(): ClipbirdService = this@ClipbirdService
@@ -52,25 +52,18 @@ class ClipbirdService : Service() {
 
   val binder = ClipbirdBinder()
 
-  private suspend fun connect(server: ClientServer) {
-    try {
-      syncingManager.connectToServer(server)
-    } catch (e: IOException) {
-      Toast.makeText(this@ClipbirdService, "Failed to connect to trusted server ${server.name}", Toast.LENGTH_SHORT).show()
-    }
-  }
-
   private fun initialize() {
     this.connectionRequestNotification = ConnectionRequestNotification(this)
     this.notification = StatusNotification(this)
 
     this.serviceCoroutineScope.launch {
       syncingManager.serverFoundEvents.collect {
-        if (
-          syncingManager.serverState.value == ClientServerConnectionState.Idle &&
-          trustedServers.hasTrustedServer(it.name)
-        ) {
-          connect(it)
+        if (syncingManager.serverState.value == ClientServerConnectionState.Idle && trustedServers.hasTrustedServer(it.name)) {
+          try {
+            syncingManager.connectToServer(it)
+          } catch (_: IOException) {
+            Toast.makeText(this@ClipbirdService, "Failed to connect to trusted server ${it.name}", Toast.LENGTH_SHORT).show()
+          }
         }
       }
     }
@@ -121,7 +114,12 @@ class ClipbirdService : Service() {
       IntentFilter(Intent.ACTION_USER_PRESENT)
     )
 
+    this.connector.schedule()
     this.showStatusNotification()
+  }
+
+  fun showStatusNotification() {
+    notification.showStatusNotification(this)
   }
 
   override fun onCreate() {
@@ -129,23 +127,9 @@ class ClipbirdService : Service() {
     this.initialize()
   }
 
-  private suspend fun handleDeviceUnlocked() {
-    syncingManager.availableServers.collect { servers ->
-      servers.forEach {
-        if (
-          syncingManager.serverState.value == ClientServerConnectionState.Idle &&
-          trustedServers.hasTrustedServer(it.name) &&
-          applicationState.getPrimaryServer() == it.name
-        ) {
-          connect(it)
-        }
-      }
-    }
-  }
-
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     if (intent?.action == ACTION_DEVICE_UNLOCKED) {
-      this.serviceCoroutineScope.launch { handleDeviceUnlocked() }
+      this.serviceCoroutineScope.launch { connector.reset() }
     }
     return START_STICKY
   }
@@ -157,10 +141,6 @@ class ClipbirdService : Service() {
   }
 
   override fun onBind(intent: Intent?): IBinder = binder
-
-  fun showStatusNotification() {
-    notification.showStatusNotification(this)
-  }
 
   companion object {
     fun start(context: Context) {
