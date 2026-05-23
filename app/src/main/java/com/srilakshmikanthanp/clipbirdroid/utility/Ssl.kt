@@ -12,6 +12,8 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import java.security.KeyPair
 import java.security.KeyPairGenerator
+import java.security.MessageDigest
+import java.security.cert.X509Certificate
 import java.util.Date
 
 fun generateRSAKeyPair(bits: Int = 2048): KeyPair {

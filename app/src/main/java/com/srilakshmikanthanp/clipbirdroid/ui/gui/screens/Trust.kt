@@ -22,13 +22,9 @@ import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClient
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedDevicesViewModel
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServer
-import java.security.MessageDigest
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.utility.sha256Fingerprint
 import java.security.cert.X509Certificate
 import kotlin.collections.toList
-
-private fun sha256Fingerprint(cert: X509Certificate): String {
-  return MessageDigest.getInstance("SHA-256").digest(cert.encoded).joinToString(":") { "%02X".format(it) }
-}
 
 @Composable
 private fun EmptyTrustedState(message: String) {
