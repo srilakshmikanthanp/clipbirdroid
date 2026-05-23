@@ -65,7 +65,7 @@ private fun Action(icon: Int, text: String, modifier: Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutUs(onMenuClick: () -> Unit = {}) {
+fun About(onMenuClick: () -> Unit = {}) {
   val context = LocalContext.current
 
   val onIssueReport = {
@@ -203,6 +203,6 @@ fun AboutUs(onMenuClick: () -> Unit = {}) {
 
 @Preview(showBackground = true)
 @Composable
-fun AboutUsPreview() {
-  AboutUs()
+fun AboutPreview() {
+  About()
 }

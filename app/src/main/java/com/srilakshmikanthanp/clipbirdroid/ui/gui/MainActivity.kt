@@ -33,7 +33,7 @@ import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.DrawerItems
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.composables.NavigationDrawer
-import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.AboutUs
+import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.About
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.Devices
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.History
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.screens.SettingsScreen
@@ -70,7 +70,7 @@ private fun Clipbird() {
       DrawerItems.HISTORY -> History(onMenuClick = onMenuClick)
       DrawerItems.SETTING -> SettingsScreen(onMenuClick = onMenuClick)
       DrawerItems.TRUSTED_DEVICES -> TrustedDevices(onMenuClick = onMenuClick)
-      DrawerItems.ABOUT -> AboutUs(onMenuClick = onMenuClick)
+      DrawerItems.ABOUT -> About(onMenuClick = onMenuClick)
       DrawerItems.DEVICES -> Devices(onMenuClick = onMenuClick)
     }
   }
