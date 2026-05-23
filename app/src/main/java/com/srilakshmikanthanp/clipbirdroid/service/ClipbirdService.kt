@@ -8,11 +8,11 @@ import android.os.Binder
 import android.os.IBinder
 import android.widget.Toast
 import com.srilakshmikanthanp.clipbirdroid.ApplicationState
-import com.srilakshmikanthanp.clipbirdroid.broadcast.DeviceUnlockedHandler
+import com.srilakshmikanthanp.clipbirdroid.broadcast.DeviceUnlockEventHandler
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardManager
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedClients
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
-import com.srilakshmikanthanp.clipbirdroid.common.utility.Connector
+import com.srilakshmikanthanp.clipbirdroid.utility.Connector
 import com.srilakshmikanthanp.clipbirdroid.history.ClipboardHistory
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationPacket
 import com.srilakshmikanthanp.clipbirdroid.packets.AuthenticationStatus
@@ -33,7 +33,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ClipbirdService @Inject constructor() : Service() {
   private val serviceCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-  private val deviceUnlockedReceiver = DeviceUnlockedHandler()
+  private val deviceUnlockEventReceiver = DeviceUnlockEventHandler()
 
   private lateinit var connectionRequestNotification: ConnectionRequestNotification
   private lateinit var notification: StatusNotification
@@ -52,10 +52,7 @@ class ClipbirdService @Inject constructor() : Service() {
 
   val binder = ClipbirdBinder()
 
-  private fun initialize() {
-    this.connectionRequestNotification = ConnectionRequestNotification(this)
-    this.notification = StatusNotification(this)
-
+  private fun launchServerFoundEventObserver() {
     this.serviceCoroutineScope.launch {
       syncingManager.serverFoundEvents.collect {
         if (syncingManager.serverState.value == ClientServerConnectionState.Idle && trustedServers.hasTrustedServer(it.name)) {
@@ -67,7 +64,19 @@ class ClipbirdService @Inject constructor() : Service() {
         }
       }
     }
+  }
 
+  private fun launchServerStateObserver() {
+    this.serviceCoroutineScope.launch {
+      syncingManager.serverState.collect {
+        if (it is ClientServerConnectionState.Connected) {
+          applicationState.setLastConnectedServer(it.session.name)
+        }
+      }
+    }
+  }
+
+  private fun launchClientConnectionObserver() {
     this.serviceCoroutineScope.launch {
       syncingManager.clientConnectedEvents.collect {
         if (it.isTrusted.value) {
@@ -77,28 +86,25 @@ class ClipbirdService @Inject constructor() : Service() {
         }
       }
     }
+  }
 
-    syncingManager.addSyncRequestHandler {
-      clipboardHistory.addHistory(it)
-    }
-
+  private fun launchHistoryToClipboardObserver() {
     this.serviceCoroutineScope.launch {
       clipboardHistory.clipboard.collect {
         clipboardManager.getClipboard().setClipboardContent(it)
       }
     }
+  }
 
-    this.serviceCoroutineScope.launch {
-      clipboardManager.clipboardChangeEvents.collect {
-        syncingManager.synchronize(it)
-      }
+  private fun addSyncRequestHandlerToHistory() {
+    syncingManager.addSyncRequestHandler {
+      clipboardHistory.addHistory(it)
     }
+  }
 
+  private fun launchUseBluetoothSettingStateObserver() {
     this.serviceCoroutineScope.launch {
-      combine(
-        applicationState.shouldUseBluetoothFlow,
-        applicationState.isServerFlow
-      ) {
+      combine(applicationState.shouldUseBluetoothFlow, applicationState.isServerFlow) {
         useBluetooth, isServer -> isServer to useBluetooth
       }.collect { (isServer, useBluetooth) ->
         if (isServer) {
@@ -108,14 +114,26 @@ class ClipbirdService @Inject constructor() : Service() {
         }
       }
     }
+  }
 
+  private fun launchClipboardChangeEventObserver() {
+    this.serviceCoroutineScope.launch {
+      clipboardManager.clipboardChangeEvents.collect {
+        syncingManager.synchronize(it)
+      }
+    }
+  }
+
+  private fun setupNotificationChannels() {
+    this.connectionRequestNotification = ConnectionRequestNotification(this)
+    this.notification = StatusNotification(this)
+  }
+
+  private fun registerDeviceUnlockEventReceiver() {
     registerReceiver(
-      deviceUnlockedReceiver,
+      deviceUnlockEventReceiver,
       IntentFilter(Intent.ACTION_USER_PRESENT)
     )
-
-    this.connector.schedule()
-    this.showStatusNotification()
   }
 
   fun showStatusNotification() {
@@ -124,7 +142,17 @@ class ClipbirdService @Inject constructor() : Service() {
 
   override fun onCreate() {
     super.onCreate()
-    this.initialize()
+    this.setupNotificationChannels()
+    this.registerDeviceUnlockEventReceiver()
+    this.launchServerFoundEventObserver()
+    this.launchServerStateObserver()
+    this.launchClientConnectionObserver()
+    this.launchHistoryToClipboardObserver()
+    this.addSyncRequestHandlerToHistory()
+    this.launchUseBluetoothSettingStateObserver()
+    this.launchClipboardChangeEventObserver()
+    this.connector.schedule()
+    this.showStatusNotification()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -136,13 +164,15 @@ class ClipbirdService @Inject constructor() : Service() {
 
   override fun onDestroy() {
     super.onDestroy()
-    unregisterReceiver(deviceUnlockedReceiver)
+    unregisterReceiver(deviceUnlockEventReceiver)
     this.serviceCoroutineScope.cancel()
   }
 
   override fun onBind(intent: Intent?): IBinder = binder
 
   companion object {
+    const val ACTION_DEVICE_UNLOCKED = "com.srilakshmikanthanp.clipbirdroid.DEVICE_UNLOCKED"
+
     fun start(context: Context) {
       Intent(context, ClipbirdService::class.java).also {
         context.startForegroundService(it)
@@ -154,7 +184,5 @@ class ClipbirdService @Inject constructor() : Service() {
         context.stopService(it)
       }
     }
-
-    const val ACTION_DEVICE_UNLOCKED = "com.srilakshmikanthanp.clipbirdroid.DEVICE_UNLOCKED"
   }
 }

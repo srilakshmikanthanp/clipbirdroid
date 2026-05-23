@@ -19,7 +19,7 @@ interface ApplicationState {
   fun setIsServer(isServer: Boolean)
   fun getIsServer(): Boolean
 
-  fun setPrimaryServer(name: String)
-  fun removePrimaryServer()
-  fun getPrimaryServer(): String?
+  fun setLastConnectedServer(name: String)
+  fun removeLastConnectedServer()
+  fun getLastConnectedServer(): String?
 }

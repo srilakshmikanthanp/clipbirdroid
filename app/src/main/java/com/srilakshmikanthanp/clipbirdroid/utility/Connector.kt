@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.utility
+package com.srilakshmikanthanp.clipbirdroid.utility
 
 import com.srilakshmikanthanp.clipbirdroid.ApplicationState
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
@@ -25,7 +25,7 @@ class Connector @Inject constructor(
   private var job: Job? = null
 
   private suspend fun run() {
-    syncingManager.availableServers.value.find { applicationState.getPrimaryServer() == it.name }?.let {
+    syncingManager.availableServers.value.find { applicationState.getLastConnectedServer() == it.name }?.let {
       if (syncingManager.serverState.value == ClientServerConnectionState.Idle && trustedServers.hasTrustedServer(it.name)) {
         try {
           syncingManager.connectToServer(it)
@@ -37,6 +37,9 @@ class Connector @Inject constructor(
   }
 
   fun schedule() {
+    if (this.job?.isActive == true) {
+      return
+    }
     this.job = scope.launch {
       while (isActive) {
         if (syncingManager.serverState.value == ClientServerConnectionState.Idle) run()

@@ -10,7 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.srilakshmikanthanp.clipbirdroid.R
 import com.srilakshmikanthanp.clipbirdroid.clipboard.ClipboardContent
-import com.srilakshmikanthanp.clipbirdroid.common.utility.toPNG
+import com.srilakshmikanthanp.clipbirdroid.utility.toPNG
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch

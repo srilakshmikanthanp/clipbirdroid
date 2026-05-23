@@ -1,7 +1,7 @@
 package com.srilakshmikanthanp.clipbirdroid
 
 import android.content.Context
-import com.srilakshmikanthanp.clipbirdroid.common.utility.generateSslConfig
+import com.srilakshmikanthanp.clipbirdroid.utility.generateSslConfig
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.constants.appCertExpiryInterval
 import com.srilakshmikanthanp.clipbirdroid.constants.appMdnsServiceName

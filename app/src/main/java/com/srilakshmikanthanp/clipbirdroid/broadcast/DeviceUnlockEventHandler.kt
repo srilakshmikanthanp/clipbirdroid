@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.srilakshmikanthanp.clipbirdroid.service.ClipbirdService
 
-class DeviceUnlockedHandler : BroadcastReceiver() {
+class DeviceUnlockEventHandler : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent?) {
     Intent(context, ClipbirdService::class.java).apply {
       action = ClipbirdService.ACTION_DEVICE_UNLOCKED

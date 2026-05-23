@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.utility
+package com.srilakshmikanthanp.clipbirdroid.utility
 
 import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig

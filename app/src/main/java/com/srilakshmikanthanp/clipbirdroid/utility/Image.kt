@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid.common.utility
+package com.srilakshmikanthanp.clipbirdroid.utility
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory

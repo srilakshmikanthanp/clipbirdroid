@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -107,9 +106,6 @@ private fun DeviceRow(
 @Composable
 private fun TrustedServerList(
   servers: List<TrustedServer>,
-  primaryServer: String?,
-  onPrimaryServer: (String) -> Unit,
-  removePrimaryServer: () -> Unit,
   remove: (String) -> Unit,
 ) {
   Column(
@@ -132,15 +128,6 @@ private fun TrustedServerList(
         DeviceRow(
           name = it.name,
           cert = it.certificate,
-          leading = {
-            IconButton(onClick = { if (it.name == primaryServer) removePrimaryServer() else onPrimaryServer(it.name) }) {
-              Icon(
-                imageVector = Icons.Default.Bolt,
-                contentDescription = "Set as primary",
-                tint = if (primaryServer == it.name) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-              )
-            }
-          },
           trailing = {
             IconButton(onClick = { remove(it.name) }) {
               Icon(
@@ -259,9 +246,6 @@ fun TrustedDevices(
       when (tabIndex) {
         0 -> TrustedServerList(
           servers = trustedServers,
-          primaryServer = primaryServer,
-          onPrimaryServer = { applicationStateViewModel.applicationState.setPrimaryServer(it) },
-          removePrimaryServer = { applicationStateViewModel.applicationState.removePrimaryServer() },
           remove = { trustedDevicesViewModel.removeTrustedServer(it) },
         )
 

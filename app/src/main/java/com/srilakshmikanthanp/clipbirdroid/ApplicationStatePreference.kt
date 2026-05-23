@@ -3,9 +3,6 @@ package com.srilakshmikanthanp.clipbirdroid
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -86,15 +83,15 @@ class ApplicationStatePreference(context: Context): SharedPreferences.OnSharedPr
     return storagePreference.getBoolean(IS_SERVER, false)
   }
 
-  override fun setPrimaryServer(name: String) {
+  override fun setLastConnectedServer(name: String) {
     storagePreference.edit() { putString(PRIMARY_SERVER, name) }
   }
 
-  override fun getPrimaryServer(): String? {
+  override fun getLastConnectedServer(): String? {
     return storagePreference.getString(PRIMARY_SERVER, null)
   }
 
-  override fun removePrimaryServer() {
+  override fun removeLastConnectedServer() {
     storagePreference.edit() { remove(PRIMARY_SERVER) }
   }
 
@@ -103,7 +100,7 @@ class ApplicationStatePreference(context: Context): SharedPreferences.OnSharedPr
       HOST_SSL -> _hostSslConfigFlow.value = getHostSslConfig()
       SHOULD_USE_BLUETOOTH -> _shouldUseBluetoothFlow.value = shouldUseBluetooth()
       IS_SERVER -> _isServerFlow.value = getIsServer()
-      PRIMARY_SERVER -> _primaryServerFlow.value = getPrimaryServer()
+      PRIMARY_SERVER -> _primaryServerFlow.value = getLastConnectedServer()
     }
   }
 }

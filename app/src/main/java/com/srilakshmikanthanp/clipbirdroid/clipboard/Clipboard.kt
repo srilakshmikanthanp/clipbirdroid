@@ -7,7 +7,7 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.srilakshmikanthanp.clipbirdroid.constants.appName
 import com.srilakshmikanthanp.clipbirdroid.constants.appProvider
-import com.srilakshmikanthanp.clipbirdroid.common.utility.toPNG
+import com.srilakshmikanthanp.clipbirdroid.utility.toPNG
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.FileNotFoundException
