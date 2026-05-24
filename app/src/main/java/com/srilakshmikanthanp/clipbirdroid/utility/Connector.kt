@@ -1,15 +1,16 @@
 package com.srilakshmikanthanp.clipbirdroid.utility
 
+import android.util.Log
 import com.srilakshmikanthanp.clipbirdroid.ApplicationState
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.ClientServerConnectionState
 import com.srilakshmikanthanp.clipbirdroid.syncing.manager.SyncingManager
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class Connector @Inject constructor(
@@ -18,45 +19,47 @@ class Connector @Inject constructor(
   private val trustedServers: TrustedServers,
   private val scope: CoroutineScope
 ) {
-  private val baseDelayMillis = TimeUnit.SECONDS.toMillis(5)
-  private val maxDelayMillis = TimeUnit.MINUTES.toMillis(60)
-  private var currentDelayMillis = baseDelayMillis
+  private suspend fun tryToConnectToServer() {
+    val server = syncingManager.availableServers.value.find { applicationState.getLastConnectedServer() == it.name } ?: return
 
-  private var job: Job? = null
-
-  private suspend fun run() {
-    syncingManager.availableServers.value.find { applicationState.getLastConnectedServer() == it.name }?.let {
-      if (syncingManager.serverState.value == ClientServerConnectionState.Idle && trustedServers.hasTrustedServer(it.name)) {
-        try {
-          syncingManager.connectToServer(it)
-        } catch (e: Exception) {
-          // Ignore connection failure
-        }
-      }
-    }
-  }
-
-  fun schedule() {
-    if (this.job?.isActive == true) {
+    if (syncingManager.serverState.value != ClientServerConnectionState.Idle || !trustedServers.hasTrustedServer(server.name)) {
       return
     }
-    this.job = scope.launch {
-      while (isActive) {
-        if (syncingManager.serverState.value == ClientServerConnectionState.Idle) run()
-        currentDelayMillis = (currentDelayMillis * 2).coerceAtMost(maxDelayMillis)
-        delay(currentDelayMillis)
+
+    for (i in 1..RETRY_COUNT) {
+      try {
+        syncingManager.connectToServer(server)
+        return
+      } catch (e: Exception) {
+        Log.e("Connector", "Failed to connect to server ${server.name} on attempt $i", e)
+      }
+
+      if (i != RETRY_COUNT) {
+        delay(RETRY_DELAY)
       }
     }
   }
 
-  fun cancel() {
-    this.job?.cancel()
-    this.job = null
-    this.currentDelayMillis = baseDelayMillis
+  private val queue = Channel<Unit>(
+    capacity = MAX_QUEUE_SIZE,
+    onBufferOverflow = BufferOverflow.DROP_OLDEST
+  )
+
+  companion object {
+    private const val MAX_QUEUE_SIZE = 10
+    private const val RETRY_COUNT = 3
+    private const val RETRY_DELAY = 5_000L
   }
 
-  fun reset() {
-    cancel()
-    schedule()
+  init {
+    scope.launch(Dispatchers.IO) {
+      for (ignored in queue) {
+        tryToConnectToServer()
+      }
+    }
+  }
+
+  fun enqueueConnector() {
+    queue.trySend(Unit)
   }
 }

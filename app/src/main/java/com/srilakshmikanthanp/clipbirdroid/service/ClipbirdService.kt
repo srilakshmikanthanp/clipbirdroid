@@ -129,13 +129,6 @@ class ClipbirdService @Inject constructor() : Service() {
     this.notification = StatusNotification(this)
   }
 
-  private fun registerDeviceUnlockEventReceiver() {
-    registerReceiver(
-      deviceUnlockEventReceiver,
-      IntentFilter(Intent.ACTION_USER_PRESENT)
-    )
-  }
-
   fun showStatusNotification() {
     notification.showStatusNotification(this)
   }
@@ -143,7 +136,7 @@ class ClipbirdService @Inject constructor() : Service() {
   override fun onCreate() {
     super.onCreate()
     this.setupNotificationChannels()
-    this.registerDeviceUnlockEventReceiver()
+    this.registerReceiver(deviceUnlockEventReceiver, IntentFilter(Intent.ACTION_USER_PRESENT))
     this.launchServerFoundEventObserver()
     this.launchServerStateObserver()
     this.launchClientConnectionObserver()
@@ -151,13 +144,13 @@ class ClipbirdService @Inject constructor() : Service() {
     this.addSyncRequestHandlerToHistory()
     this.launchUseBluetoothSettingStateObserver()
     this.launchClipboardChangeEventObserver()
-    this.connector.schedule()
+    this.connector.enqueueConnector()
     this.showStatusNotification()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     if (intent?.action == ACTION_DEVICE_UNLOCKED) {
-      this.serviceCoroutineScope.launch { connector.reset() }
+      this.serviceCoroutineScope.launch { connector.enqueueConnector() }
     }
     return START_STICKY
   }
