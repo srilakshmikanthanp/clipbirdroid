@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid
+package com.srilakshmikanthanp.clipbirdroid.common.ssl
 
 import android.content.Context
 import androidx.core.content.edit

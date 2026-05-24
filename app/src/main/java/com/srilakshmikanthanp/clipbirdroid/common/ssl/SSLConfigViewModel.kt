@@ -1,4 +1,4 @@
-package com.srilakshmikanthanp.clipbirdroid
+package com.srilakshmikanthanp.clipbirdroid.common.ssl
 
 import androidx.lifecycle.ViewModel
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig

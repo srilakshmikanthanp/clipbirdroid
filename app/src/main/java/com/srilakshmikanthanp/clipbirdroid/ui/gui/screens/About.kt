@@ -46,7 +46,7 @@ import com.srilakshmikanthanp.clipbirdroid.constants.appIssuesPage
 import com.srilakshmikanthanp.clipbirdroid.constants.appVersion
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.srilakshmikanthanp.clipbirdroid.SSLConfigViewModel
+import com.srilakshmikanthanp.clipbirdroid.common.ssl.SSLConfigViewModel
 import com.srilakshmikanthanp.clipbirdroid.constants.appSourcePage
 import com.srilakshmikanthanp.clipbirdroid.ui.gui.utility.sha256Fingerprint
 
