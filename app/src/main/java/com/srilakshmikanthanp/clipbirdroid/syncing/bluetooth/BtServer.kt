@@ -26,10 +26,10 @@ class BtServer @Inject constructor(
   sslConfig: SSLConfig,
   private val trustedClients: TrustedClients,
   parentScope: CoroutineScope
-): Server(context, sslConfig), BtSessionListener {
+): Server(context, sslConfig), BtSocketSessionListener {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
-  private val clients = mutableMapOf<String, BtSession>()
+  private val clients = mutableMapOf<String, BtSocketSession>()
   private var acceptJob: Job? = null
   private var serverSocket: BluetoothServerSocket? = null
 
@@ -37,7 +37,7 @@ class BtServer @Inject constructor(
     val serverSocket = this@BtServer.serverSocket ?: return@withContext
     while (this@BtServer.acceptJob?.isActive == true) {
       try {
-        val connection = BtSession(this@BtServer, coroutineScope, serverSocket.accept(), sslConfig)
+        val connection = BtSocketSession(this@BtServer, coroutineScope, serverSocket.accept(), sslConfig)
         clients[connection.getRemoteDeviceName()] = connection
         connection.start()
       } catch (e: IOException) {
@@ -61,26 +61,26 @@ class BtServer @Inject constructor(
     clients.clear()
   }
 
-  override fun onHandShakeCompleted(btSession: BtSession) {
-    val certificate = btSession.getPeerCertificate()
-    val session = BtServerClientSession(btSession.getRemoteDeviceName(), certificate, btSession, trustedClients, coroutineScope)
-    btSession.setAttribute(BtServerClientSession::class.simpleName!!, session)
+  override fun onHandShakeCompleted(btSocketSession: BtSocketSession) {
+    val certificate = btSocketSession.getPeerCertificate()
+    val session = BtServerClientSession(btSocketSession.getRemoteDeviceName(), certificate, btSocketSession, trustedClients, coroutineScope)
+    btSocketSession.setAttribute(BtServerClientSession::class.simpleName!!, session)
     super.serverEventListeners.forEach { it.onClientConnected(session) }
   }
 
-  override fun onDisconnected(btSession: BtSession) {
-    this.clients.remove(btSession.getRemoteDeviceName())
-    val session = btSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
+  override fun onDisconnected(btSocketSession: BtSocketSession) {
+    this.clients.remove(btSocketSession.getRemoteDeviceName())
+    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
     super.serverEventListeners.forEach { it.onClientDisconnected(session) }
   }
 
-  override fun onError(btSession: BtSession, cause: Throwable) {
-    val session = btSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
+  override fun onError(btSocketSession: BtSocketSession, cause: Throwable) {
+    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
     super.serverEventListeners.forEach { it.onClientError(session, cause) }
   }
 
-  override fun onNetworkPacket(btSession: BtSession, packet: NetworkPacket) {
-    val session = btSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
+  override fun onNetworkPacket(btSocketSession: BtSocketSession, packet: NetworkPacket) {
+    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
     super.serverEventListeners.forEach { it.onNetworkPacket(session, packet) }
   }
 }

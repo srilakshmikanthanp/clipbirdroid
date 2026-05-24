@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okio.IOException
 import java.security.cert.X509Certificate
 
 @SuppressLint("MissingPermission")
@@ -29,15 +28,18 @@ class BtClientServerSession(
   private val context: Context,
   private val listener: ClientServerSessionEventListener,
   parentScope: CoroutineScope
-): Session(btResolvedDevice.name), BtSessionListener {
+): Session(btResolvedDevice.name), BtSocketSessionListener {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
   private val bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
-  private var btSession: BtSession? = null
+  private var btSocketSession: BtSocketSession? = null
+
+  private val _isTrusted = MutableStateFlow(false)
+  override val isTrusted = _isTrusted.asStateFlow()
 
   init {
     coroutineScope.launch {
       trustedServers.trustedServers.collect {
-        if (btSession?.isHandshakeCompleted() == true) {
+        if (btSocketSession?.isHandshakeCompleted() == true) {
           _isTrusted.value = trustedServers.isTrustedServer(TrustedServer(name, getCertificate()))
         }
       }
@@ -46,24 +48,21 @@ class BtClientServerSession(
 
   private suspend fun connect(socket: BluetoothSocket) = withContext(Dispatchers.IO) {
     socket.connect()
-    this@BtClientServerSession.btSession = BtSession(this@BtClientServerSession, coroutineScope, socket, sslConfig)
-    this@BtClientServerSession.btSession!!.start()
+    this@BtClientServerSession.btSocketSession = BtSocketSession(this@BtClientServerSession, coroutineScope, socket, sslConfig)
+    this@BtClientServerSession.btSocketSession!!.start()
   }
 
   override suspend fun sendPacket(packet: NetworkPacket) {
-    btSession?.sendPacket(packet)
+    btSocketSession?.sendPacket(packet)
   }
 
   override suspend fun disconnect() {
-    btSession?.stop()
-    btSession = null
+    btSocketSession?.stop()
+    btSocketSession = null
   }
 
-  private val _isTrusted = MutableStateFlow(false)
-  override val isTrusted = _isTrusted.asStateFlow()
-
   override fun getCertificate(): X509Certificate {
-    return btSession!!.getPeerCertificate()
+    return btSocketSession!!.getPeerCertificate()
   }
 
   suspend fun connect() = withContext(Dispatchers.IO) {
@@ -74,22 +73,22 @@ class BtClientServerSession(
     this@BtClientServerSession.connect(socket)
   }
 
-  override fun onHandShakeCompleted(btSession: BtSession) {
+  override fun onHandShakeCompleted(btSocketSession: BtSocketSession) {
     coroutineScope.launch {
       _isTrusted.value = trustedServers.isTrustedServer(TrustedServer(name, getCertificate()))
       listener.onConnected(this@BtClientServerSession)
     }
   }
 
-  override fun onDisconnected(btSession: BtSession) {
+  override fun onDisconnected(btSocketSession: BtSocketSession) {
     listener.onDisconnected(this)
   }
 
-  override fun onError(btSession: BtSession, cause: Throwable) {
+  override fun onError(btSocketSession: BtSocketSession, cause: Throwable) {
     listener.onError(this, cause)
   }
 
-  override fun onNetworkPacket(btSession: BtSession, packet: NetworkPacket) {
+  override fun onNetworkPacket(btSocketSession: BtSocketSession, packet: NetworkPacket) {
     listener.onNetworkPacket(this, packet)
   }
 }
