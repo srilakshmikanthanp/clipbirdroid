@@ -17,10 +17,7 @@ import java.util.Base64
 
 class ApplicationStatePreference(context: Context): SharedPreferences.OnSharedPreferenceChangeListener, ApplicationState {
   private val storagePreference = context.getSharedPreferences(ApplicationStatePreference::class.simpleName, Context.MODE_PRIVATE)
-
-  private val _hostSslConfigFlow = MutableStateFlow(getHostSslConfig())
-  override val hostSslConfigFlow: StateFlow<SSLConfig?> = _hostSslConfigFlow.asStateFlow()
-
+  
   private val _shouldUseBluetoothFlow = MutableStateFlow(shouldUseBluetooth())
   override val shouldUseBluetoothFlow: StateFlow<Boolean> = _shouldUseBluetoothFlow.asStateFlow()
 
@@ -33,38 +30,11 @@ class ApplicationStatePreference(context: Context): SharedPreferences.OnSharedPr
   companion object {
     private const val IS_SERVER = "IS_SERVER"
     private const val SHOULD_USE_BLUETOOTH = "SHOULD_USE_BLUETOOTH"
-    private const val HOST_SSL = "HOST_SSL"
     private const val PRIMARY_SERVER = "PRIMARY_SERVER"
   }
 
   init {
     storagePreference.registerOnSharedPreferenceChangeListener(this)
-  }
-
-  override fun removeSslConfig() {
-    storagePreference.edit() { remove(HOST_SSL) }
-  }
-
-  override fun setHostSslConfig(sslConfig: SSLConfig) {
-    val privateKeyBase64 = Base64.getEncoder().encodeToString(sslConfig.privateKey.encoded)
-    val certificateBase64 = Base64.getEncoder().encodeToString(sslConfig.certificate.encoded)
-    val json = JSONObject().apply {
-      put("certificate", certificateBase64)
-      put("privateKey", privateKeyBase64)
-    }.toString()
-    storagePreference.edit { putString(HOST_SSL, json) }
-  }
-
-  override fun getHostSslConfig(): SSLConfig? {
-    val jsonString = storagePreference.getString(HOST_SSL, null) ?: return null
-    val jsonObject = JSONObject(jsonString)
-    val certificateBase64 = jsonObject.getString("certificate")
-    val privateKeyBase64 = jsonObject.getString("privateKey")
-    val certificateBytes = Base64.getDecoder().decode(certificateBase64)
-    val privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64)
-    val certificate = CertificateFactory.getInstance("X.509").generateCertificate(ByteArrayInputStream(certificateBytes)) as X509Certificate
-    val privateKey = KeyFactory.getInstance("RSA").generatePrivate(PKCS8EncodedKeySpec(privateKeyBytes))
-    return SSLConfig(privateKey, certificate)
   }
 
   override fun shouldUseBluetooth(): Boolean {
@@ -97,7 +67,6 @@ class ApplicationStatePreference(context: Context): SharedPreferences.OnSharedPr
 
   override fun onSharedPreferenceChanged(preference: SharedPreferences?, key: String?) {
     when (key) {
-      HOST_SSL -> _hostSslConfigFlow.value = getHostSslConfig()
       SHOULD_USE_BLUETOOTH -> _shouldUseBluetoothFlow.value = shouldUseBluetooth()
       IS_SERVER -> _isServerFlow.value = getIsServer()
       PRIMARY_SERVER -> _primaryServerFlow.value = getLastConnectedServer()

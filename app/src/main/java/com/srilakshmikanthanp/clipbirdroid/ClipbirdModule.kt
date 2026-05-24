@@ -20,23 +20,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class ClipbirdModule {
-  private fun getSslConfig(applicationState: ApplicationState, context: Context): SSLConfig {
-    val sslConfig = applicationState.getHostSslConfig() ?: generateSslConfig(context)
-    val currentTime = System.currentTimeMillis()
-    if (sslConfig.certificate.notAfter.time - currentTime < appCertExpiryInterval()) return generateSslConfig(context)
-    val x500Name = JcaX509CertificateHolder(sslConfig.certificate).subject
-    val cn = x500Name.getRDNs(BCStyle.CN)[0]
-    val name = IETFUtils.valueToString(cn.first.value)
-    val deviceName = appMdnsServiceName(context)
-    if (name != deviceName) return generateSslConfig(context)
-    applicationState.setHostSslConfig(sslConfig)
-    return sslConfig
-  }
-
   @Singleton
   @Provides
-  fun provideSslConfig(applicationState: ApplicationState, @ApplicationContext context: Context): SSLConfig {
-    return getSslConfig(applicationState, context)
+  fun provideSslConfig(sslConfigProvider: SslConfigProvider): SSLConfig {
+    return sslConfigProvider.getSslConfig()
   }
 
   @Provides
