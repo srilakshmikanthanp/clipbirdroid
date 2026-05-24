@@ -2,7 +2,6 @@ package com.srilakshmikanthanp.clipbirdroid.syncing.bluetooth
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
 import android.content.Context
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServer
 import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
@@ -46,7 +45,11 @@ class BtClientServerSession(
     }
   }
 
-  private suspend fun connect(socket: BluetoothSocket) = withContext(Dispatchers.IO) {
+  suspend fun connect() = withContext(Dispatchers.IO) {
+    val btAdapter = requireNotNull(bluetoothAdapter)
+    val remoteDevice = btAdapter.getRemoteDevice(btResolvedDevice.address)
+    val socket = remoteDevice.createRfcommSocketToServiceRecord(BtConstants.serviceUuid)
+    btAdapter.cancelDiscovery()
     socket.connect()
     this@BtClientServerSession.btSocketSession = BtSocketSession(this@BtClientServerSession, coroutineScope, socket, sslConfig)
     this@BtClientServerSession.btSocketSession!!.start()
@@ -63,14 +66,6 @@ class BtClientServerSession(
 
   override fun getCertificate(): X509Certificate {
     return btSocketSession!!.getPeerCertificate()
-  }
-
-  suspend fun connect() = withContext(Dispatchers.IO) {
-    val btAdapter = requireNotNull(bluetoothAdapter)
-    val remoteDevice = btAdapter.getRemoteDevice(btResolvedDevice.address)
-    val socket = remoteDevice.createRfcommSocketToServiceRecord(BtConstants.serviceUuid)
-    btAdapter.cancelDiscovery()
-    this@BtClientServerSession.connect(socket)
   }
 
   override fun onHandShakeCompleted(btSocketSession: BtSocketSession) {

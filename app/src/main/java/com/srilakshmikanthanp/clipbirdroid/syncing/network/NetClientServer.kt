@@ -4,6 +4,7 @@ import com.srilakshmikanthanp.clipbirdroid.common.trust.TrustedServers
 import com.srilakshmikanthanp.clipbirdroid.common.types.SSLConfig
 import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServer
 import com.srilakshmikanthanp.clipbirdroid.syncing.ClientServerSessionEventListener
+import com.srilakshmikanthanp.clipbirdroid.syncing.Session
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -16,8 +17,10 @@ class NetClientServer(
 ) : ClientServer(netResolvedDevice.name) {
   private val coroutineScope = CoroutineScope(SupervisorJob(parentScope.coroutineContext[Job]))
 
-  override suspend fun connect(listener: ClientServerSessionEventListener) {
-    NetClientServerSession(netResolvedDevice, sslConfig, trustedServers, listener, coroutineScope).connect()
+  override suspend fun connect(listener: ClientServerSessionEventListener): Session {
+    val session = NetClientServerSession(netResolvedDevice, sslConfig, trustedServers, listener, coroutineScope);
+    session.connect()
+    return session
   }
 
   override fun equals(other: Any?): Boolean {
