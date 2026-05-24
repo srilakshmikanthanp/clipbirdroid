@@ -6,7 +6,7 @@
   <string name="devices_server_prompt">Devices in your group show up here</string>
   <string name="history_prompt">Latest clipbird history would appear here</string>
   <string name="no_preview">No Preview</string>
-  <string name="open_source_licenses">Open Source Licenses</string>
+  <string name="licenses">Licenses</string>
   <string name="join_to_a_group">Join to a Group</string>
   <string name="notification_title">Clipbird is syncing</string>
   <string name="permissions">Permissions</string>
@@ -82,4 +82,6 @@ s
   <string name="trusted_devices">Trust</string>
   <string name="add_to_trust_device">Add To Trusted Groups</string>
     <string name="mark_as_primary_server">Mark as Primary Server</string>
+  <string name="fingerprint">Finger Print</string>
+  <string name="source_code">Source Code</string>
 </resources>

@@ -14,6 +14,7 @@ android {
     buildConfigField "String", "APP_NAME", "\"Clipbird\""
     buildConfigField "String", "APP_DONATE", "\"https://srilakshmikanthanp.github.io/donate\""
     buildConfigField "String", "APP_HOME", "\"https://srilakshmikanthanp.github.io/clipbirdesk\""
+    buildConfigField "String", "SOURCE_HOME", "\"https://github.com/srilakshmikanthanp/clipbirdroid\""
     buildConfigField "String", "APP_UUID", "\"3A8D9FCA-9F95-4947-8AB0-3E364ED765E1\""
 
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

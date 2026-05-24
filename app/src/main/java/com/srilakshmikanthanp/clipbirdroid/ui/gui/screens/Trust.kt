@@ -64,7 +64,7 @@ private fun DeviceRow(
           Text("OK")
         }
       },
-      title = { Text("Fingerprint") },
+      title = { Text(stringResource(R.string.fingerprint)) },
       text = {
         Text(
           text = fingerprint,

@@ -53,6 +53,14 @@ fun appHomePage(): String {
 }
 
 /**
+ * @brief Get the App Source Page
+ * @return string
+ */
+fun appSourcePage(): String {
+  return BuildConfig.SOURCE_HOME
+}
+
+/**
  * @brief Get the App ISSUES Page
  * @return string
  */
