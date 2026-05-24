@@ -70,17 +70,17 @@ class BtServer @Inject constructor(
 
   override fun onDisconnected(btSocketSession: BtSocketSession) {
     this.clients.remove(btSocketSession.getRemoteDeviceName())
-    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
+    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as? BtServerClientSession? ?: return
     super.serverEventListeners.forEach { it.onClientDisconnected(session) }
   }
 
   override fun onError(btSocketSession: BtSocketSession, cause: Throwable) {
-    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
+    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as? BtServerClientSession? ?: return
     super.serverEventListeners.forEach { it.onClientError(session, cause) }
   }
 
   override fun onNetworkPacket(btSocketSession: BtSocketSession, packet: NetworkPacket) {
-    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as BtServerClientSession? ?: return
+    val session = btSocketSession.getAttribute(BtServerClientSession::class.simpleName!!) as? BtServerClientSession? ?: return
     super.serverEventListeners.forEach { it.onNetworkPacket(session, packet) }
   }
 }
